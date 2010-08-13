@@ -32,6 +32,7 @@
 # http://docs.djangoproject.com/en/dev/topics/testing/
 from django.test import TestCase
 from django.test.client import Client
+import unittest
 
 class SimpleTest(TestCase):
     def test_basic_addition(self):
@@ -42,7 +43,7 @@ class SimpleTest(TestCase):
 
 
 # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
-class UrlTest(TestCase):
+class UserInterfaceTestCase(TestCase):
     def test_root(self):
         self.failUnlessEqual(Client().get('/').status_code, 200)
 
@@ -57,18 +58,19 @@ class UrlTest(TestCase):
             # print u, response.status_code
             self.failUnlessEqual(response.status_code, 301)
 
-
-class RegisterExperiment(TestCase):
     def test_register(self):
         self.client = Client()
 
         from django.contrib.auth.models import User
+        from tardis import settings
+        import os
+        
         user='user1'
         pwd='test'
         email=''
         User.objects.create_user(user, email, pwd)
 
-        f = open('tardis_portal/tests/notMETS_test.xml')
+        f = open(os.path.join(settings.APP_ROOT, "tardis_portal/tests/notMETS_test.xml"), "r")
         response = self.client.post('/experiment/register/', {'username': user,
                                                               'password': pwd,
                                                               'xmldata': f,
@@ -77,8 +79,6 @@ class RegisterExperiment(TestCase):
         f.close()
         self.failUnlessEqual(response.status_code, 200)
     
-    
-class LoginTest(TestCase):
     def test_login(self):
         from django.contrib.auth.models import User
         user='user2'
@@ -88,3 +88,80 @@ class LoginTest(TestCase):
 
         self.failUnlessEqual(self.client.login(username=user, password=pwd), True)        
         
+class ExperimentParserTestCase(unittest.TestCase):
+    def setUp(self):
+        from tardis import settings
+        import os
+        f = open(os.path.join(settings.APP_ROOT, "tardis_portal/tests/METS_test.xml"), "r")
+        xmlString = f.read()
+        f.close()
+        from tardis.tardis_portal.ExperimentParser import ExperimentParser
+        self.experimentParser = ExperimentParser(str(xmlString))
+
+    def testGetTitle(self):
+        self.assertTrue(self.experimentParser.getTitle() == 'Test Title', 'title is not the same')
+
+    def testGetAuthors(self):
+        self.assertTrue(len(self.experimentParser.getAuthors()) == 3, 'number of authors should be 3' )
+        self.assertTrue('Author2' in self.experimentParser.getAuthors(), '"Author2 should be in the authors list"' )
+        
+    def testGetAbstract(self):
+        self.assertTrue(self.experimentParser.getAbstract() == 'Test Abstract.', 'abstract is not the same')
+    
+    def testGetPDBIDs(self):        
+        self.assertTrue(len(self.experimentParser.getPDBIDs()) == 1, 'number of pdb ids should be 1')
+        self.assertTrue('SAMPLE_PDBID' in self.experimentParser.getPDBIDs(), 'pdb id should be "SAMPLE_PDBID"')
+    
+    def testGetRelationURLs(self):
+        self.assertTrue('http://www.test.com' in self.experimentParser.getRelationURLs(), 'missing url from relationsURLs')
+        self.assertTrue(len(self.experimentParser.getRelationURLs()) == 1, 'there should only be 1 relationsURL')
+    
+    def testGetAgentName(self):
+        self.assertTrue(self.experimentParser.getAgentName('CREATOR') == 'Creator', 'agent should be "Creator"')
+        self.assertTrue(self.experimentParser.getAgentName('PAINTER') == None, 'there is no "Painter" agent')
+    
+    def testGetDatasetTitle(self):
+        self.assertTrue(self.experimentParser.getDatasetTitle('J-2') == 'Dataset1 Title', 'dataset title should be "J-2"')
+        self.assertTrue(self.experimentParser.getDatasetTitle('J-4') == None, 'there is no dataset with id "J-4"')
+    
+    def testGetDatasetDMDIDs(self):
+        self.assertTrue(len(self.experimentParser.getDatasetDMDIDs()) == 2, 'total number of datasets is wrong')
+        self.assertTrue('J-2' in self.experimentParser.getDatasetDMDIDs(), 'J-2 is not in the dataset')
+        self.assertTrue('J-1' not in self.experimentParser.getDatasetDMDIDs(), "J-1 shouldn't be in the dataset")
+    
+    def testGetDatasetADMIDs(self):
+        # get metadata ids for this dataset...
+        pass
+    
+    def testGetFileIDs(self):
+        self.assertTrue('F-3' in self.experimentParser.getFileIDs('J-3'), 'F-3 is missing from the file IDs')
+        self.assertTrue(len(self.experimentParser.getFileIDs('J-3')) == 2, 'there should only be 2 files for the J-3 dataset')
+        self.assertTrue('F-5' not in self.experimentParser.getFileIDs('J-3'), 'F-3 is missing from the file IDs')
+    
+    def testGetFileLocation(self):
+        self.assertTrue(self.experimentParser.getFileLocation('F-1') == 'file://Images/File1', "file F-1's location is wrong")
+    
+    def testGetFileADMIDs(self):
+        # get metadata ids for this file...
+        self.assertTrue('A-3' in self.experimentParser.getFileADMIDs('F-4'), 'wrong file metadata id')
+        self.assertTrue(len(self.experimentParser.getFileADMIDs('F-4')) == 1, 'there should only be 1 metadata ID for the file')
+    
+    def testGetFileName(self):
+        self.assertTrue(self.experimentParser.getFileName('F-1') == 'File1', 'wrong file name for file "F-1"')
+
+    def testGetFileSize(self):        
+        self.assertTrue(self.experimentParser.getFileSize('F-1') == '6148', 'wrong file size for file "F-1"')
+    
+    def testGetTechXML(self):
+        # check if the root of the returned element is datafile or something else
+        self.assertTrue(
+            self.experimentParser.getTechXML('A-3').getroot().tag == '{http://www.tardis.edu.au/schemas/trdDatafile/1}datafile', 'element has wrong tag')
+    
+    def testGetParameterFromTechXML(self):
+        pass
+
+def suite():
+    userInterfaceSuite = unittest.TestLoader().loadTestsFromTestCase(UserInterfaceTestCase)
+    parserSuite = unittest.TestLoader().loadTestsFromTestCase(ExperimentParserTestCase)
+    allTests = unittest.TestSuite([parserSuite, userInterfaceSuite])
+    return allTests

@@ -166,11 +166,15 @@ class ProcessExperiment:
 			author_experiment.save()
 			x = x + 1
 
+		# looks like the intention here is to reload all the datasets from scratch
 		e.dataset_set.all().delete()
 
+		# for each dataset...
 		for dmdid in ep.getDatasetDMDIDs():
 			d = Dataset(experiment=e, description=ep.getDatasetTitle(dmdid))
 			d.save()
+			
+			# for each metadata element of this dataset...
 			for admid in ep.getDatasetADMIDs(dmdid):
 				
 					techxml = ep.getTechXML(admid)
@@ -202,6 +206,7 @@ class ProcessExperiment:
 						print "Schema " + xmlns + " doesn't exist!"
 						#todo replace with logging
 		
+			# for each file in the dataset...
 			for fileid in ep.getFileIDs(dmdid):
 				
 				# if ep.getFileLocation(fileid).startswith('file://'):
@@ -220,6 +225,7 @@ class ProcessExperiment:
 				url=ep.getFileLocation(fileid), size=ep.getFileSize(fileid))
 				datafile.save()
 				
+				# for each metadata element of this file...
 				for admid in ep.getFileADMIDs(fileid):
 
 					techxml = ep.getTechXML(admid)
