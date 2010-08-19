@@ -21,4 +21,4 @@ def dfparametertypecheck(value, arg):
 		dfid = datafileparameter.dataset_file.id
 		return "<img src='/displayDatafileImage/" + str(dfid) + "/" + datafileparameter.name.name + "/' />"
 	else:
-		return value		
+		return value

@@ -155,4 +155,4 @@ def get_or_create_user_ldap(email):
 		up.save()
 
 		#todo :send email with notification
-	return authcate_user	
+	return authcate_user

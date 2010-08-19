@@ -1213,4 +1213,4 @@ def import_params(request):
 		'form': form,
 		'subtitle': "Import Parameters",
 	})
-	return HttpResponse(render_response_index(request, 'tardis_portal/import_params.html', c))			
+	return HttpResponse(render_response_index(request, 'tardis_portal/import_params.html', c))
