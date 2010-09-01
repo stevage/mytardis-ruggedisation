@@ -1185,7 +1185,7 @@ def search_quick(request):
                         'tardis_portal/search_experiment.html', c))
 
 
-def getFilteredDatafilesForMX(request, searchFilterData):
+def __getFilteredDatafilesForMX(request, searchFilterData):
 
     datafile_results = \
         get_accessible_datafiles_for_user(get_accessible_experiments(request.user.id))
@@ -1238,7 +1238,7 @@ def getFilteredDatafilesForMX(request, searchFilterData):
     return datafile_results
 
 
-def getFilteredDatafiles(request, searchFilterData):
+def __getFilteredDatafiles(request, searchFilterData):
 
     #from django.db.models import Q
 
@@ -1265,7 +1265,7 @@ def getFilteredDatafiles(request, searchFilterData):
         ParameterName.objects.filter(schema__namespace__exact=
         globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] + '_datafile'])]  # TODO: if p is searchable
 
-    datafile_results = filterParameters(parameters, datafile_results,
+    datafile_results = __filterParameters(parameters, datafile_results,
             searchFilterData, 'datafileparameter')
 
     # get all the dataset parameters for given schema
@@ -1273,7 +1273,7 @@ def getFilteredDatafiles(request, searchFilterData):
         ParameterName.objects.filter(schema__namespace__exact=
         globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] + '_dataset'])]  # TODO: if p is searchable
 
-    datafile_results = filterParameters(parameters, datafile_results,
+    datafile_results = __filterParameters(parameters, datafile_results,
             searchFilterData, 'dataset__datasetparameter')
 
     # let's sort it in the end
@@ -1283,7 +1283,7 @@ def getFilteredDatafiles(request, searchFilterData):
     return datafile_results
 
 
-def filterParameters(
+def __filterParameters(
     parameters,
     datafile_results,
     searchFilterData,
@@ -1433,11 +1433,11 @@ def search_datafile(request, type):
             # for the meantime, we'll just use the original way the MX
             # search form is processed...
             if request.POST['searchQueryType'] == 'mx':
-                datafile_results = getFilteredDatafilesForMX(request,
+                datafile_results = __getFilteredDatafilesForMX(request,
                         form.cleaned_data)
             else:
 
-                datafile_results = getFilteredDatafiles(request,
+                datafile_results = __getFilteredDatafiles(request,
                         form.cleaned_data)
 
             # let's cache the query with all the filters in the session so

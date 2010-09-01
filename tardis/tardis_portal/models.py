@@ -34,23 +34,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.safestring import SafeUnicode
 
-class ChoiceField(models.IntegerField):
-    def __init__(self, choices, **kwargs):
-        if not hasattr(choices[0],'__iter__'):
-                choices = zip(range(len(choices)), choices)
-
-        self.val2choice = dict(choices)
-        self.choice2val = dict((v,k) for k,v in choices)
-
-        kwargs['choices'] = choices
-        super(models.IntegerField, self).__init__(**kwargs)
-
-    def to_python(self, value):
-        return self.val2choice[value]
-
-    def get_db_prep_value(self, choice):
-        return self.choice2val[choice]
-
 
 class UserProfile(models.Model):
 
