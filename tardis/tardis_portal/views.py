@@ -32,6 +32,7 @@ from tardis.tardis_portal.MultiPartForm import MultiPartForm
 
 __DATAFILE_RESULTS_PER_PAGE = 25
 __SCHEMA_DICT = {'mx_datafile':'http://www.tardis.edu.au/schemas/trdDatafile/1',
+                 'mx_dataset':'http://www.tardis.edu.au/schemas/trdDataset/1',
                 'sax_datafile':'http://www.tardis.edu.au/schemas/sax/datafile/2010/08/10',
                 'sax_dataset':'http://www.tardis.edu.au/schemas/sax/dataset/2010/08/10',
                 }
@@ -1193,7 +1194,7 @@ def __getFilteredDatafilesForMX(request, searchFilterData):
     datafile_results = \
         datafile_results.filter(
         datafileparameter__name__schema__namespace__exact=
-        globals()['__SCHEMA_DICT']['mx'])
+        globals()['__SCHEMA_DICT']['mx_datafile'])
 
     # if filename is searchable which i think will always be the case...
 
@@ -1414,47 +1415,67 @@ def __getSearchableParameterNames(searchQueryType, parameterType):
     return parameterNames
 
 
+def __getSearchForm(request):
+
+    if request.GET['searchQueryType'] == 'mx':
+        form = MXDatafileSearchForm(request.GET)
+    else:
+        form = SAXDatafileSearchForm(request.GET)
+    return form
+
+
+def __processParameters(request, type, form):
+
+    if form.is_valid():
+
+        # TODO: remove this bit later on when we have a more generic
+        #       way of displaying all the search forms
+
+        # for the meantime, we'll just use the original way the MX
+        # search form is processed...
+        if request.GET['searchQueryType'] == 'mx':
+            datafile_results = __getFilteredDatafilesForMX(request,
+                    form.cleaned_data)
+        else:
+            datafile_results = __getFilteredDatafiles(request,
+                    form.cleaned_data)
+
+        # let's cache the query with all the filters in the session so
+        # we won't have to keep running the query all the time it is needed
+        # by the paginator
+        request.session['datafileResults'] = datafile_results
+        return datafile_results
+    else:
+        return None
+
+
 @login_required()
 def search_datafile(request, type):
 
     # TODO: check if going to /search/datafile will flag an error in unit test
     bodyclass = None
-    if request.method == 'POST':  # and request.POST.has_key('searchQueryType'): # display the 1st page of the results
-        if request.POST['searchQueryType'] == 'mx':
-            form = MXDatafileSearchForm(request.POST)
-        else:
-            form = SAXDatafileSearchForm(request.POST)
+    
+    if not request.GET.has_key('page') and len(request.GET) > 0: # if 
+        #request.method == 'POST':  # and request.POST.has_key('searchQueryType'): # display the 1st page of the results
 
-        if form.is_valid():
-
-            # TODO: remove this bit later on when we have a more generic
-            #       way of displaying all the search forms
-
-            # for the meantime, we'll just use the original way the MX
-            # search form is processed...
-            if request.POST['searchQueryType'] == 'mx':
-                datafile_results = __getFilteredDatafilesForMX(request,
-                        form.cleaned_data)
-            else:
-
-                datafile_results = __getFilteredDatafiles(request,
-                        form.cleaned_data)
-
-            # let's cache the query with all the filters in the session so
-            # we won't have to keep running the query all the time it is needed
-            # by the paginator
-            request.session['datafileResults'] = datafile_results
-
+        form = __getSearchForm(request)
+        datafile_results = __processParameters(request, type, form)
+        if datafile_results is not None:
             bodyclass = 'list'
         else:
             return __redirectToSearchDatafileFormPage(type, form)
-    else:
-        if request.GET.has_key('page') and 'datafileResults' \
-                in request.session:  # succeeding pages of pagination
-            datafile_results = request.session['datafileResults']
-            bodyclass = 'list'
-        else:
 
+    else:
+        if request.GET.has_key('page'):
+            if 'datafileResults' in request.session:  # succeeding pages of pagination
+                datafile_results = request.session['datafileResults']
+            else:
+                datafile_results = __processParameters(request, type, form)
+                if datafile_results is not None:
+                    bodyclass = 'list'
+                else:
+                    return __redirectToSearchDatafileFormPage(type, form)                
+        else:
             # display the form
             if 'datafileResults' in request.session:
                 del request.session['datafileResults']
@@ -1475,9 +1496,15 @@ def search_datafile(request, type):
     except (EmptyPage, InvalidPage):
         datafiles = paginator.page(paginator.num_pages)
 
+    #TODO: can we always assume that '&page' will be the last parameter
+    #      in HTTP GET?
+    indexOfPage = request.META['QUERY_STRING'].rfind('&page')
+    cleanedUpQueryString = request.META['QUERY_STRING'][0:indexOfPage]
+
     c = Context({
         'datafiles': datafiles,
         'paginator': paginator,
+        'query_string': cleanedUpQueryString,
         'subtitle': 'Search Datafiles',
         'nav': [{'name': 'Search Datafile', 'link': '/search/datafile/'
                 }],

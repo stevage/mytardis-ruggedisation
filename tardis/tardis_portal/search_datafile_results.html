@@ -57,7 +57,7 @@
 							<div class="pagination">
 							    <span class="step-links">
 							        {% if datafiles.has_previous %}
-							            <a href="?page={{ datafiles.previous_page_number }}">previous</a>
+							            <a href="?{{ query_string }}&page={{ datafiles.previous_page_number }}">previous</a>
 							        {% endif %}
 
 							        <span class="current">
@@ -65,7 +65,7 @@
 							        </span>
 
 							        {% if datafiles.has_next %}
-							            <a href="?page={{ datafiles.next_page_number }}">next</a>
+							            <a href="?{{ query_string }}&page={{ datafiles.next_page_number }}">next</a>
 							        {% endif %}
 							    </span>
 							</div>						

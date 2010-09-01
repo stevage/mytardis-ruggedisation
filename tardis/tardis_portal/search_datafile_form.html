@@ -34,9 +34,9 @@
 	                Please correct the error{{ searchForm.errors|pluralize }} below.
 	            </p>
 	         {% endif %}       
-             <form name="input" action="." method="post">
+             <form name="input" action="." method="get">
              <table width="100%">
-             <!-- {{ searchForm.as_table }} -->             
+             <!-- {{ searchForm.as_table }} -->
              {% for field in searchForm %}
 	             {% if field.name in parameterNames %}
 	             <tr><th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td></tr>
