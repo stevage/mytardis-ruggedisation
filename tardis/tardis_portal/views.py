@@ -16,6 +16,7 @@ from django.contrib.auth.decorators import login_required
 from tardis.tardis_portal.ProcessExperiment import ProcessExperiment
 from tardis.tardis_portal.RegisterExperimentForm import RegisterExperimentForm
 from tardis.tardis_portal.ImportParamsForm import ImportParamsForm
+from tardis.tardis_portal.forms import *
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
@@ -28,6 +29,12 @@ import urllib2
 from tardis.tardis_portal import ldap_auth
 
 from tardis.tardis_portal.MultiPartForm import MultiPartForm
+
+__DATAFILE_RESULTS_PER_PAGE = 25
+__SCHEMA_DICT = {'mx_datafile':'http://www.tardis.edu.au/schemas/trdDatafile/1',
+                'sax_datafile':'http://www.tardis.edu.au/schemas/sax/datafile/2010/08/10',
+                'sax_dataset':'http://www.tardis.edu.au/schemas/sax/dataset/2010/08/10',
+                }
 
 
 def render_response_index(request, *args, **kwargs):
@@ -70,6 +77,8 @@ def logout(request):
     try:
         del request.session['username']
         del request.session['password']
+        if 'datafileResults' in request.session:
+            del request.session['datafileResults']
     except KeyError:
         pass
 
@@ -83,7 +92,7 @@ def get_accessible_experiments(user_id):
 
     experiments = None
 
-        # from stackoverflow question 852414
+    # from stackoverflow question 852414
 
     from django.db.models import Q
 
@@ -265,7 +274,7 @@ def has_dataset_access(dataset_id, user):
     if not user.is_authenticated():
         return False
 
-    g = Group.objects.filter(name=experiment.id, user__pk=user.pk)
+    g = Group.objects.filter(name=str(experiment.id), user__pk=user.pk)
 
     if g:
         return True
@@ -1176,94 +1185,307 @@ def search_quick(request):
                         'tardis_portal/search_experiment.html', c))
 
 
-def search_datafile(request):
-    get = False
+def getFilteredDatafilesForMX(request, searchFilterData):
+
     datafile_results = \
         get_accessible_datafiles_for_user(get_accessible_experiments(request.user.id))
+
+    datafile_results = \
+        datafile_results.filter(
+        datafileparameter__name__schema__namespace__exact=
+        globals()['__SCHEMA_DICT']['mx'])
+
+    # if filename is searchable which i think will always be the case...
+
+    if searchFilterData['filename'] != '':
+        datafile_results = \
+            datafile_results.filter(
+            filename__icontains=searchFilterData['filename'])
+
+    if searchFilterData['diffractometerType'] != '-':
+        datafile_results = \
+            datafile_results.filter(
+            dataset__datasetparameter__name__name__icontains='diffractometerType',
+            dataset__datasetparameter__string_value__icontains=searchFilterData['diffractometerType'])
+
+    if searchFilterData['xraySource'] != '':
+        datafile_results = \
+            datafile_results.filter(
+            dataset__datasetparameter__name__name__icontains='xraySource',
+            dataset__datasetparameter__string_value__icontains=searchFilterData['xraySource'])
+
+    if searchFilterData['crystalName'] != '':
+        datafile_results = \
+            datafile_results.filter(dataset__datasetparameter__name__name__icontains='crystalName',
+            dataset__datasetparameter__string_value__icontains=searchFilterData['crystalName'])
+
+    if searchFilterData['resolutionLimit'] > 0:
+        datafile_results = \
+            datafile_results.filter(datafileparameter__name__name__icontains='resolutionLimit',
+            datafileparameter__numerical_value__lte=searchFilterData['resolutionLimit'])
+
+    if searchFilterData['xrayWavelengthFrom'] > 0 \
+        and searchFilterData['xrayWavelengthTo'] > 0:
+        datafile_results = \
+            datafile_results.filter(datafileparameter__name__name__icontains='xrayWavelength',
+            datafileparameter__numerical_value__range=(searchFilterData['xrayWavelengthFrom'],
+            searchFilterData['xrayWavelengthTo']))
+
+    # let's sort it in the end
     if datafile_results:
         datafile_results = datafile_results.order_by('filename')
 
-        if request.GET.has_key('results'):
-            get = True
-            if request.GET.has_key('filename') \
-                and len(request.GET['filename']) > 0:
-                datafile_results = \
-                    datafile_results.filter(filename__icontains=request.GET['filename'
-                        ])
+    return datafile_results
 
-            if request.GET.has_key('diffractometerType') \
-                and request.GET['diffractometerType'] != '-':
-                datafile_results = \
-                    datafile_results.filter(dataset__datasetparameter__name__name__icontains='diffractometerType'
-                        ,
-                        dataset__datasetparameter__string_value__icontains=request.GET['diffractometerType'
-                        ])
 
-            if request.GET.has_key('xraySource') \
-                and len(request.GET['xraySource']) > 0:
-                datafile_results = \
-                    datafile_results.filter(dataset__datasetparameter__name__name__icontains='xraySource'
-                        ,
-                        dataset__datasetparameter__string_value__icontains=request.GET['xraySource'
-                        ])
+def getFilteredDatafiles(request, searchFilterData):
 
-            if request.GET.has_key('crystalName') \
-                and len(request.GET['crystalName']) > 0:
-                datafile_results = \
-                    datafile_results.filter(dataset__datasetparameter__name__name__icontains='crystalName'
-                        ,
-                        dataset__datasetparameter__string_value__icontains=request.GET['crystalName'
-                        ])
+    #from django.db.models import Q
 
-            if request.GET.has_key('resLimitTo') \
-                and len(request.GET['resLimitTo']) > 0:
-                datafile_results = \
-                    datafile_results.filter(datafileparameter__name__name__icontains='resolutionLimit'
-                        ,
-                        datafileparameter__numerical_value__lte=request.GET['resLimitTo'
-                        ])
+    datafile_results = \
+        get_accessible_datafiles_for_user(
+        get_accessible_experiments(request.user.id))
 
-            if request.GET.has_key('xrayWavelengthFrom') \
-                and len(request.GET['xrayWavelengthFrom']) > 0 \
-                and request.GET.has_key('xrayWavelengthTo') \
-                and len(request.GET['xrayWavelengthTo']) > 0:
-                datafile_results = \
-                    datafile_results.filter(datafileparameter__name__name__icontains='xrayWavelength'
-                        ,
-                        datafileparameter__numerical_value__range=(request.GET['xrayWavelengthFrom'
-                        ], request.GET['xrayWavelengthTo']))
+    datafile_results = \
+        datafile_results.filter(
+        datafileparameter__name__schema__namespace__exact=
+        globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] +
+        '_datafile'])
 
-    paginator = Paginator(datafile_results, 25)
+    # if filename is searchable which i think will always be the case...
+    if searchFilterData['filename'] != '':
+        datafile_results = \
+            datafile_results.filter(
+            filename__icontains=searchFilterData['filename'])
+
+    # TODO: might need to cache the result of this later on
+
+    # get all the datafile parameters for the given schema
+    parameters = [p for p in
+        ParameterName.objects.filter(schema__namespace__exact=
+        globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] + '_datafile'])]  # TODO: if p is searchable
+
+    datafile_results = filterParameters(parameters, datafile_results,
+            searchFilterData, 'datafileparameter')
+
+    # get all the dataset parameters for given schema
+    parameters = [p for p in
+        ParameterName.objects.filter(schema__namespace__exact=
+        globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] + '_dataset'])]  # TODO: if p is searchable
+
+    datafile_results = filterParameters(parameters, datafile_results,
+            searchFilterData, 'dataset__datasetparameter')
+
+    # let's sort it in the end
+    if datafile_results:
+        datafile_results = datafile_results.order_by('filename')
+
+    return datafile_results
+
+
+def filterParameters(
+    parameters,
+    datafile_results,
+    searchFilterData,
+    paramType,
+    ):
+
+    for parameter in parameters:
+        kwargs = {paramType + '__name__name__icontains': parameter.name}
+        try:
+
+            # if parameter is a string...
+            if parameter.is_numeric == False \
+                and searchFilterData[parameter.name] != '':
+                kwargs[paramType + '__string_value__icontains'] = \
+                    searchFilterData[parameter.name]
+            elif parameter.is_numeric == True \
+                and parameter.comparison_type \
+                == ParameterName.RANGE_COMPARISON \
+                and searchFilterData[parameter.name + 'From'] \
+                is not None and searchFilterData[parameter.name + 'To'] \
+                is not None:
+
+            # if parameter is an number and we want to do a range comparison
+
+                kwargs[paramType + '__numerical_value__range'] = \
+                    (searchFilterData[parameter.name + 'From'],
+                     searchFilterData[parameter.name + 'To'])
+            elif parameter.is_numeric == True \
+                and searchFilterData[parameter.name] is not None:
+
+                # if parameter is an number and we want to handle other type of number comparisons
+                if parameter.comparison_type \
+                    == ParameterName.EXACT_VALUE_COMPARISON:
+                    kwargs[paramType + '__numerical_value__exact'] = \
+                        searchFilterData[parameter.name]
+                        
+                # TODO: is this really how not equal should be declared?
+                #elif parameter.comparison_type == ParameterName.NOT_EQUAL_COMPARISON:
+                #   datafile_results = \
+                #       datafile_results.filter(datafileparameter__name__name__icontains=parameter.name).filter(
+                #                               ~Q(datafileparameter__numerical_value=searchFilterData[parameter.name]))
+
+                elif parameter.comparison_type \
+                    == ParameterName.GREATER_THAN_COMPARISON:
+                    kwargs[paramType + '__numerical_value__gt'] = \
+                        searchFilterData[parameter.name]
+                elif parameter.comparison_type \
+                    == ParameterName.GREATER_THAN_EQUAL_COMPARISON:
+                    kwargs[paramType + '__numerical_value__gte'] = \
+                        searchFilterData[parameter.name]
+                elif parameter.comparison_type \
+                    == ParameterName.LESS_THAN_COMPARISON:
+                    kwargs[paramType + '__numerical_value__lt'] = \
+                        searchFilterData[parameter.name]
+                elif parameter.comparison_type \
+                    == ParameterName.LESS_THAN_EQUAL_COMPARISON:
+                    kwargs[paramType + '__numerical_value__lte'] = \
+                        searchFilterData[parameter.name]
+                else:
+                    # ignore the unhandled case
+                    pass
+            else:
+                # ignore...
+                pass
+
+            # we will only update datafile_results if we have an additional
+            # filter (based on the 'passed' condition) in addition to the
+            # initial value of kwargs
+            if len(kwargs) > 1:
+                datafile_results = datafile_results.filter(**kwargs)
+        except KeyError:
+            pass
+
+    return datafile_results
+
+
+def __redirectToSearchDatafileFormPage(searchQueryType,
+        searchForm=None):
+
+    url = 'tardis_portal/search_datafile_form.html'
+    if not searchForm:
+        if searchQueryType == 'sax':
+            searchForm = SAXDatafileSearchForm()
+        elif searchQueryType == 'mx':
+            searchForm = MXDatafileSearchForm()
+        else:
+            # TODO: what do we need to do if the user didn't provide a page to display?
+            pass
+
+    # TODO: remove this later on when we have a more generic search form
+    if searchQueryType == 'mx':
+        url = 'tardis_portal/search_datafile_form_mx.html'
+
+    # get all the searchable datafile parameters for the given search type
+    parameterNames = __getSearchableParameterNames(searchQueryType, 'datafile')
+
+    # extend parameterNames with the searchable dataset parameters
+    parameterNames.extend(__getSearchableParameterNames(searchQueryType, 'dataset'))
+
+    # we'll always need to append filename to searchable parameterNames
+    parameterNames.append('filename')
+
+    # TODO: figure out if we need to move this to the globals scope
+    hiddenFields = ['searchQueryType']
+
+    return render_to_response(url, {'searchForm': searchForm,
+                              'parameterNames': parameterNames,
+                              'hiddenFields': hiddenFields})
+
+
+def __getSearchableParameterNames(searchQueryType, parameterType):
+
+    parameterNames = [p.name for p in
+        ParameterName.objects.filter(
+        schema__namespace__exact=
+        globals()['__SCHEMA_DICT'][searchQueryType + '_' + parameterType])
+        if p.is_searchable and p.comparison_type != ParameterName.RANGE_COMPARISON]
+
+    # let's add the range type of parameter search this time...
+    for p in \
+        ParameterName.objects.filter(schema__namespace__exact=
+            globals()['__SCHEMA_DICT'][searchQueryType + '_' + parameterType]):
+        if p.is_searchable and p.comparison_type \
+            == ParameterName.RANGE_COMPARISON:
+            parameterNames.append(p.name + 'From')
+            parameterNames.append(p.name + 'To')
+    
+    return parameterNames
+
+
+@login_required()
+def search_datafile(request, type):
+
+    # TODO: check if going to /search/datafile will flag an error in unit test
+    bodyclass = None
+    if request.method == 'POST':  # and request.POST.has_key('searchQueryType'): # display the 1st page of the results
+        if request.POST['searchQueryType'] == 'mx':
+            form = MXDatafileSearchForm(request.POST)
+        else:
+            form = SAXDatafileSearchForm(request.POST)
+
+        if form.is_valid():
+
+            # TODO: remove this bit later on when we have a more generic
+            #       way of displaying all the search forms
+
+            # for the meantime, we'll just use the original way the MX
+            # search form is processed...
+            if request.POST['searchQueryType'] == 'mx':
+                datafile_results = getFilteredDatafilesForMX(request,
+                        form.cleaned_data)
+            else:
+
+                datafile_results = getFilteredDatafiles(request,
+                        form.cleaned_data)
+
+            # let's cache the query with all the filters in the session so
+            # we won't have to keep running the query all the time it is needed
+            # by the paginator
+            request.session['datafileResults'] = datafile_results
+
+            bodyclass = 'list'
+        else:
+            return __redirectToSearchDatafileFormPage(type, form)
+    else:
+        if request.GET.has_key('page') and 'datafileResults' \
+                in request.session:  # succeeding pages of pagination
+            datafile_results = request.session['datafileResults']
+            bodyclass = 'list'
+        else:
+
+            # display the form
+            if 'datafileResults' in request.session:
+                del request.session['datafileResults']
+            return __redirectToSearchDatafileFormPage(type)
+
+    # process the files to be displayed by the paginator...
+    paginator = Paginator(datafile_results,
+                          globals()['__DATAFILE_RESULTS_PER_PAGE'])
 
     try:
         page = int(request.GET.get('page', '1'))
     except ValueError:
         page = 1
 
-    # If page request (9999) is out of range, deliver last page of results.
-
+    # If page request (9999) is out of :range, deliver last page of results.
     try:
         datafiles = paginator.page(page)
     except (EmptyPage, InvalidPage):
         datafiles = paginator.page(paginator.num_pages)
 
-    bodyclass = None
-    if get:
-        bodyclass = 'list'
-
     c = Context({
-        'submitted': get,
         'datafiles': datafiles,
         'paginator': paginator,
-        'query_string': request.META['QUERY_STRING'],
         'subtitle': 'Search Datafiles',
         'nav': [{'name': 'Search Datafile', 'link': '/search/datafile/'
                 }],
         'bodyclass': bodyclass,
         'search_pressed': True,
         })
-    return HttpResponse(render_response_index(request,
-                        'tardis_portal/search_datafile.html', c))
+    url = 'tardis_portal/search_datafile_results.html'
+    return HttpResponse(render_response_index(request, url, c))
 
 
 @login_required()

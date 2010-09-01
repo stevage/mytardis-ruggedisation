@@ -27,54 +27,53 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-{% extends "portal_template.html" %} 
+{% extends "search_datafile.html" %}        
+        {% block searchPageBody %}
+	        {% if searchForm.errors %}
+	            <p style="color: red;">
+	                Please correct the error{{ searchForm.errors|pluralize }} below.
+	            </p>
+	        {% endif %}                     
+             <form name="input" action="." method="post">
+             {{ searchForm.searchQueryType }}
+             <table width="100%">
+             <tr>
+             <td valign="top">
 
-		{% block content %}
+             Diffractometer Type
+             <br/>
+             {{ searchForm.diffractometerType }}
+             <br><br>X-ray Source
+             <br>
+             {{ searchForm.xraySource }} {{ searchForm.errors.xraySource }}
+             <br/>
+             <br/>Crystal Name
+             <br/>{{ searchForm.crystalName }} {{ searchForm.errors.crystalName }}
+             </td>
+             <td>
+                             
+             Filename
+             <br/>
+             {{ searchForm.filename }} {{ searchForm.errors.filename }}
+             <br/>
+             <br/>
+             
+             Max Resolution Limit
+             <br/>
+             {{ searchForm.resolutionLimit }} Å {{ searchForm.errors.resolutionLimit }}             
 
-		<div id="content">
-			<div class="post">
-				<h1 class="title">
-					<a href="#">Search Datafile</a>
-				</h1>
-				<!--
-				<div style="padding-left: 10px">Search <a href="../experiment/">Experiment</a> | Datafile</div><br/>
-				-->
-				<div class="entry">					
-					<p>								
-						{% block searchPageBody %}{% endblock %}
-					</p>
-				</div>
-			</div>
-		</div>
+             <br/>
+             <br>X-ray Wavelength
+         
+             Between {{ searchForm.xrayWavelengthFrom }} and
+             {{ searchForm.xrayWavelengthTo }} Å
+             {{ searchForm.errors.xrayWavelengthFrom }} {{ searchForm.errors.xrayWavelengthTo }}               
+             <br><br>            
+             <input type="submit" value="Submit">
+             </td>
 
-			{% endblock %} {% block sidebar %}
-
-			<ul>
-				<li>
-					<h2>
-						Browse Experiments
-					</h2>
-					<ul>
-						<li>
-							<a href="/experiment/view">Index</a>
-						</li>
-						<li>
-							<a href="/search/experiment">Search</a>
-						</li>					
-					</ul>
-					{% if user.is_authenticated %}
-					<br/>
-					<h2>
-						Controls
-					</h2>
-					<ul>
-						<li>
-							<a href="/experiment/control_panel">Control Panel</a>
-						</li>					
-					</ul>
-					{% endif %}
-				</li>			
-			</ul>
-			<p>
-			{% endblock %}
+             </tr>
+             </table>
+             </form>
+        {% endblock %}
 		</p>

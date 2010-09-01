@@ -34,6 +34,23 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.safestring import SafeUnicode
 
+class ChoiceField(models.IntegerField):
+    def __init__(self, choices, **kwargs):
+        if not hasattr(choices[0],'__iter__'):
+                choices = zip(range(len(choices)), choices)
+
+        self.val2choice = dict(choices)
+        self.choice2val = dict((v,k) for k,v in choices)
+
+        kwargs['choices'] = choices
+        super(models.IntegerField, self).__init__(**kwargs)
+
+    def to_python(self, value):
+        return self.val2choice[value]
+
+    def get_db_prep_value(self, choice):
+        return self.choice2val[choice]
+
 
 class UserProfile(models.Model):
 
@@ -143,13 +160,34 @@ class Schema(models.Model):
 
 
 class ParameterName(models.Model):
+    
+    EXACT_VALUE_COMPARISON = 1
+    NOT_EQUAL_COMPARISON = 2
+    RANGE_COMPARISON = 3    
+    GREATER_THAN_COMPARISON = 4
+    GREATER_THAN_EQUAL_COMPARISON = 5
+    LESS_THAN_COMPARISON = 6
+    LESS_THAN_EQUAL_COMPARISON = 7
+    __COMPARISON_CHOICES = (
+        (EXACT_VALUE_COMPARISON, 'Exact value'),
+        # TODO: enable this next time if i figure out how to support 
+        #(NOT_EQUAL_COMPARISON, 'Not equal'),
+        (RANGE_COMPARISON, 'Range'),        
+        (GREATER_THAN_COMPARISON, 'Greater than'),
+        (GREATER_THAN_EQUAL_COMPARISON, 'Greater than or equal'),
+        (LESS_THAN_COMPARISON, 'Less than'),
+        (LESS_THAN_EQUAL_COMPARISON, 'Less than or equal'),
+    )
 
     schema = models.ForeignKey(Schema)
     name = models.CharField(max_length=60)
     full_name = models.CharField(max_length=60)
     units = models.CharField(max_length=60, blank=True)
     is_numeric = models.BooleanField()
-
+    comparison_type = models.IntegerField(
+        choices=__COMPARISON_CHOICES, default=EXACT_VALUE_COMPARISON)
+    is_searchable = models.BooleanField(default=False)
+    
     def __unicode__(self):
         return self.name
 
