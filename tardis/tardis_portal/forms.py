@@ -68,7 +68,6 @@ class MXDatafileSearchForm(DatafileSearchForm):
     xrayWavelengthTo = forms.IntegerField(
         required=False, label='X-ray Wavelength To',
         widget=forms.TextInput(attrs={'size': '4'}))
-    searchQueryType = forms.CharField(widget=forms.HiddenInput, initial='mx')
 
 
 # small angle xray and wide angle xray - scattering
@@ -91,8 +90,6 @@ class SAXDatafileSearchForm(DatafileSearchForm):
         required=False, label='Counting secs')
     positionerString = forms.CharField(
         required=False, label='Positioner string')
-    searchQueryType = forms.CharField(
-        widget=forms.HiddenInput, initial='sax')
 
 
 # infrared

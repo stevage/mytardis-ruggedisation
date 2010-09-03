@@ -1,5 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+"""
+views.py
+
+@author Steve Androulakis
+@author Gerson Galang
+
+"""
+
 from django.template import Context, loader
 from django.http import HttpResponse
 
@@ -17,6 +26,7 @@ from tardis.tardis_portal.ProcessExperiment import ProcessExperiment
 from tardis.tardis_portal.RegisterExperimentForm import RegisterExperimentForm
 from tardis.tardis_portal.ImportParamsForm import ImportParamsForm
 from tardis.tardis_portal.forms import *
+from tardis.tardis_portal.errors import *
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
@@ -1186,7 +1196,11 @@ def search_quick(request):
                         'tardis_portal/search_experiment.html', c))
 
 
-def __getFilteredDatafilesForMX(request, searchFilterData):
+def __getFilteredDatafilesForMX(request, searchQueryType, searchFilterData):
+    """The old way of querying the DB. This is to be replaced by 
+    __getFilteredDatafiles().
+    
+    """
 
     datafile_results = \
         get_accessible_datafiles_for_user(get_accessible_experiments(request.user.id))
@@ -1239,7 +1253,20 @@ def __getFilteredDatafilesForMX(request, searchFilterData):
     return datafile_results
 
 
-def __getFilteredDatafiles(request, searchFilterData):
+def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
+    """Filter the list of datafiles for the provided searchQueryType using the
+    cleaned up searchFilterData.
+    
+    Arguments:
+    request -- the HTTP request
+    searchQueryType -- the type of query, 'mx' or 'sax'
+    searchFilterData -- the cleaned up search form data
+    
+    Returns:
+    A list of datafiles as a result of the query or None if the provided search
+      request is invalid
+    
+    """
 
     #from django.db.models import Q
 
@@ -1250,8 +1277,7 @@ def __getFilteredDatafiles(request, searchFilterData):
     datafile_results = \
         datafile_results.filter(
         datafileparameter__name__schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] +
-        '_datafile'])
+        globals()['__SCHEMA_DICT'][searchQueryType + '_datafile'])
 
     # if filename is searchable which i think will always be the case...
     if searchFilterData['filename'] != '':
@@ -1264,7 +1290,7 @@ def __getFilteredDatafiles(request, searchFilterData):
     # get all the datafile parameters for the given schema
     parameters = [p for p in
         ParameterName.objects.filter(schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] + '_datafile'])]  # TODO: if p is searchable
+        globals()['__SCHEMA_DICT'][searchQueryType + '_datafile'])]  # TODO: if p is searchable
 
     datafile_results = __filterParameters(parameters, datafile_results,
             searchFilterData, 'datafileparameter')
@@ -1272,7 +1298,7 @@ def __getFilteredDatafiles(request, searchFilterData):
     # get all the dataset parameters for given schema
     parameters = [p for p in
         ParameterName.objects.filter(schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchFilterData['searchQueryType'] + '_dataset'])]  # TODO: if p is searchable
+        globals()['__SCHEMA_DICT'][searchQueryType + '_dataset'])]  # TODO: if p is searchable
 
     datafile_results = __filterParameters(parameters, datafile_results,
             searchFilterData, 'dataset__datasetparameter')
@@ -1290,6 +1316,20 @@ def __filterParameters(
     searchFilterData,
     paramType,
     ):
+    """Go through each parameter and apply it as a filter (together with its
+    specified comparator) on the provided list of datafiles.
+    
+    Arguments:
+    parameters -- list of ParameterNames model
+    datafile_results -- list of datafile to apply the filter
+    searchFilterData -- the cleaned up search form data
+    paramType -- either 'datafile' or 'dataset'
+    
+    Returns:
+    A list of datafiles as a result of the query or None if the provided search
+      request is invalid
+    
+    """
 
     for parameter in parameters:
         kwargs = {paramType + '__name__name__icontains': parameter.name}
@@ -1361,8 +1401,9 @@ def __filterParameters(
     return datafile_results
 
 
-def __redirectToSearchDatafileFormPage(searchQueryType,
+def __forwardToSearchDatafileFormPage(searchQueryType,
         searchForm=None):
+    """Forward to the search data file form page."""
 
     url = 'tardis_portal/search_datafile_form.html'
     if not searchForm:
@@ -1388,14 +1429,25 @@ def __redirectToSearchDatafileFormPage(searchQueryType,
     parameterNames.append('filename')
 
     # TODO: figure out if we need to move this to the globals scope
-    hiddenFields = ['searchQueryType']
+    #hiddenFields = ['searchQueryType']
 
     return render_to_response(url, {'searchForm': searchForm,
-                              'parameterNames': parameterNames,
-                              'hiddenFields': hiddenFields})
+                              'parameterNames': parameterNames,})
+                              #'hiddenFields': hiddenFields})
 
 
 def __getSearchableParameterNames(searchQueryType, parameterType):
+    """Get all names of the searchable fields for the given searchQueryType
+    and it's parameterType.
+    
+    Arguments:
+    searchQueryType -- The type of search query eg 'mx', 'sax', etc
+    parameterType -- Currently supports 'datafile' or 'dataset'
+    
+    Returns:
+    List of names of searchable parameters
+    
+    """
 
     parameterNames = [p.name for p in
         ParameterName.objects.filter(
@@ -1415,16 +1467,48 @@ def __getSearchableParameterNames(searchQueryType, parameterType):
     return parameterNames
 
 
-def __getSearchForm(request):
+def __getSearchForm(request, searchQueryType):
+    """Create the search form based on the HTTP GET request.
+    
+    Arguments:
+    request -- The HTTP request object
+    searchQueryType -- The search query type: 'mx' or 'sax'
+    
+    Returns:
+    The supported search form
+    
+    Throws:
+    UnsupportedSearchQueryTypeError is the provided searchQueryType is not supported
+    
+    """
 
-    if request.GET['searchQueryType'] == 'mx':
+    if searchQueryType == 'mx':
         form = MXDatafileSearchForm(request.GET)
-    else:
+    elif searchQueryType == 'sax':
         form = SAXDatafileSearchForm(request.GET)
+    else:
+        raise UnsupportedSearchQueryTypeError(
+            "'%s' search query type is currently unsupported" % (searchQueryType,))
     return form
 
 
-def __processParameters(request, type, form):
+def __processParameters(request, searchQueryType, form):
+    """Validate the provided datafile search request and return search results.
+    
+    Arguments:
+    request -- The HTTP request object
+    searchQueryType -- The search query type
+    form -- The search form to use
+    
+    Returns:
+    A list of datafiles as a result of the query or None if the provided search
+      request is invalid
+    
+    Throws:
+    SearchQueryTypeUnprovidedError if searchQueryType is not in the HTTP GET request
+    UnsupportedSearchQueryTypeError is the provided searchQueryType is not supported
+    
+    """
 
     if form.is_valid():
 
@@ -1433,12 +1517,12 @@ def __processParameters(request, type, form):
 
         # for the meantime, we'll just use the original way the MX
         # search form is processed...
-        if request.GET['searchQueryType'] == 'mx':
+        if searchQueryType == 'mx':
             datafile_results = __getFilteredDatafilesForMX(request,
-                    form.cleaned_data)
+                    searchQueryType, form.cleaned_data)
         else:
             datafile_results = __getFilteredDatafiles(request,
-                    form.cleaned_data)
+                    searchQueryType, form.cleaned_data)
 
         # let's cache the query with all the filters in the session so
         # we won't have to keep running the query all the time it is needed
@@ -1450,7 +1534,7 @@ def __processParameters(request, type, form):
 
 
 @login_required()
-def search_datafile(request, type):
+def search_datafile(request, searchQueryType):
 
     # TODO: check if going to /search/datafile will flag an error in unit test
     bodyclass = None
@@ -1458,28 +1542,29 @@ def search_datafile(request, type):
     if not request.GET.has_key('page') and len(request.GET) > 0: # if 
         #request.method == 'POST':  # and request.POST.has_key('searchQueryType'): # display the 1st page of the results
 
-        form = __getSearchForm(request)
-        datafile_results = __processParameters(request, type, form)
+        form = __getSearchForm(request, searchQueryType)
+        datafile_results = __processParameters(request, searchQueryType, form)
         if datafile_results is not None:
             bodyclass = 'list'
         else:
-            return __redirectToSearchDatafileFormPage(type, form)
+            return __forwardToSearchDatafileFormPage(searchQueryType, form)
 
     else:
         if request.GET.has_key('page'):
             if 'datafileResults' in request.session:  # succeeding pages of pagination
                 datafile_results = request.session['datafileResults']
             else:
-                datafile_results = __processParameters(request, type, form)
+                form = __getSearchForm(request, searchQueryType)
+                datafile_results = __processParameters(request, searchQueryType, form)
                 if datafile_results is not None:
                     bodyclass = 'list'
                 else:
-                    return __redirectToSearchDatafileFormPage(type, form)                
+                    return __forwardToSearchDatafileFormPage(searchQueryType, form)                
         else:
             # display the form
             if 'datafileResults' in request.session:
                 del request.session['datafileResults']
-            return __redirectToSearchDatafileFormPage(type)
+            return __forwardToSearchDatafileFormPage(searchQueryType)
 
     # process the files to be displayed by the paginator...
     paginator = Paginator(datafile_results,
@@ -1496,10 +1581,8 @@ def search_datafile(request, type):
     except (EmptyPage, InvalidPage):
         datafiles = paginator.page(paginator.num_pages)
 
-    #TODO: can we always assume that '&page' will be the last parameter
-    #      in HTTP GET?
-    indexOfPage = request.META['QUERY_STRING'].rfind('&page')
-    cleanedUpQueryString = request.META['QUERY_STRING'][0:indexOfPage]
+    import re
+    cleanedUpQueryString = re.sub('&page=\d+', '', request.META['QUERY_STRING'])
 
     c = Context({
         'datafiles': datafiles,
