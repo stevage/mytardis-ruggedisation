@@ -57,7 +57,7 @@ class UserInterfaceTestCase(TestCase):
         c = Client()
         urls = ['/login', '/about', '/partners', '/stats']
         urls += ['/experiment/register', '/experiment/view']
-        urls += ['/search/experiment', '/search/datafile']
+        urls += ['/search/experiment', '/search/datafile/mx']
 
         for u in urls:
             response = c.get(u)
