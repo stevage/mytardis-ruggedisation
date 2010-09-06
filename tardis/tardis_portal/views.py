@@ -1208,7 +1208,7 @@ def __getFilteredDatafilesForMX(request, searchQueryType, searchFilterData):
     datafile_results = \
         datafile_results.filter(
         datafileparameter__name__schema__namespace__exact=
-        globals()['__SCHEMA_DICT']['mx_datafile'])
+        globals()['__SCHEMA_DICT']['mx_datafile']).distinct()
 
     # if filename is searchable which i think will always be the case...
 
@@ -1277,7 +1277,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     datafile_results = \
         datafile_results.filter(
         datafileparameter__name__schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchQueryType + '_datafile'])
+        globals()['__SCHEMA_DICT'][searchQueryType + '_datafile']).distinct()
 
     # if filename is searchable which i think will always be the case...
     if searchFilterData['filename'] != '':
