@@ -94,6 +94,7 @@ class SearchTestCase(TestCase):
         self.assertTrue(response.context['search_pressed'] is not None)
         
         self.assertEqual(len(response.context['paginator'].object_list), 1)     
+        self.assertTemplateUsed(response, 'tardis_portal/search_datafile_results.html')
         
         from tardis.tardis_portal.models import Dataset_File
         self.assertTrue(
@@ -111,7 +112,12 @@ class SearchTestCase(TestCase):
         response = self.client.get('/search/datafile/sax/', {'frqimn':'0.0450647',})
         self.assertEqual(len(response.context['paginator'].object_list), 125)
         self.client.logout()
-        #self.assertFalse(response.request.session.has_key('datafileResults'))
+
+    def testPrivateSearchFunctions(self):
+        from tardis.tardis_portal import views
+        
+        # TODO: need to decide if we are to make those private functions public
+        #       so they can be tested
 
 
 # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
