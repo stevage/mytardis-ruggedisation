@@ -30,21 +30,88 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# http://docs.djangoproject.com/en/dev/topics/testing/
+"""
+tests.py
+http://docs.djangoproject.com/en/dev/topics/testing/
+
+@author Ulrich Felzmann
+@author Gerson Galang
+
+"""
 
 from django.test import TestCase
 from django.test.client import Client
 import unittest
 
 
-class SimpleTest(TestCase):
+class SearchTestCase(TestCase):
+    
+    fixtures = ['test_sax_data']
+    
+    def setUp(self):
+        self.client = Client()
+    
+    def testSearchDatafileForm(self):
+        response = self.client.get('/search/datafile/sax/')
+        
+        # check if the response is a redirect to the login page
+        self.assertRedirects(response, 
+            '/accounts/login/?next=/search/datafile/sax/')
+        
+        # let's try to login this time...
+        self.client.login(username='test', password='test')
+        response = self.client.get('/search/datafile/sax/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['searchForm'] is not None)
+        self.assertTrue(response.context['parameterNames'] is not None)
+        self.assertTemplateUsed(response, 'tardis_portal/search_datafile_form.html')
+        
+        self.client.logout()
 
-    def test_basic_addition(self):
-        """
-        Tests that 1 + 1 always equals 2.
-        """
+    def testSearchDatafileAuthentication(self):
+        response = self.client.get('/search/datafile/sax/', {'filename':'',})
+        
+        # check if the response is a redirect to the login page
+        self.assertEqual(response.status_code, 302)
+        
+        # let's try to login this time...
+        self.client.login(username='test', password='test')
+        response = self.client.get('/search/datafile/sax/', {'filename':'',})
+        self.assertEqual(response.status_code, 200)
+        self.client.logout()
 
-        self.failUnlessEqual(1 + 1, 2)
+    def testSearchDatafileResults(self):
+        self.client.login(username='test', password='test')
+        response = self.client.get('/search/datafile/sax/', {'filename':'air_0_001.tif',})
+        
+        # check for the existence of the contexts..
+        self.assertTrue(response.context['datafiles'] is not None)
+        self.assertTrue(response.context['paginator'] is not None)
+        self.assertTrue(response.context['query_string'] is not None)
+        self.assertTrue(response.context['subtitle'] is not None)
+        self.assertTrue(response.context['nav'] is not None)
+        self.assertTrue(response.context['bodyclass'] is not None)
+        self.assertTrue(response.context['search_pressed'] is not None)
+        
+        self.assertEqual(len(response.context['paginator'].object_list), 1)     
+        
+        from tardis.tardis_portal.models import Dataset_File
+        self.assertTrue(
+            type(response.context['paginator'].object_list[0]) is Dataset_File)
+        
+        # TODO: check if the schema is correct
+        
+        # check if searching for nothing would result to returning everything
+        response = self.client.get('/search/datafile/sax/', {'filename':'',})
+        self.assertEqual(len(response.context['paginator'].object_list), 129)
+        
+        response = self.client.get('/search/datafile/sax/', {'io':'123',})
+        self.assertEqual(len(response.context['paginator'].object_list), 0)
+        
+        response = self.client.get('/search/datafile/sax/', {'frqimn':'0.0450647',})
+        self.assertEqual(len(response.context['paginator'].object_list), 125)
+        self.client.logout()
+        #self.assertFalse(response.request.session.has_key('datafileResults'))
 
 
 # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -225,7 +292,10 @@ def suite():
         unittest.TestLoader().loadTestsFromTestCase(UserInterfaceTestCase)
     parserSuite = \
         unittest.TestLoader().loadTestsFromTestCase(ExperimentParserTestCase)
-    allTests = unittest.TestSuite([parserSuite, userInterfaceSuite])
+    searchSuite = \
+        unittest.TestLoader().loadTestsFromTestCase(SearchTestCase)
+    allTests = unittest.TestSuite([parserSuite, userInterfaceSuite, searchSuite])
+    #allTests = unittest.TestSuite([searchSuite])
     return allTests
 
 

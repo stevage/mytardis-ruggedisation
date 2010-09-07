@@ -74,22 +74,32 @@ class MXDatafileSearchForm(DatafileSearchForm):
 class SAXDatafileSearchForm(DatafileSearchForm):
 
     frqimn = forms.DecimalField(required=False, label='FRQIMN')
+    frxcen = forms.DecimalField(required=False, label='FRXCEN')
+    frleng = forms.DecimalField(required=False, label='FRLENG')
+    frwlen = forms.DecimalField(required=False, label='FRWLEN')
+    frqimx = forms.DecimalField(required=False, label='FRQIMX')
+    frycen = forms.DecimalField(required=False, label='FRYCEN')
+    frtype = forms.CharField(required=False, label='FRTYPE')
+    detang = forms.DecimalField(required=False, label='DETANG')
+    
     io = forms.IntegerField(required=False)
     ioBgnd = forms.IntegerField(required=False, label='Io bgnd')
 
     it = forms.IntegerField(required=False)
-
     # a way to handle range comparisons..
     itFrom = forms.IntegerField(required=False, label='It From')
     itTo = forms.IntegerField(required=False, label='It To')
-
     itBgnd = forms.IntegerField(required=False, label='It bgnd')
+    
     ibs = forms.IntegerField(required=False)
     ibsBgnd = forms.IntegerField(required=False, label='Ibs bgnd')
+    
     countingSecs = forms.DecimalField(
         required=False, label='Counting secs')
     positionerString = forms.CharField(
         required=False, label='Positioner string')
+    positionerValues = forms.CharField(
+        required=False, label='Positioner values')
 
 
 # infrared

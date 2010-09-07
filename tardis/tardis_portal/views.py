@@ -761,6 +761,8 @@ def ldap_login(request):
         password = request.POST['password']
 
         next = '/'
+        # TODO: this block will need fixing later as the expected functionality
+        #       this condition is supposed to provide does not work
         if request.POST.has_key('next'):
             next = request.POST['next']
 
