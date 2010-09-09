@@ -15,6 +15,7 @@ from django.contrib.auth.decorators import login_required
 
 from tardis.tardis_portal.ProcessExperiment import ProcessExperiment
 from tardis.tardis_portal.RegisterExperimentForm import RegisterExperimentForm
+from tardis.tardis_portal.logger import logger
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
@@ -147,7 +148,7 @@ def get_or_create_user_ldap(email):
     try:
 
         u = User.objects.get(username=username)
-        print u.get_profile()
+        logger.debug(u.get_profile())
 
         # if, somehow someone else has created a user manually that has this username
 

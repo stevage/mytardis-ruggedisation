@@ -1,12 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
 import itertools
 import mimetools
 import mimetypes
 from cStringIO import StringIO
 import urllib
 import urllib2
-
+from tardis.tardis_portal.logger import logger
 
 class MultiPartForm(object):
 
@@ -101,10 +102,8 @@ if __name__ == '__main__':
     request.add_header('Content-length', len(body))
     request.add_data(body)
 
-    print
-    print 'OUTGOING DATA:'
-    print request.get_data()
+    logger.debug('OUTGOING DATA:')
+    logger.debug(request.get_data())
 
-    print
-    print 'SERVER RESPONSE:'
-    print urllib2.urlopen(request).read()
+    logger.debug('SERVER RESPONSE:')
+    logger.debug(urllib2.urlopen(request).read())

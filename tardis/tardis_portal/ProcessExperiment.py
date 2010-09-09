@@ -71,7 +71,7 @@ def getParameterFromTechXML(tech_xml, parameter_name):
     elements = tech_xml.xpath('/' + parameter_string + '/text()',
                               namespaces={prefix: xmlns})
 
-    print elements
+    logger.debug(elements)
     return getSingleResult(elements)
 
 
@@ -143,10 +143,10 @@ class ProcessExperiment:
         f.close()
 
         if firstline.startswith('<experiment'):
-            print 'processing simple xml'
+            logger.debug( 'processing simple xml')
             eid = self.process_simple(filename, created_by, expid)
         else:
-            print 'processing METS'
+            logger.debug('processing METS')
             eid = self.process_METS(filename, created_by, expid)
 
         return eid
@@ -158,7 +158,7 @@ class ProcessExperiment:
         expid=None,
         ):
 
-        print 'START EXP: ' + str(expid)
+        logger.debug('START EXP: ' + str(expid))
 
         url = 'http://www.example.com'
         self.url = 'http://www.example.com'
@@ -249,7 +249,7 @@ class ProcessExperiment:
                             dp.save()
                 except Schema.DoesNotExist:
 
-                    print 'Schema ' + xmlns + " doesn't exist!"
+                    logger.debug('Schema ' + xmlns + " doesn't exist!")
 
                         # todo replace with logging
 
@@ -267,7 +267,7 @@ class ProcessExperiment:
                     filename = ep.getFileLocation(fileid).rpartition('/'
                             )[2]
 
-                # print filename
+                # logger.debug(filename)
 
                 datafile = Dataset_File(dataset=d, filename=filename,
                         url=ep.getFileLocation(fileid),
@@ -314,7 +314,7 @@ class ProcessExperiment:
                                 data=SafeUnicode(techxml.getvalue()))
                         xml_data.save()
 
-        print 'DONE EXP: ' + str(e.id)
+        logger.debug('DONE EXP: ' + str(e.id))
 
         return e.id
 
@@ -325,7 +325,7 @@ class ProcessExperiment:
         expid=None,
         ):
 
-        print 'START EXP: ' + str(expid)
+        logger.debug('START EXP: ' + str(expid))
 
         url = 'http://www.example.com'
         self.url = 'http://www.example.com'
@@ -339,14 +339,14 @@ class ProcessExperiment:
             for line in f:
                 line = line.strip()
 
-                # print "LINE: " + line
+                # logger.debug("LINE: " + line)
 
                 if line.startswith('<experiment>'):
                     current = 'experiment'
                     e = e + 1
                     ds = 0
                     df = 0
-                    print 'experiment: ' + str(e)
+                    logger.debug('experiment: ' + str(e))
 
                     exp = dict()
                     authors = list()
@@ -389,15 +389,14 @@ class ProcessExperiment:
                     ds = ds + 1
                     df = 0
                     dataset = dict()
-                    print 'experiment: ' + str(e) + ' dataset: ' \
-                        + str(ds)
+                    logger.debug('experiment: ' + str(e) + ' dataset: ' + str(ds))
                 elif line.startswith('<file>'):
 
                     if current == 'dataset':
                         d = Dataset(experiment=experiment,
                                     description=dataset['description'])
                         d.save()
-                        print dataset
+                        logger.debug(dataset)
 
                         if dataset.has_key('metadata'):
 
@@ -405,8 +404,7 @@ class ProcessExperiment:
                             xmlns = getXmlnsFromTechXMLRaw(md)
 
                             try:
-                                print 'trying to find parameters with an xmlns of ' \
-                                    + xmlns
+                                logger.debug('trying to find parameters with an xmlns of ' + xmlns)
                                 schema = \
                                     Schema.objects.get(namespace__exact=xmlns)
 
@@ -419,8 +417,7 @@ class ProcessExperiment:
 
                                 for pn in parameternames:
                                     try:
-                                        print 'finding parameter ' \
-                                            + pn.name + ' in metadata'
+                                        logger.debug('finding parameter ' + pn.name + ' in metadata')
 
                                         if pn.is_numeric:
                                             value = \
@@ -437,16 +434,16 @@ class ProcessExperiment:
                                                     pn.name), numerical_value=None)
                                             dp.save()
                                     except e:
-                                        print e
+                                        logger.debug(e)
                             except e:
-                                print e
+                                logger.debug(e)
                     else:
                         if self.null_check(datafile['name']):
                             filename = datafile['name']
                         else:
                             filename = datafile['path']
 
-                        # print filename
+                        # logger.debug(filename)
 
                         dfile = Dataset_File(dataset=d,
                                 filename=filename, url=datafile['path'
@@ -454,7 +451,7 @@ class ProcessExperiment:
                         dfile.save()
                         current_df_id = dfile.id
 
-                        print datafile
+                        logger.debug(datafile)
 
                         if datafile.has_key('metadata'):
 
@@ -462,8 +459,7 @@ class ProcessExperiment:
                             xmlns = getXmlnsFromTechXMLRaw(md)
 
                             try:
-                                print 'trying to find parameters with an xmlns of ' \
-                                    + xmlns
+                                logger.debug('trying to find parameters with an xmlns of ' + xmlns)
                                 schema = \
                                     Schema.objects.get(namespace__exact=xmlns)
 
@@ -476,8 +472,7 @@ class ProcessExperiment:
 
                                 for pn in parameternames:
                                     try:
-                                        print 'finding parameter ' \
-                                            + pn.name + ' in metadata'
+                                        logger.debug('finding parameter ' + pn.name + ' in metadata')
                                         dfile = \
                                             Dataset_File.objects.get(pk=current_df_id)
                                         if pn.is_numeric:
@@ -495,17 +490,16 @@ class ProcessExperiment:
                                                     pn.name), numerical_value=None)
                                             dp.save()
                                     except e:
-                                        print e
+                                        logger.debug(e)
                             except e:
-                                print e
+                                logger.debug(e)
 
                     # commit any dataset if current = dataset
 
                     current = 'file'
                     df = df + 1
                     datafile = dict()
-                    print 'experiment: ' + str(e) + ' dataset: ' \
-                        + str(ds) + ' datafile: ' + str(df)
+                    logger.debug('experiment: ' + str(e) + ' dataset: ' + str(ds) + ' datafile: ' + str(df))
                 elif line.startswith('<metadata'):
 
                     md = ''
@@ -520,11 +514,11 @@ class ProcessExperiment:
                 elif line.startswith('<abstract'):
 
                     ab = line.partition('<abstract>')[2]
-                    print 'found abstract'
+                    logger.debug('found abstract')
                     while not line.strip().endswith('</abstract>'):
                         line = f.next()
                         ab = ab + line.partition('</abstract>')[0]
-                    print 'ABSTRACTAMUNDO = ' + ab
+                    logger.debug('ABSTRACTAMUNDO = ' + ab)
                     exp['abstract'] = ab
                 elif line.startswith('</experiment>'):
 
@@ -532,32 +526,31 @@ class ProcessExperiment:
                         d = Dataset(experiment=experiment,
                                     description=dataset['description'])
                         d.save()
-                        print dataset
+                        logger.debug(dataset)
                     else:
                         if self.null_check(datafile['name']):
                             filename = datafile['name']
                         else:
                             filename = datafile['path']
 
-                        # print filename
+                        # logger.debug(filename)
 
                         dfile = Dataset_File(dataset=d,
                                 filename=filename, url=datafile['path'
                                 ], size=datafile['size'])
                         dfile.save()
 
-                        print dfile.id
+                        logger.debug(dfile.id)
                         current_df_id = dfile.id
 
-                        print datafile
+                        logger.debug(datafile)
 
                         if datafile.has_key('metadata'):
                             md = datafile['metadata']
                             xmlns = getXmlnsFromTechXMLRaw(md)
 
                             try:
-                                print 'trying to find parameters with an xmlns of ' \
-                                    + xmlns
+                                logger.debug('trying to find parameters with an xmlns of ' + xmlns)
                                 schema = \
                                     Schema.objects.get(namespace__exact=xmlns)
 
@@ -570,8 +563,7 @@ class ProcessExperiment:
 
                                 for pn in parameternames:
                                     try:
-                                        print 'finding parameter ' \
-                                            + pn.name + ' in metadata'
+                                        logger.debug('finding parameter ' + pn.name + ' in metadata')
                                         dfile = \
                                             Dataset_File.objects.get(pk=current_df_id)
                                         if pn.is_numeric:
@@ -589,47 +581,43 @@ class ProcessExperiment:
                                                     pn.name), numerical_value=None)
                                             dp.save()
                                     except e:
-                                        print e
+                                        logger.debug(e)
                             except e:
-                                print e
+                                logger.debug(e)
                 try:
-                    print 'attempting to parse line: ' + line
+                    logger.debug('attempting to parse line: ' + line)
                     dom = parseString(line)
                     doc = dom.documentElement
 
-                    # print doc.tagName + ": " + getText(contents)
+                    # logger.debug(doc.tagName + ": " + getText(contents))
 
                     tag_name = doc.tagName
-                    print tag_name + ' discovered'
+                    logger.debug(tag_name + ' discovered')
                     if current == 'experiment':
                         if tag_name == 'title' or tag_name \
                             == 'organization':
                             contents = doc.childNodes
                             exp[tag_name] = getText(contents)
-                            print '\tADDED ' + tag_name + ': ' \
-                                + getText(contents)
+                            logger.debug('\tADDED ' + tag_name + ': ' + getText(contents))
                         if tag_name == 'author':
                             contents = doc.childNodes
                             authors.append(getText(contents))
-                            print '\tADDED ' + tag_name + ': ' \
-                                + getText(contents)
+                            logger.debug('\tADDED ' + tag_name + ': ' + getText(contents))
                     if current == 'dataset':
                         if tag_name == 'description':
                             contents = doc.childNodes
                             dataset[tag_name] = getText(contents)
-                            print '\t' + tag_name + ': ' \
-                                + getText(contents)
+                            logger.debug('\t' + tag_name + ': ' + getText(contents))
                     if current == 'file':
                         if tag_name == 'name' or tag_name == 'size' \
                             or tag_name == 'path':
                             contents = doc.childNodes
                             datafile[tag_name] = getText(contents)
-                            print '\t' + tag_name + ': ' \
-                                + getText(contents)
+                            logger.debug('\t' + tag_name + ': ' + getText(contents))
                 except:
                     pass
 
-        print 'DONE EXP: ' + str(experiment.id)
+        logger.debug('DONE EXP: ' + str(experiment.id))
 
         return experiment.id
 

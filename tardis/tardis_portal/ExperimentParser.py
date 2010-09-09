@@ -33,7 +33,7 @@
 from lxml import etree
 from StringIO import StringIO
 from django.utils.safestring import SafeUnicode
-
+from tardis.tardis_portal.logger import logger
 
 class ExperimentParser:
 
@@ -49,7 +49,7 @@ class ExperimentParser:
 
     def __init__(self, xmlString):
         self.tree = etree.parse(StringIO(xmlString))
-        print '(Initializing %s)' % self.tree
+        logger.debug('(Initializing %s)' % self.tree)
 
     def __getSingleResult(self, elements):
         if len(elements) == 1:

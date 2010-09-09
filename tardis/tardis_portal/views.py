@@ -331,8 +331,8 @@ def in_group(user, group):
     for group in user.groups.all():
         user_groups.append(str(group.name))
 
-    print group_list
-    print user_groups
+    logger.debug(group_list)
+    logger.debug(user_groups)
 
     if filter(lambda x: x in user_groups, group_list):
         return True
@@ -406,7 +406,7 @@ def download(request, experiment_id):
                 + datafile.url.partition('//')[2]
 
             try:
-                print file_path
+                logger.debug(file_path)
                 from django.core.servers.basehttp import FileWrapper
                 wrapper = FileWrapper(file(file_path))
 
@@ -574,7 +574,7 @@ def downloadExperiment(request, experiment_id):
 
     tar_command = 'tar -C ' + settings.FILE_STORE_PATH + ' -c ' \
         + str(experiment.id) + '/'
-    print 'TAR COMMAND: ' + tar_command
+    logger.debug('TAR COMMAND: ' + tar_command)
 
     import shlex
     import subprocess
@@ -967,7 +967,7 @@ def register_experiment_ws_xmldata(request):
 
                     owner = urllib.unquote_plus(owner)
 
-                    print 'registering owner: ' + owner
+                    logger.debug('registering owner: ' + owner)
                     u = None
 
                     # try get user from email
@@ -980,7 +980,7 @@ def register_experiment_ws_xmldata(request):
                         exp_owner.save()
                         u.groups.add(g)
 
-            print 'Sending file request'
+            logger.debug('Sending file request')
 
             if from_url:
 
@@ -991,7 +991,7 @@ def register_experiment_ws_xmldata(request):
 
                         # todo remove hard coded u/p for sync transfer....
 
-                        print 'started transfer thread'
+                        logger.debug('started transfer thread')
 
                         file_transfer_url = from_url + '/file_transfer/'
                         data = urllib.urlencode({
@@ -1004,15 +1004,15 @@ def register_experiment_ws_xmldata(request):
                             'password': str('tardis'),
                             })
 
-                        print file_transfer_url
-                        print data
+                        logger.debug(file_transfer_url)
+                        logger.debug(data)
 
                         urllib.urlopen(file_transfer_url, data)
 
 
                 FileTransferThread().start()
 
-            print 'returning response from main call'
+            logger.debug('returning response from main call')
 
             response = HttpResponse(str(eid), status=200)
             response['Location'] = settings.TARDISURLPREFIX \
@@ -1190,7 +1190,7 @@ def search_quick(request):
 
             experiments = experiments.distinct()
 
-            print experiments
+            logger.debug(experiments)
 
     c = Context({'submitted': get, 'experiments': experiments,
                 'subtitle': 'Search Experiments'})
@@ -1705,7 +1705,7 @@ def publish_experiment(request, experiment_id):
 
         mpform.add_file('xmldata', 'METS.xml', fileHandle=f)
 
-        print 'about to send register request to site'
+        logger.debug('about to send register request to site')
 
         # Build the request
 
@@ -1719,12 +1719,12 @@ def publish_experiment(request, experiment_id):
         requestmp.add_data(body)
 
         print
-        print 'OUTGOING DATA:'
-        print requestmp.get_data()
+        logger.debug('OUTGOING DATA:')
+        logger.debug(requestmp.get_data())
 
         print
-        print 'SERVER RESPONSE:'
-        print urllib2.urlopen(requestmp).read()
+        logger.debug('SERVER RESPONSE:')
+        logger.debug(urllib2.urlopen(requestmp).read())
 
         experiment.public = True
         experiment.save()
@@ -1777,10 +1777,10 @@ def import_params(request):
             for line in params:
                 if i == 0:
                     prefix = line
-                    print prefix
+                    logger.debug(prefix)
                 elif i == 1:
                     schema = line
-                    print schema
+                    logger.debug(schema)
 
                     try:
                         Schema.objects.get(namespace=schema)
