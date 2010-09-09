@@ -41,6 +41,7 @@ http://docs.djangoproject.com/en/dev/topics/testing/
 
 from django.test import TestCase
 from django.test.client import Client
+from tardis.tardis_portal.logger import logger
 import unittest
 
 
