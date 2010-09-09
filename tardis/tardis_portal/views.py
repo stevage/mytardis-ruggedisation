@@ -27,6 +27,7 @@ from tardis.tardis_portal.RegisterExperimentForm import RegisterExperimentForm
 from tardis.tardis_portal.ImportParamsForm import ImportParamsForm
 from tardis.tardis_portal.forms import *
 from tardis.tardis_portal.errors import *
+from tardis.tardis_portal.logger import logger
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
