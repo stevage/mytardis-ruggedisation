@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 import itertools
@@ -8,6 +8,7 @@ from cStringIO import StringIO
 import urllib
 import urllib2
 from tardis.tardis_portal.logger import logger
+
 
 class MultiPartForm(object):
 

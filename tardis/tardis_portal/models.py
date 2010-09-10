@@ -151,8 +151,10 @@ class ParameterName(models.Model):
     GREATER_THAN_EQUAL_COMPARISON = 5
     LESS_THAN_COMPARISON = 6
     LESS_THAN_EQUAL_COMPARISON = 7
+    CONTAINS_COMPARISON = 8
     __COMPARISON_CHOICES = (
         (EXACT_VALUE_COMPARISON, 'Exact value'),
+        (CONTAINS_COMPARISON, 'Contains'),
         # TODO: enable this next time if i figure out how to support 
         #(NOT_EQUAL_COMPARISON, 'Not equal'),
         (RANGE_COMPARISON, 'Range'),        
@@ -170,6 +172,9 @@ class ParameterName(models.Model):
     comparison_type = models.IntegerField(
         choices=__COMPARISON_CHOICES, default=EXACT_VALUE_COMPARISON)
     is_searchable = models.BooleanField(default=False)
+    # TODO: we'll need to rethink the way choices for drop down menus are
+    #       represented in the DB. doing it this way is just a bit wasteful.
+    choices = models.CharField(max_length=500, blank=True)
     
     def __unicode__(self):
         return self.name
@@ -207,5 +212,4 @@ class XML_data(models.Model):
 
     def __unicode__(self):
         return self.xmlns
-
 

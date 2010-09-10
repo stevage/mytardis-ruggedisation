@@ -31,6 +31,7 @@
 #
 
 import sys
+import logging
 
 APP_ROOT = '/path/to/tardis/'
 TARDISURLPREFIX = 'http://127.0.0.1'

@@ -23,8 +23,6 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, \
 from django.contrib.auth.decorators import login_required
 
 from tardis.tardis_portal.ProcessExperiment import ProcessExperiment
-from tardis.tardis_portal.RegisterExperimentForm import RegisterExperimentForm
-from tardis.tardis_portal.ImportParamsForm import ImportParamsForm
 from tardis.tardis_portal.forms import *
 from tardis.tardis_portal.errors import *
 from tardis.tardis_portal.logger import logger
@@ -32,6 +30,7 @@ from tardis.tardis_portal.logger import logger
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 from tardis.tardis_portal.models import *
+from tardis.tardis_portal import constants
 from django.db.models import Sum
 
 import urllib
@@ -40,13 +39,6 @@ import urllib2
 from tardis.tardis_portal import ldap_auth
 
 from tardis.tardis_portal.MultiPartForm import MultiPartForm
-
-__DATAFILE_RESULTS_PER_PAGE = 25
-__SCHEMA_DICT = {'mx_datafile':'http://www.tardis.edu.au/schemas/trdDatafile/1',
-                 'mx_dataset':'http://www.tardis.edu.au/schemas/trdDataset/1',
-                'sax_datafile':'http://www.tardis.edu.au/schemas/sax/datafile/2010/08/10',
-                'sax_dataset':'http://www.tardis.edu.au/schemas/sax/dataset/2010/08/10',
-                }
 
 
 def render_response_index(request, *args, **kwargs):
@@ -1199,63 +1191,6 @@ def search_quick(request):
                         'tardis_portal/search_experiment.html', c))
 
 
-def __getFilteredDatafilesForMX(request, searchQueryType, searchFilterData):
-    """The old way of querying the DB. This is to be replaced by 
-    __getFilteredDatafiles().
-    
-    """
-
-    datafile_results = \
-        get_accessible_datafiles_for_user(get_accessible_experiments(request.user.id))
-
-    datafile_results = \
-        datafile_results.filter(
-        datafileparameter__name__schema__namespace__exact=
-        globals()['__SCHEMA_DICT']['mx_datafile']).distinct()
-
-    # if filename is searchable which i think will always be the case...
-
-    if searchFilterData['filename'] != '':
-        datafile_results = \
-            datafile_results.filter(
-            filename__icontains=searchFilterData['filename'])
-
-    if searchFilterData['diffractometerType'] != '-':
-        datafile_results = \
-            datafile_results.filter(
-            dataset__datasetparameter__name__name__icontains='diffractometerType',
-            dataset__datasetparameter__string_value__icontains=searchFilterData['diffractometerType'])
-
-    if searchFilterData['xraySource'] != '':
-        datafile_results = \
-            datafile_results.filter(
-            dataset__datasetparameter__name__name__icontains='xraySource',
-            dataset__datasetparameter__string_value__icontains=searchFilterData['xraySource'])
-
-    if searchFilterData['crystalName'] != '':
-        datafile_results = \
-            datafile_results.filter(dataset__datasetparameter__name__name__icontains='crystalName',
-            dataset__datasetparameter__string_value__icontains=searchFilterData['crystalName'])
-
-    if searchFilterData['resolutionLimit'] > 0:
-        datafile_results = \
-            datafile_results.filter(datafileparameter__name__name__icontains='resolutionLimit',
-            datafileparameter__numerical_value__lte=searchFilterData['resolutionLimit'])
-
-    if searchFilterData['xrayWavelengthFrom'] > 0 \
-        and searchFilterData['xrayWavelengthTo'] > 0:
-        datafile_results = \
-            datafile_results.filter(datafileparameter__name__name__icontains='xrayWavelength',
-            datafileparameter__numerical_value__range=(searchFilterData['xrayWavelengthFrom'],
-            searchFilterData['xrayWavelengthTo']))
-
-    # let's sort it in the end
-    if datafile_results:
-        datafile_results = datafile_results.order_by('filename')
-
-    return datafile_results
-
-
 def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     """Filter the list of datafiles for the provided searchQueryType using the
     cleaned up searchFilterData.
@@ -1280,7 +1215,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     datafile_results = \
         datafile_results.filter(
         datafileparameter__name__schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchQueryType + '_datafile']).distinct()
+        constants.SCHEMA_DICT[searchQueryType]['datafile']).distinct()
 
     # if filename is searchable which i think will always be the case...
     if searchFilterData['filename'] != '':
@@ -1293,7 +1228,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     # get all the datafile parameters for the given schema
     parameters = [p for p in
         ParameterName.objects.filter(schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchQueryType + '_datafile'])]  # TODO: if p is searchable
+        constants.SCHEMA_DICT[searchQueryType]['datafile'])]  # TODO: if p is searchable
 
     datafile_results = __filterParameters(parameters, datafile_results,
             searchFilterData, 'datafileparameter')
@@ -1301,7 +1236,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     # get all the dataset parameters for given schema
     parameters = [p for p in
         ParameterName.objects.filter(schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchQueryType + '_dataset'])]  # TODO: if p is searchable
+        constants.SCHEMA_DICT[searchQueryType]['dataset'])]  # TODO: if p is searchable
 
     datafile_results = __filterParameters(parameters, datafile_results,
             searchFilterData, 'dataset__datasetparameter')
@@ -1339,59 +1274,84 @@ def __filterParameters(
         try:
 
             # if parameter is a string...
-            if parameter.is_numeric == False \
-                and searchFilterData[parameter.name] != '':
-                kwargs[paramType + '__string_value__icontains'] = \
-                    searchFilterData[parameter.name]
-            elif parameter.is_numeric == True \
-                and parameter.comparison_type \
-                == ParameterName.RANGE_COMPARISON \
-                and searchFilterData[parameter.name + 'From'] \
-                is not None and searchFilterData[parameter.name + 'To'] \
-                is not None:
-
-            # if parameter is an number and we want to do a range comparison
-
-                kwargs[paramType + '__numerical_value__range'] = \
-                    (searchFilterData[parameter.name + 'From'],
-                     searchFilterData[parameter.name + 'To'])
-            elif parameter.is_numeric == True \
-                and searchFilterData[parameter.name] is not None:
-
-                # if parameter is an number and we want to handle other type of number comparisons
-                if parameter.comparison_type \
-                    == ParameterName.EXACT_VALUE_COMPARISON:
-                    kwargs[paramType + '__numerical_value__exact'] = \
-                        searchFilterData[parameter.name]
-                        
-                # TODO: is this really how not equal should be declared?
-                #elif parameter.comparison_type == ParameterName.NOT_EQUAL_COMPARISON:
-                #   datafile_results = \
-                #       datafile_results.filter(datafileparameter__name__name__icontains=parameter.name).filter(
-                #                               ~Q(datafileparameter__numerical_value=searchFilterData[parameter.name]))
-
-                elif parameter.comparison_type \
-                    == ParameterName.GREATER_THAN_COMPARISON:
-                    kwargs[paramType + '__numerical_value__gt'] = \
-                        searchFilterData[parameter.name]
-                elif parameter.comparison_type \
-                    == ParameterName.GREATER_THAN_EQUAL_COMPARISON:
-                    kwargs[paramType + '__numerical_value__gte'] = \
-                        searchFilterData[parameter.name]
-                elif parameter.comparison_type \
-                    == ParameterName.LESS_THAN_COMPARISON:
-                    kwargs[paramType + '__numerical_value__lt'] = \
-                        searchFilterData[parameter.name]
-                elif parameter.comparison_type \
-                    == ParameterName.LESS_THAN_EQUAL_COMPARISON:
-                    kwargs[paramType + '__numerical_value__lte'] = \
-                        searchFilterData[parameter.name]
+            if parameter.is_numeric == False:
+                if searchFilterData[parameter.name] != '':
+                    if parameter.comparison_type == \
+                            ParameterName.EXACT_VALUE_COMPARISON:
+                        kwargs[paramType + '__string_value__iexact'] = \
+                            searchFilterData[parameter.name]
+                    elif parameter.comparison_type == \
+                            ParameterName.CONTAINS_COMPARISON:
+                        # we'll implement exact comparison as 'icontains' for now
+                        kwargs[paramType + '__string_value__icontains'] = \
+                            searchFilterData[parameter.name]
+                    else:
+                        # if comparison_type on a string is a comparison type
+                        # that can only be applied to a numeric value, we'll
+                        # default to just using 'icontains' comparison
+                        kwargs[paramType + '__string_value__icontains'] = \
+                            searchFilterData[parameter.name]
                 else:
-                    # ignore the unhandled case
                     pass
-            else:
-                # ignore...
-                pass
+            else: # parameter.is_numeric == True:
+                if parameter.comparison_type == \
+                        ParameterName.RANGE_COMPARISON:
+                    fromParam = searchFilterData[parameter.name + 'From']
+                    toParam = searchFilterData[parameter.name + 'To']
+                    if fromParam is None and toParam is None:
+                        pass
+                    else:
+                        # if parameters are provided and we want to do a range 
+                        # comparison
+                        # note that we're using '1' as the lower range as using
+                        # '0' in the filter would return all the data
+                        # TODO: investigate on why the oddness above is 
+                        #       happening
+                        # TODO: we should probably move the static value here
+                        #       to the constants module
+                        kwargs[paramType + '__numerical_value__range'] = \
+                            (fromParam is not None and fromParam or 1,
+                             toParam is not None and toParam or 9999999999)
+                        
+                elif searchFilterData[parameter.name] is not None:
+
+                    # if parameter is an number and we want to handle other type of number comparisons
+                    if parameter.comparison_type == \
+                            ParameterName.EXACT_VALUE_COMPARISON:
+                        kwargs[paramType + '__numerical_value__exact'] = \
+                            searchFilterData[parameter.name]
+                        
+                    # TODO: is this really how not equal should be declared?
+                    #elif parameter.comparison_type == ParameterName.NOT_EQUAL_COMPARISON:
+                    #   datafile_results = \
+                    #       datafile_results.filter(datafileparameter__name__name__icontains=parameter.name).filter(
+                    #                               ~Q(datafileparameter__numerical_value=searchFilterData[parameter.name]))
+
+                    elif parameter.comparison_type == \
+                            ParameterName.GREATER_THAN_COMPARISON:
+                        kwargs[paramType + '__numerical_value__gt'] = \
+                            searchFilterData[parameter.name]
+                    elif parameter.comparison_type == \
+                            ParameterName.GREATER_THAN_EQUAL_COMPARISON:
+                        kwargs[paramType + '__numerical_value__gte'] = \
+                            searchFilterData[parameter.name]
+                    elif parameter.comparison_type == \
+                            ParameterName.LESS_THAN_COMPARISON:
+                        kwargs[paramType + '__numerical_value__lt'] = \
+                            searchFilterData[parameter.name]
+                    elif parameter.comparison_type == \
+                            ParameterName.LESS_THAN_EQUAL_COMPARISON:
+                        kwargs[paramType + '__numerical_value__lte'] = \
+                            searchFilterData[parameter.name]
+                    else:
+                        # if comparison_type on a numeric is a comparison type
+                        # that can only be applied to a string value, we'll
+                        # default to just using 'exact' comparison
+                        kwargs[paramType + '__numerical_value__exact'] = \
+                            searchFilterData[parameter.name]
+                else:
+                    # ignore...
+                    pass
 
             # we will only update datafile_results if we have an additional
             # filter (based on the 'passed' condition) in addition to the
@@ -1410,64 +1370,23 @@ def __forwardToSearchDatafileFormPage(searchQueryType,
 
     url = 'tardis_portal/search_datafile_form.html'
     if not searchForm:
-        if searchQueryType == 'sax':
-            searchForm = SAXDatafileSearchForm()
-        elif searchQueryType == 'mx':
-            searchForm = MXDatafileSearchForm()
-        else:
-            # TODO: what do we need to do if the user didn't provide a page to display?
-            pass
+        #if searchQueryType == 'sax':
+        SearchDatafileForm = createSearchDatafileForm(searchQueryType)
+        searchForm = SearchDatafileForm()
+        #else:
+        #    # TODO: what do we need to do if the user didn't provide a page to display?
+        #    pass
 
     # TODO: remove this later on when we have a more generic search form
     if searchQueryType == 'mx':
         url = 'tardis_portal/search_datafile_form_mx.html'
 
-    # get all the searchable datafile parameters for the given search type
-    parameterNames = __getSearchableParameterNames(searchQueryType, 'datafile')
-
-    # extend parameterNames with the searchable dataset parameters
-    parameterNames.extend(__getSearchableParameterNames(searchQueryType, 'dataset'))
-
-    # we'll always need to append filename to searchable parameterNames
-    parameterNames.append('filename')
-
-    # TODO: figure out if we need to move this to the globals scope
-    #hiddenFields = ['searchQueryType']
-
+    from itertools import groupby
+    modifiedSearchForm = [list(g) for k, g in groupby(
+        searchForm, lambda x: x.name.rsplit('To')[0].rsplit('From')[0])]
+    
     return render_to_response(url, {'searchForm': searchForm,
-                              'parameterNames': parameterNames,})
-                              #'hiddenFields': hiddenFields})
-
-
-def __getSearchableParameterNames(searchQueryType, parameterType):
-    """Get all names of the searchable fields for the given searchQueryType
-    and it's parameterType.
-    
-    Arguments:
-    searchQueryType -- The type of search query eg 'mx', 'sax', etc
-    parameterType -- Currently supports 'datafile' or 'dataset'
-    
-    Returns:
-    List of names of searchable parameters
-    
-    """
-
-    parameterNames = [p.name for p in
-        ParameterName.objects.filter(
-        schema__namespace__exact=
-        globals()['__SCHEMA_DICT'][searchQueryType + '_' + parameterType])
-        if p.is_searchable and p.comparison_type != ParameterName.RANGE_COMPARISON]
-
-    # let's add the range type of parameter search this time...
-    for p in \
-        ParameterName.objects.filter(schema__namespace__exact=
-            globals()['__SCHEMA_DICT'][searchQueryType + '_' + parameterType]):
-        if p.is_searchable and p.comparison_type \
-            == ParameterName.RANGE_COMPARISON:
-            parameterNames.append(p.name + 'From')
-            parameterNames.append(p.name + 'To')
-    
-    return parameterNames
+                              'modifiedSearchForm':modifiedSearchForm})
 
 
 def __getSearchForm(request, searchQueryType):
@@ -1485,14 +1404,12 @@ def __getSearchForm(request, searchQueryType):
     
     """
 
-    if searchQueryType == 'mx':
-        form = MXDatafileSearchForm(request.GET)
-    elif searchQueryType == 'sax':
-        form = SAXDatafileSearchForm(request.GET)
-    else:
-        raise UnsupportedSearchQueryTypeError(
-            "'%s' search query type is currently unsupported" % (searchQueryType,))
-    return form
+    try:
+        SearchDatafileForm = createSearchDatafileForm(searchQueryType)
+        form = SearchDatafileForm(request.GET)
+        return form
+    except UnsupportedSearchQueryTypeError as e:
+        raise e
 
 
 def __processParameters(request, searchQueryType, form):
@@ -1515,17 +1432,8 @@ def __processParameters(request, searchQueryType, form):
 
     if form.is_valid():
 
-        # TODO: remove this bit later on when we have a more generic
-        #       way of displaying all the search forms
-
-        # for the meantime, we'll just use the original way the MX
-        # search form is processed...
-        if searchQueryType == 'mx':
-            datafile_results = __getFilteredDatafilesForMX(request,
-                    searchQueryType, form.cleaned_data)
-        else:
-            datafile_results = __getFilteredDatafiles(request,
-                    searchQueryType, form.cleaned_data)
+        datafile_results = __getFilteredDatafiles(request,
+            searchQueryType, form.cleaned_data)
 
         # let's cache the query with all the filters in the session so
         # we won't have to keep running the query all the time it is needed
@@ -1571,7 +1479,7 @@ def search_datafile(request, searchQueryType):
 
     # process the files to be displayed by the paginator...
     paginator = Paginator(datafile_results,
-                          globals()['__DATAFILE_RESULTS_PER_PAGE'])
+                          constants.DATAFILE_RESULTS_PER_PAGE)
 
     try:
         page = int(request.GET.get('page', '1'))

@@ -70,41 +70,105 @@ class MXDatafileSearchForm(DatafileSearchForm):
         widget=forms.TextInput(attrs={'size': '4'}))
 
 
-# small angle xray and wide angle xray - scattering
-class SAXDatafileSearchForm(DatafileSearchForm):
-
-    frqimn = forms.DecimalField(required=False, label='FRQIMN')
-    frxcen = forms.DecimalField(required=False, label='FRXCEN')
-    frleng = forms.DecimalField(required=False, label='FRLENG')
-    frwlen = forms.DecimalField(required=False, label='FRWLEN')
-    frqimx = forms.DecimalField(required=False, label='FRQIMX')
-    frycen = forms.DecimalField(required=False, label='FRYCEN')
-    frtype = forms.CharField(required=False, label='FRTYPE')
-    detang = forms.DecimalField(required=False, label='DETANG')
-    
-    io = forms.IntegerField(required=False)
-    ioBgnd = forms.IntegerField(required=False, label='Io bgnd')
-
-    it = forms.IntegerField(required=False)
-    # a way to handle range comparisons..
-    itFrom = forms.IntegerField(required=False, label='It From')
-    itTo = forms.IntegerField(required=False, label='It To')
-    itBgnd = forms.IntegerField(required=False, label='It bgnd')
-    
-    ibs = forms.IntegerField(required=False)
-    ibsBgnd = forms.IntegerField(required=False, label='Ibs bgnd')
-    
-    countingSecs = forms.DecimalField(
-        required=False, label='Counting secs')
-    positionerString = forms.CharField(
-        required=False, label='Positioner string')
-    positionerValues = forms.CharField(
-        required=False, label='Positioner values')
-
-
 # infrared
 class IRDatafileSearchForm(DatafileSearchForm):
 
     pass
 
 
+class ImportParamsForm(forms.Form):
+
+    username = forms.CharField(max_length=400, required=True)
+    password = forms.CharField(max_length=400, required=True)
+    params = forms.FileField()
+
+
+class RegisterExperimentForm(forms.Form):
+
+    username = forms.CharField(max_length=400, required=True)
+    password = forms.CharField(max_length=400, required=True)
+    xmldata = forms.FileField()
+    experiment_owner = forms.CharField(max_length=400, required=False)
+    originid = forms.CharField(max_length=400, required=False)
+
+
+def createSearchDatafileForm(searchQueryType):
+
+    from errors import UnsupportedSearchQueryTypeError
+    from tardis.tardis_portal.models import ParameterName
+    from tardis.tardis_portal import constants
+
+    parameterNames = None
+
+    if constants.SCHEMA_DICT.has_key(searchQueryType):
+        parameterNames = \
+            ParameterName.objects.filter(schema__namespace__in=
+            [constants.SCHEMA_DICT[searchQueryType]['datafile'],
+            constants.SCHEMA_DICT[searchQueryType]['dataset']],
+            is_searchable='True')
+
+        fields = {}
+
+        fields['filename'] = forms.CharField(label='Filename',
+                max_length=100, required=False)
+
+        for parameterName in parameterNames:
+            if parameterName.is_numeric:
+                if parameterName.comparison_type \
+                    == ParameterName.RANGE_COMPARISON:
+                    fields[parameterName.name + 'From'] = \
+                        forms.DecimalField(label=parameterName.full_name
+                            + ' From', required=False)
+                    fields[parameterName.name + 'To'] = \
+                        forms.DecimalField(label=parameterName.full_name
+                            + ' To', required=False)
+                else:
+                    # note that we'll also ignore the choices text box entry
+                    # even if it's filled if the parameter is of numeric type
+                    # TODO: decide if we are to raise an exception if 
+                    #       parameterName.choices is not empty
+                    fields[parameterName.name] = \
+                        forms.DecimalField(label=parameterName.full_name,
+                            required=False)
+            else: # parameter is a string
+                if parameterName.choices != '':
+                    fields[parameterName.name] = \
+                        forms.CharField(label=parameterName.full_name,                        
+                        widget=forms.Select(choices=
+                        __getParameterChoices(parameterName.choices)),
+                        required=False)
+                else:
+                    fields[parameterName.name] = \
+                        forms.CharField(label=parameterName.full_name,
+                        max_length=255, required=False)
+
+        return type('SearchDatafileForm', (forms.BaseForm, ),
+                    {'base_fields': fields})
+    else:
+        raise UnsupportedSearchQueryTypeError(
+            "'%s' search query type is currently unsupported" % 
+            (searchQueryType, ))
+
+
+def __getParameterChoices(choicesString):
+    """Handle the choices string in this format:
+    '(hello:hi how are you), (yes:i am here), (no:joe)'
+
+    Note that this parser is very strict and is not smart enough to handle
+    any extra unknown characters that the user might put in the choices
+    textbox.
+
+    """
+
+    import string
+    import re
+    paramChoices = []
+    dropDownEntryPattern = re.compile(r'\((.*):(.*)\)')
+
+    dropDownEntryStrings = string.split(choicesString, ',')
+    for dropDownEntry in dropDownEntryStrings:
+        dropDownEntry = string.strip(dropDownEntry)
+        (key, value) = dropDownEntryPattern.search(dropDownEntry).groups()
+        paramChoices.append((str(key), str(value)))
+
+    return tuple(paramChoices)

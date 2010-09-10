@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from django.template import Context, loader
 from django.http import HttpResponse
@@ -14,7 +14,7 @@ from django.http import HttpResponseRedirect, HttpResponseForbidden, \
 from django.contrib.auth.decorators import login_required
 
 from tardis.tardis_portal.ProcessExperiment import ProcessExperiment
-from tardis.tardis_portal.RegisterExperimentForm import RegisterExperimentForm
+from tardis.tardis_portal.forms import RegisterExperimentForm
 from tardis.tardis_portal.logger import logger
 
 from django.core.paginator import Paginator, InvalidPage, EmptyPage

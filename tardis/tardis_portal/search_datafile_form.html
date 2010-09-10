@@ -27,7 +27,7 @@
  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
-{% extends "search_datafile.html" %}        
+{% extends "search_datafile.html" %}
         {% block searchPageBody %}
 	         {% if searchForm.errors %}
 	            <p style="color: red;">
@@ -37,15 +37,20 @@
              <form name="input" action="." method="get">
              <table width="100%">
              {# {{ searchForm.as_table }} #}
-             {% for field in searchForm %}
-	             {% if field.name in parameterNames %}
-	             <tr><th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td></tr>
-     			 {% else %} 
-     			    {% if field.name in hiddenFields %}
-     			      {{ field }}
-     			    {% endif %}
-     			 {% endif %}
-		     {% endfor %}
+             {% for fields in modifiedSearchForm %}
+                <tr>
+                 {# for the from and to fields to be displayed properly, the for loop had to be reversed #}
+                 {% for field in fields reversed %}
+                 <th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td>
+                 
+                 {% if fields|length == 2 and forloop.first %}
+                 <td>to</td>
+                 {% endif %}
+                 
+                 {% endfor %}
+                 </tr>
+             {% endfor %}
+             
 		     <tr><td colspan="2" style="text-align:center"><input type="submit" value="Submit"></td></tr>
              </table>
              </form>
