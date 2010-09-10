@@ -143,3 +143,11 @@ EMAIL_HOST_USER = 'bob@bobmail.com'
 EMAIL_HOST_PASSWORD = 'bob'
 
 EMAIL_USE_TLS = True
+
+LOG_FILENAME = '/var/tmp/tardis.log'
+
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# logging levels are: DEBUG, INFO, WARN, ERROR, CRITICAL
+LOG_LEVEL = logging.DEBUG
+
