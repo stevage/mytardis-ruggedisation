@@ -28,7 +28,6 @@ import ldap
 
 
 def authenticate_user_ldap(username, password):
-
     # return true if username and password correct
 
     l = None
@@ -38,8 +37,8 @@ def authenticate_user_ldap(username, password):
 
         searchScope = ldap.SCOPE_SUBTREE
 
-        # # retrieve all attributes - again adjust to your needs - see documentation for more options
-
+        # retrieve all attributes - again adjust to your needs
+        # see documentation for more options
         retrieveAttributes = None
         searchFilter = 'uid=' + username
 
@@ -70,7 +69,6 @@ def authenticate_user_ldap(username, password):
 
 
 def get_ldap_username_for_email(email):
-
     # return username if found, otherwise return none
 
     l = None
@@ -79,8 +77,8 @@ def get_ldap_username_for_email(email):
 
         searchScope = ldap.SCOPE_SUBTREE
 
-        # # retrieve all attributes - again adjust to your needs - see documentation for more options
-
+        # retrieve all attributes - again adjust to your needs
+        # see documentation for more options
         retrieveAttributes = ['uid']
         searchFilter = '(|(mail=' + email + ')(mailalternateaddress=' \
             + email + '))'
@@ -104,7 +102,6 @@ def get_ldap_username_for_email(email):
 
 
 def get_ldap_email_for_user(username):
-
     # return email if found else return none
 
     l = None
@@ -113,7 +110,8 @@ def get_ldap_email_for_user(username):
 
         searchScope = ldap.SCOPE_SUBTREE
 
-        # # retrieve all attributes - again adjust to your needs - see documentation for more options
+        # retrieve all attributes - again adjust to your needs
+        # see documentation for more options
 
         retrieveAttributes = ['mail']
         searchFilter = 'uid=' + username
@@ -140,7 +138,6 @@ def get_ldap_email_for_user(username):
 
 
 def get_or_create_user_ldap(email):
-
     # ignore the 'authcate' model fieldname.. adapted from monash auth
 
     authcate_user = None
@@ -150,12 +147,12 @@ def get_or_create_user_ldap(email):
         u = User.objects.get(username=username)
         logger.debug(u.get_profile())
 
-        # if, somehow someone else has created a user manually that has this username
-
+        # if, somehow someone else has created a user manually that has this
+        # username
         if not u.get_profile().authcate_user:
 
-            # see if this has already happened and a new user was assigned with a diff username
-
+            # see if this has already happened and a new user was assigned with
+            # a diff username
             try:
                 u_email = User.objects.get(email__exact=email,
                         username=username)
@@ -164,9 +161,7 @@ def get_or_create_user_ldap(email):
 
                 pass  # this is a rare case and will have to be handled later
         else:
-
-                # create user somehow and email? (auto_gen username?)
-
+            # create user somehow and email? (auto_gen username?)
             authcate_user = u
     except User.DoesNotExist, ue:
 
@@ -174,7 +169,6 @@ def get_or_create_user_ldap(email):
         import string
 
         # random password todo make function
-
         random_password = ''
         chars = string.letters + string.digits
 
@@ -189,5 +183,3 @@ def get_or_create_user_ldap(email):
         # todo :send email with notification
 
     return authcate_user
-
-

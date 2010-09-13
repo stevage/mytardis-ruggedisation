@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
 #
@@ -100,11 +100,11 @@ def createSearchDatafileForm(searchQueryType):
 
     parameterNames = None
 
-    if constants.SCHEMA_DICT.has_key(searchQueryType):
+    if searchQueryType in constants.SCHEMA_DICT:
         parameterNames = \
-            ParameterName.objects.filter(schema__namespace__in=
-            [constants.SCHEMA_DICT[searchQueryType]['datafile'],
-            constants.SCHEMA_DICT[searchQueryType]['dataset']],
+            ParameterName.objects.filter(
+            schema__namespace__in=[constants.SCHEMA_DICT[searchQueryType] \
+            ['datafile'], constants.SCHEMA_DICT[searchQueryType]['dataset']],
             is_searchable='True')
 
         fields = {}
@@ -125,7 +125,7 @@ def createSearchDatafileForm(searchQueryType):
                 else:
                     # note that we'll also ignore the choices text box entry
                     # even if it's filled if the parameter is of numeric type
-                    # TODO: decide if we are to raise an exception if 
+                    # TODO: decide if we are to raise an exception if
                     #       parameterName.choices is not empty
                     fields[parameterName.name] = \
                         forms.DecimalField(label=parameterName.full_name,
@@ -133,10 +133,9 @@ def createSearchDatafileForm(searchQueryType):
             else: # parameter is a string
                 if parameterName.choices != '':
                     fields[parameterName.name] = \
-                        forms.CharField(label=parameterName.full_name,                        
-                        widget=forms.Select(choices=
-                        __getParameterChoices(parameterName.choices)),
-                        required=False)
+                        forms.CharField(label=parameterName.full_name,
+                        widget=forms.Select(choices=__getParameterChoices(
+                        parameterName.choices)), required=False)
                 else:
                     fields[parameterName.name] = \
                         forms.CharField(label=parameterName.full_name,
@@ -146,7 +145,7 @@ def createSearchDatafileForm(searchQueryType):
                     {'base_fields': fields})
     else:
         raise UnsupportedSearchQueryTypeError(
-            "'%s' search query type is currently unsupported" % 
+            "'%s' search query type is currently unsupported" %
             (searchQueryType, ))
 
 

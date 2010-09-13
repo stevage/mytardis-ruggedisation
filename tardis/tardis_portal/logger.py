@@ -31,7 +31,6 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-import logging
 import logging.handlers
 
 from django.conf import settings
@@ -40,14 +39,15 @@ from django.conf import settings
 def init_logging():
     """
     logging facility for tardis
-    sends logging output to a disk file 
+    sends logging output to a disk file
     supports rotation of disk log files
     fallback on console if disk log file cannot be openend
-    
+
     http://docs.python.org/library/logging.html
     logg
     >>> from tardis.tardis_portal.logger import logger
     >>> logger.info('Hello world.')
+
     """
 
     logger = logging.getLogger(__name__)
@@ -70,4 +70,3 @@ def init_logging():
 logger = None
 if not logger:
     logger = init_logging()
-

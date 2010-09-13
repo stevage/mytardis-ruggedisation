@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010, Monash e-Research Centre
@@ -60,7 +60,7 @@ class Author(models.Model):
 
 class Experiment(models.Model):
 
-    url = models.URLField(verify_exists=False, max_length=255)  # use verify-exists
+    url = models.URLField(verify_exists=False, max_length=255)
     approved = models.BooleanField()
     title = models.CharField(max_length=400)
     institution_name = models.CharField(max_length=400)
@@ -143,10 +143,10 @@ class Schema(models.Model):
 
 
 class ParameterName(models.Model):
-    
+
     EXACT_VALUE_COMPARISON = 1
     NOT_EQUAL_COMPARISON = 2
-    RANGE_COMPARISON = 3    
+    RANGE_COMPARISON = 3
     GREATER_THAN_COMPARISON = 4
     GREATER_THAN_EQUAL_COMPARISON = 5
     LESS_THAN_COMPARISON = 6
@@ -155,9 +155,9 @@ class ParameterName(models.Model):
     __COMPARISON_CHOICES = (
         (EXACT_VALUE_COMPARISON, 'Exact value'),
         (CONTAINS_COMPARISON, 'Contains'),
-        # TODO: enable this next time if i figure out how to support 
+        # TODO: enable this next time if i figure out how to support
         #(NOT_EQUAL_COMPARISON, 'Not equal'),
-        (RANGE_COMPARISON, 'Range'),        
+        (RANGE_COMPARISON, 'Range'),
         (GREATER_THAN_COMPARISON, 'Greater than'),
         (GREATER_THAN_EQUAL_COMPARISON, 'Greater than or equal'),
         (LESS_THAN_COMPARISON, 'Less than'),
@@ -175,7 +175,7 @@ class ParameterName(models.Model):
     # TODO: we'll need to rethink the way choices for drop down menus are
     #       represented in the DB. doing it this way is just a bit wasteful.
     choices = models.CharField(max_length=500, blank=True)
-    
+
     def __unicode__(self):
         return self.name
 
@@ -212,4 +212,3 @@ class XML_data(models.Model):
 
     def __unicode__(self):
         return self.xmlns
-

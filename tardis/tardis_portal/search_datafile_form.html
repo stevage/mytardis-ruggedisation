@@ -39,7 +39,7 @@
              {# {{ searchForm.as_table }} #}
              {% for fields in modifiedSearchForm %}
                 <tr>
-                 {# for the from and to fields to be displayed properly, the for loop had to be reversed #}
+                 {# for the 'from' and 'to' fields to be displayed properly, the for loop had to be reversed #}
                  {% for field in fields reversed %}
                  <th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td>
                  

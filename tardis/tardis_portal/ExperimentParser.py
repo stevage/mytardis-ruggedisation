@@ -43,7 +43,8 @@ class ExperimentParser:
     __schema_xlink = ('xlink', 'http://www.w3.org/1999/xlink')
 
     __xpath_findModsElement = \
-        "//METS:dmdSec[//METS:div[@TYPE='investigation']/@DMDID = @ID]/METS:mdWrap[@MDTYPE='MODS']"
+        "//METS:dmdSec[//METS:div[@TYPE='investigation']/@DMDID = @ID]" \
+        "/METS:mdWrap[@MDTYPE='MODS']"
     __xpath_findDivElementWithTypeInvestigation = \
         "//METS:structMap/METS:div[@TYPE='investigation']"
     __xpath_findFileGroup = '//METS:fileSec/METS:fileGrp'
@@ -62,12 +63,18 @@ class ExperimentParser:
             return None
 
     def __removeLineSeparators(self, str):
-        """Remove all the line separators and whitespaces from the given string."""
+        """Remove all the line separators and whitespaces from the given
+        string.
+
+        """
 
         return ' '.join([l.strip() for l in str.splitlines()]).strip()
 
     def __getStrippedElements(self, elements):
-        """Strip the extra whitespaces (eg '\t', ' ', '\n', etc) at the front and back of each of the elements."""
+        """Strip the extra whitespaces (eg '\t', ' ', '\n', etc) at the front
+        and back of each of the elements.
+
+        """
 
         return [e.strip() for e in elements]
 
@@ -182,19 +189,23 @@ class ExperimentParser:
         return self.__getSingleResult(elements)
 
     def getTechXML(self, tech_id):
-        """Get the datafile element which holds the metadata for the file given the metadata ID.
+        """Get the datafile element which holds the metadata for the file given
+        the metadata ID.
 
-		Arguments:
-		tech_id -- the metadata ID
-		
-		Returns:
-		The datafile element which holds the metadata for the file given the metadata ID.
+        Arguments:
+        tech_id -- the metadata ID
 
-		"""
+        Returns:
+        The datafile element which holds the metadata for the file given the
+        metadata ID.
+
+        """
 
         f = StringIO("<?xml version='1.0' ?>"
-                     + "<xsl:stylesheet version='2.0' xmlns:xsl='http://www.w3.org/1999/XSL/Transform' xmlns:mets='http://www.loc.gov/METS/'>"
-                      + "<xsl:output method='xml' indent='yes'/>"
+                     + "<xsl:stylesheet version='2.0' xmlns:xsl='"
+                     + "http://www.w3.org/1999/XSL/Transform' "
+                     + "xmlns:mets='http://www.loc.gov/METS/'>"
+                     + "<xsl:output method='xml' indent='yes'/>"
                      + "<xsl:template match='/'>"
                      + '<xsl:copy-of select="//mets:techMD[@ID=\''
                      + tech_id + '\']/mets:mdWrap/mets:xmlData/*"/>'
@@ -216,5 +227,3 @@ class ExperimentParser:
         elements = tech_xml.xpath('/' + parameter_string + '/text()',
                                   namespaces={prefix: xmlns})
         return self.__getSingleResult(elements)
-
-

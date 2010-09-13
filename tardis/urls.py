@@ -10,11 +10,12 @@ from registration.forms import RegistrationFormUniqueEmail
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns(  # (r'^search/quick/$', 'tardis.tardis_portal.views.search_quick'),
-                         # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
-                         # to INSTALLED_APPS to enable admin documentation:
-                         # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-                         # Uncomment the next line to enable the admin:
+urlpatterns = patterns(
+    # (r'^search/quick/$', 'tardis.tardis_portal.views.search_quick'),
+    # Uncomment the admin/doc line below and add 'django.contrib.admindocs'
+    # to INSTALLED_APPS to enable admin documentation:
+    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
+    # Uncomment the next line to enable the admin:
     '',
     (r'^$', 'tardis.tardis_portal.views.index'),
     (r'^site-settings.xml/$', 'tardis.tardis_portal.views.site_settings'),
@@ -36,17 +37,20 @@ urlpatterns = patterns(  # (r'^search/quick/$', 'tardis.tardis_portal.views.sear
      'tardis.tardis_portal.views.publish_experiment'),
     (r'^search/experiment/$',
      'tardis.tardis_portal.views.search_experiment'),
-    (r'^search/datafile/(\w+)/$', 'tardis.tardis_portal.views.search_datafile'),
+    (r'^search/datafile/(\w+)/$',
+     'tardis.tardis_portal.views.search_datafile'),
     (r'^downloadTar/$', 'tardis.tardis_portal.views.downloadTar'),
     (r'^displayDatasetImage/(?P<dataset_id>\d+)/(?P<parameter_name>\w+)/$',
-	 'tardis.tardis_portal.views.display_dataset_image'),
-    (r'^displayDatafileImage/(?P<dataset_file_id>\d+)/(?P<parameter_name>\w+)/$',
+     'tardis.tardis_portal.views.display_dataset_image'),
+    (r'^displayDatafileImage/(?P<dataset_file_id>\d+)/'
+     '(?P<parameter_name>\w+)/$',
      'tardis.tardis_portal.views.display_datafile_image'),
     (r'^experiment/view/(?P<experiment_id>\d+)/downloadExperiment/$',
      'tardis.tardis_portal.views.downloadExperiment'),
-    (r'^experiment/control_panel/(?P<experiment_id>\d+)/access_list/add/(?P<username>\w+)$',
-     'tardis.tardis_portal.views.add_access_experiment'),
-    (r'^experiment/control_panel/(?P<experiment_id>\d+)/access_list/remove/(?P<username>\w+)$',
+    (r'^experiment/control_panel/(?P<experiment_id>\d+)/access_list/add/'
+     '(?P<username>\w+)$', 'tardis.tardis_portal.views.add_access_experiment'),
+    (r'^experiment/control_panel/(?P<experiment_id>\d+)/access_list/remove/'
+     '(?P<username>\w+)$',
      'tardis.tardis_portal.views.remove_access_experiment'),
     (r'^experiment/control_panel/(?P<experiment_id>\d+)/access_list/$',
      'tardis.tardis_portal.views.retrieve_access_list'),
@@ -63,8 +67,8 @@ urlpatterns = patterns(  # (r'^search/quick/$', 'tardis.tardis_portal.views.sear
     (r'^login/$', 'tardis.tardis_portal.views.ldap_login'),
     (r'^accounts/login/$', 'tardis.tardis_portal.views.ldap_login'),
     (r'^logout/$', logout, {'next_page': '/'}),
-    (r'^accounts/register/', include('registration.urls'), {'form_class'
-     : RegistrationFormUniqueEmail}),
+    (r'^accounts/register/', include('registration.urls'), {'form_class':
+     RegistrationFormUniqueEmail}),
     (r'^accounts/', include('registration.urls')),
     (r'site_media/(?P<path>.*)$', 'django.views.static.serve',
      {'document_root': settings.STATIC_DOC_ROOT}),

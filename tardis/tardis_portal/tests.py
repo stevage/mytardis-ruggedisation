@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010, Monash e-Research Centre
@@ -46,45 +46,47 @@ import unittest
 
 
 class SearchTestCase(TestCase):
-    
+
     fixtures = ['test_sax_data']
-    
+
     def setUp(self):
         self.client = Client()
-    
+
     def testSearchDatafileForm(self):
         response = self.client.get('/search/datafile/sax/')
-        
+
         # check if the response is a redirect to the login page
-        self.assertRedirects(response, 
+        self.assertRedirects(response,
             '/accounts/login/?next=/search/datafile/sax/')
-        
+
         # let's try to login this time...
         self.client.login(username='test', password='test')
         response = self.client.get('/search/datafile/sax/')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['searchForm'] is not None)
-        self.assertTrue(response.context['parameterNames'] is not None)
-        self.assertTemplateUsed(response, 'tardis_portal/search_datafile_form.html')
-        
+        self.assertTrue(response.context['modifiedSearchForm'] is not None)
+        self.assertTemplateUsed(response,
+            'tardis_portal/search_datafile_form.html')
+
         self.client.logout()
 
     def testSearchDatafileAuthentication(self):
-        response = self.client.get('/search/datafile/sax/', {'filename':'',})
-        
+        response = self.client.get('/search/datafile/sax/', {'filename': '', })
+
         # check if the response is a redirect to the login page
         self.assertEqual(response.status_code, 302)
-        
+
         # let's try to login this time...
         self.client.login(username='test', password='test')
-        response = self.client.get('/search/datafile/sax/', {'filename':'',})
+        response = self.client.get('/search/datafile/sax/', {'filename': '', })
         self.assertEqual(response.status_code, 200)
         self.client.logout()
 
     def testSearchDatafileResults(self):
         self.client.login(username='test', password='test')
-        response = self.client.get('/search/datafile/sax/', {'filename':'air_0_001.tif',})
-        
+        response = self.client.get('/search/datafile/sax/',
+            {'filename': 'air_0_001.tif', })
+
         # check for the existence of the contexts..
         self.assertTrue(response.context['datafiles'] is not None)
         self.assertTrue(response.context['paginator'] is not None)
@@ -93,30 +95,32 @@ class SearchTestCase(TestCase):
         self.assertTrue(response.context['nav'] is not None)
         self.assertTrue(response.context['bodyclass'] is not None)
         self.assertTrue(response.context['search_pressed'] is not None)
-        
-        self.assertEqual(len(response.context['paginator'].object_list), 1)     
-        self.assertTemplateUsed(response, 'tardis_portal/search_datafile_results.html')
-        
+
+        self.assertEqual(len(response.context['paginator'].object_list), 1)
+        self.assertTemplateUsed(response,
+            'tardis_portal/search_datafile_results.html')
+
         from tardis.tardis_portal.models import Dataset_File
         self.assertTrue(
             type(response.context['paginator'].object_list[0]) is Dataset_File)
-        
+
         # TODO: check if the schema is correct
-        
+
         # check if searching for nothing would result to returning everything
-        response = self.client.get('/search/datafile/sax/', {'filename':'',})
+        response = self.client.get('/search/datafile/sax/', {'filename': '', })
         self.assertEqual(len(response.context['paginator'].object_list), 129)
-        
-        response = self.client.get('/search/datafile/sax/', {'io':'123',})
+
+        response = self.client.get('/search/datafile/sax/', {'io': '123', })
         self.assertEqual(len(response.context['paginator'].object_list), 0)
-        
-        response = self.client.get('/search/datafile/sax/', {'frqimn':'0.0450647',})
+
+        response = self.client.get('/search/datafile/sax/',
+            {'frqimn': '0.0450647', })
         self.assertEqual(len(response.context['paginator'].object_list), 125)
         self.client.logout()
 
     def testPrivateSearchFunctions(self):
         from tardis.tardis_portal import views
-        
+
         # TODO: need to decide if we are to make those private functions public
         #       so they can be tested
 
@@ -188,107 +192,92 @@ class ExperimentParserTestCase(unittest.TestCase):
         self.experimentParser = ExperimentParser(str(xmlString))
 
     def testGetTitle(self):
-        self.assertTrue(self.experimentParser.getTitle() == 'Test Title'
-                        , 'title is not the same')
+        self.assertTrue(self.experimentParser.getTitle() == 'Test Title',
+            'title is not the same')
 
     def testGetAuthors(self):
         self.assertTrue(len(self.experimentParser.getAuthors()) == 3,
-                        'number of authors should be 3')
-        self.assertTrue('Author2'
-                        in self.experimentParser.getAuthors(),
-                        '"Author2 should be in the authors list"')
+            'number of authors should be 3')
+        self.assertTrue('Author2' in self.experimentParser.getAuthors(),
+            '"Author2 should be in the authors list"')
 
     def testGetAbstract(self):
-        self.assertTrue(self.experimentParser.getAbstract()
-                        == 'Test Abstract.', 'abstract is not the same')
+        self.assertTrue(self.experimentParser.getAbstract() ==
+            'Test Abstract.', 'abstract is not the same')
 
     def testGetPDBIDs(self):
         self.assertTrue(len(self.experimentParser.getPDBIDs()) == 1,
-                        'number of pdb ids should be 1')
-        self.assertTrue('SAMPLE_PDBID'
-                        in self.experimentParser.getPDBIDs(),
-                        'pdb id should be "SAMPLE_PDBID"')
+            'number of pdb ids should be 1')
+        self.assertTrue('SAMPLE_PDBID' in self.experimentParser.getPDBIDs(),
+            'pdb id should be "SAMPLE_PDBID"')
 
     def testGetRelationURLs(self):
-        self.assertTrue('http://www.test.com'
-                        in self.experimentParser.getRelationURLs(),
-                        'missing url from relationsURLs')
-        self.assertTrue(len(self.experimentParser.getRelationURLs())
-                        == 1, 'there should only be 1 relationsURL')
+        self.assertTrue('http://www.test.com' in
+            self.experimentParser.getRelationURLs(),
+            'missing url from relationsURLs')
+        self.assertTrue(len(self.experimentParser.getRelationURLs()) == 1,
+            'there should only be 1 relationsURL')
 
     def testGetAgentName(self):
-        self.assertTrue(self.experimentParser.getAgentName('CREATOR')
-                        == 'Creator', 'agent should be "Creator"')
-        self.assertTrue(self.experimentParser.getAgentName('PAINTER')
-                        == None, 'there is no "Painter" agent')
+        self.assertTrue(self.experimentParser.getAgentName('CREATOR') ==
+            'Creator', 'agent should be "Creator"')
+        self.assertTrue(self.experimentParser.getAgentName('PAINTER') == None,
+            'there is no "Painter" agent')
 
     def testGetDatasetTitle(self):
-        self.assertTrue(self.experimentParser.getDatasetTitle('J-2')
-                        == 'Dataset1 Title',
-                        'dataset title should be "J-2"')
-        self.assertTrue(self.experimentParser.getDatasetTitle('J-4')
-                        == None, 'there is no dataset with id "J-4"')
+        self.assertTrue(self.experimentParser.getDatasetTitle('J-2') ==
+            'Dataset1 Title', 'dataset title should be "J-2"')
+        self.assertTrue(self.experimentParser.getDatasetTitle('J-4') == None,
+            'there is no dataset with id "J-4"')
 
     def testGetDatasetDMDIDs(self):
-        self.assertTrue(len(self.experimentParser.getDatasetDMDIDs())
-                        == 2, 'total number of datasets is wrong')
-        self.assertTrue('J-2'
-                        in self.experimentParser.getDatasetDMDIDs(),
-                        'J-2 is not in the dataset')
-        self.assertTrue('J-1'
-                        not in self.experimentParser.getDatasetDMDIDs(),
-                        "J-1 shouldn't be in the dataset")
+        self.assertTrue(len(self.experimentParser.getDatasetDMDIDs()) == 2,
+            'total number of datasets is wrong')
+        self.assertTrue('J-2' in self.experimentParser.getDatasetDMDIDs(),
+            'J-2 is not in the dataset')
+        self.assertTrue('J-1' not in self.experimentParser.getDatasetDMDIDs(),
+            "J-1 shouldn't be in the dataset")
 
     def testGetDatasetADMIDs(self):
-
         # get metadata ids for this dataset...
 
         pass
 
     def testGetFileIDs(self):
-        self.assertTrue('F-3' in self.experimentParser.getFileIDs('J-3'
-                        ), 'F-3 is missing from the file IDs')
-        self.assertTrue(len(self.experimentParser.getFileIDs('J-3'))
-                        == 2,
-                        'there should only be 2 files for the J-3 dataset'
-                        )
-        self.assertTrue('F-5'
-                        not in self.experimentParser.getFileIDs('J-3'),
-                        'F-3 is missing from the file IDs')
+        self.assertTrue('F-3' in self.experimentParser.getFileIDs('J-3'),
+            'F-3 is missing from the file IDs')
+        self.assertTrue(len(self.experimentParser.getFileIDs('J-3')) == 2,
+            'there should only be 2 files for the J-3 dataset')
+        self.assertTrue('F-5' not in self.experimentParser.getFileIDs('J-3'),
+            'F-3 is missing from the file IDs')
 
     def testGetFileLocation(self):
-        self.assertTrue(self.experimentParser.getFileLocation('F-1')
-                        == 'file://Images/File1',
-                        "file F-1's location is wrong")
+        self.assertTrue(self.experimentParser.getFileLocation('F-1') ==
+            'file://Images/File1', "file F-1's location is wrong")
 
     def testGetFileADMIDs(self):
-
         # get metadata ids for this file...
 
-        self.assertTrue('A-3'
-                        in self.experimentParser.getFileADMIDs('F-4'),
-                        'wrong file metadata id')
-        self.assertTrue(len(self.experimentParser.getFileADMIDs('F-4'))
-                        == 1,
-                        'there should only be 1 metadata ID for the file'
-                        )
+        self.assertTrue('A-3' in self.experimentParser.getFileADMIDs('F-4'),
+            'wrong file metadata id')
+        self.assertTrue(len(self.experimentParser.getFileADMIDs('F-4')) == 1,
+            'there should only be 1 metadata ID for the file')
 
     def testGetFileName(self):
-        self.assertTrue(self.experimentParser.getFileName('F-1')
-                        == 'File1', 'wrong file name for file "F-1"')
+        self.assertTrue(self.experimentParser.getFileName('F-1') == 'File1',
+            'wrong file name for file "F-1"')
 
     def testGetFileSize(self):
-        self.assertTrue(self.experimentParser.getFileSize('F-1')
-                        == '6148', 'wrong file size for file "F-1"')
+        self.assertTrue(self.experimentParser.getFileSize('F-1') == '6148',
+            'wrong file size for file "F-1"')
 
     def testGetTechXML(self):
+        # check if the root of the returned element is datafile or
+        # something else
 
-        # check if the root of the returned element is datafile or something else
-
-        self.assertTrue(self.experimentParser.getTechXML('A-3'
-                        ).getroot().tag
-                        == '{http://www.tardis.edu.au/schemas/trdDatafile/1}datafile'
-                        , 'element has wrong tag')
+        self.assertTrue(self.experimentParser.getTechXML('A-3').getroot().\
+            tag == '{http://www.tardis.edu.au/schemas/trdDatafile/1}datafile',
+            'element has wrong tag')
 
     def testGetParameterFromTechXML(self):
         pass
@@ -301,8 +290,6 @@ def suite():
         unittest.TestLoader().loadTestsFromTestCase(ExperimentParserTestCase)
     searchSuite = \
         unittest.TestLoader().loadTestsFromTestCase(SearchTestCase)
-    allTests = unittest.TestSuite([parserSuite, userInterfaceSuite, searchSuite])
-    #allTests = unittest.TestSuite([searchSuite])
+    allTests = unittest.TestSuite(
+        [parserSuite, userInterfaceSuite, searchSuite])
     return allTests
-
-

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010, Monash e-Research Centre
@@ -144,7 +144,7 @@ class ProcessExperiment:
         f.close()
 
         if firstline.startswith('<experiment'):
-            logger.debug( 'processing simple xml')
+            logger.debug('processing simple xml')
             eid = self.process_simple(filename, created_by, expid)
         else:
             logger.debug('processing METS')
@@ -184,8 +184,7 @@ class ProcessExperiment:
 
         e.save()
 
-        url_path = self.url.rpartition('/')[0] + self.url.rpartition('/'
-                )[1]
+        url_path = self.url.rpartition('/')[0] + self.url.rpartition('/')[1]
 
         for pdbid in ep.getPDBIDs():
             p = Pdbid(experiment=e, pdbid=SafeUnicode(pdbid))
@@ -208,7 +207,8 @@ class ProcessExperiment:
             author_experiment.save()
             x = x + 1
 
-        # looks like the intention here is to reload all the datasets from scratch
+        # looks like the intention here is to reload all the datasets from
+        # scratch
         e.dataset_set.all().delete()
 
         # for each dataset...
@@ -229,7 +229,8 @@ class ProcessExperiment:
                     schema = Schema.objects.get(namespace__exact=xmlns)
 
                     parameternames = \
-                        ParameterName.objects.filter(schema__namespace__exact=schema.namespace)
+                        ParameterName.objects.filter(
+                        schema__namespace__exact=schema.namespace)
                     parameternames = parameternames.order_by('id')
 
                     for pn in parameternames:
@@ -245,8 +246,8 @@ class ProcessExperiment:
                                 dp.save()
                         else:
                             dp = DatasetParameter(dataset=d, name=pn,
-                                    string_value=ep.getParameterFromTechXML(techxml,
-                                    pn.name), numerical_value=None)
+                                string_value=ep.getParameterFromTechXML(
+                                techxml, pn.name), numerical_value=None)
                             dp.save()
                 except Schema.DoesNotExist:
 
@@ -258,15 +259,15 @@ class ProcessExperiment:
             for fileid in ep.getFileIDs(dmdid):
 
                 # if ep.getFileLocation(fileid).startswith('file://'):
-                # ....................absolute_filename = url_path + ep.getFileLocation(fileid).partition('//')[2]
-                # ................else:
-                # ....................absolute_filename = ep.getFileLocation(fileid)....
+                #     absolute_filename = url_path + \
+                #         ep.getFileLocation(fileid).partition('//')[2]
+                # else:
+                #     absolute_filename = ep.getFileLocation(fileid)....
 
                 if self.null_check(ep.getFileName(fileid)):
                     filename = ep.getFileName(fileid)
                 else:
-                    filename = ep.getFileLocation(fileid).rpartition('/'
-                            )[2]
+                    filename = ep.getFileLocation(fileid).rpartition('/')[2]
 
                 # logger.debug(filename)
 
@@ -287,7 +288,8 @@ class ProcessExperiment:
                             Schema.objects.get(namespace__exact=xmlns)
 
                         parameternames = \
-                            ParameterName.objects.filter(schema__namespace__exact=schema.namespace)
+                            ParameterName.objects.filter(
+                            schema__namespace__exact=schema.namespace)
                         parameternames = parameternames.order_by('id')
 
                         for pn in parameternames:
@@ -298,15 +300,17 @@ class ProcessExperiment:
                                         pn.name)
                                 if value != None:
                                     dp = \
-                                        DatafileParameter(dataset_file=datafile, name=pn,
-                                            string_value=None, numerical_value=float(value))
+                                        DatafileParameter(
+                                        dataset_file=datafile, name=pn,
+                                        string_value=None,
+                                        numerical_value=float(value))
                                     dp.save()
                             else:
                                 dp = \
                                     DatafileParameter(dataset_file=datafile,
-                                        name=pn,
-                                        string_value=ep.getParameterFromTechXML(techxml,
-                                        pn.name), numerical_value=None)
+                                    name=pn,
+                                    string_value=ep.getParameterFromTechXML(
+                                    techxml, pn.name), numerical_value=None)
                                 dp.save()
                     except Schema.DoesNotExist:
 
@@ -372,7 +376,8 @@ class ProcessExperiment:
                         author_experiments = \
                             Author_Experiment.objects.all()
                         author_experiments = \
-                            author_experiments.filter(experiment=experiment).delete()
+                            author_experiments.filter(
+                            experiment=experiment).delete()
 
                         x = 0
                         for authorName in authors:
@@ -390,7 +395,8 @@ class ProcessExperiment:
                     ds = ds + 1
                     df = 0
                     dataset = dict()
-                    logger.debug('experiment: ' + str(e) + ' dataset: ' + str(ds))
+                    logger.debug('experiment: ' + str(e) + ' dataset: ' +
+                                 str(ds))
                 elif line.startswith('<file>'):
 
                     if current == 'dataset':
@@ -399,18 +405,20 @@ class ProcessExperiment:
                         d.save()
                         logger.debug(dataset)
 
-                        if dataset.has_key('metadata'):
+                        if 'metadata' in dataset:
 
                             md = dataset['metadata']
                             xmlns = getXmlnsFromTechXMLRaw(md)
 
                             try:
-                                logger.debug('trying to find parameters with an xmlns of ' + xmlns)
+                                logger.debug('trying to find parameters with '
+                                    'an xmlns of ' + xmlns)
                                 schema = \
                                     Schema.objects.get(namespace__exact=xmlns)
 
                                 parameternames = \
-                                    ParameterName.objects.filter(schema__namespace__exact=schema.namespace)
+                                    ParameterName.objects.filter(
+                                    schema__namespace__exact=schema.namespace)
                                 parameternames = \
                                     parameternames.order_by('id')
 
@@ -418,21 +426,27 @@ class ProcessExperiment:
 
                                 for pn in parameternames:
                                     try:
-                                        logger.debug('finding parameter ' + pn.name + ' in metadata')
+                                        logger.debug('finding parameter ' +
+                                            pn.name + ' in metadata')
 
                                         if pn.is_numeric:
                                             value = \
-                                                getParameterFromTechXML(tech_xml, pn.name)
+                                                getParameterFromTechXML(
+                                                tech_xml, pn.name)
                                             if value != None:
                                                 dp = \
-                                                    DatasetParameter(dataset=d, name=pn, string_value=None,
-                                                        numerical_value=float(value))
+                                                    DatasetParameter(dataset=d,
+                                                    name=pn, string_value=None,
+                                                    numerical_value=float(
+                                                    value))
                                                 dp.save()
                                         else:
                                             dp = \
-                                                DatasetParameter(dataset=d, name=pn,
-                                                    string_value=getParameterFromTechXML(tech_xml,
-                                                    pn.name), numerical_value=None)
+                                                DatasetParameter(dataset=d,
+                                                name=pn,
+                                        string_value=getParameterFromTechXML(
+                                                tech_xml,
+                                                pn.name), numerical_value=None)
                                             dp.save()
                                     except e:
                                         logger.debug(e)
@@ -447,25 +461,27 @@ class ProcessExperiment:
                         # logger.debug(filename)
 
                         dfile = Dataset_File(dataset=d,
-                                filename=filename, url=datafile['path'
-                                ], size=datafile['size'])
+                            filename=filename, url=datafile['path'],
+                            size=datafile['size'])
                         dfile.save()
                         current_df_id = dfile.id
 
                         logger.debug(datafile)
 
-                        if datafile.has_key('metadata'):
+                        if 'metadata' in datafile:
 
                             md = datafile['metadata']
                             xmlns = getXmlnsFromTechXMLRaw(md)
 
                             try:
-                                logger.debug('trying to find parameters with an xmlns of ' + xmlns)
+                                logger.debug('trying to find parameters with '
+                                             'an xmlns of ' + xmlns)
                                 schema = \
                                     Schema.objects.get(namespace__exact=xmlns)
 
                                 parameternames = \
-                                    ParameterName.objects.filter(schema__namespace__exact=schema.namespace)
+                                    ParameterName.objects.filter(
+                                    schema__namespace__exact=schema.namespace)
                                 parameternames = \
                                     parameternames.order_by('id')
 
@@ -473,22 +489,29 @@ class ProcessExperiment:
 
                                 for pn in parameternames:
                                     try:
-                                        logger.debug('finding parameter ' + pn.name + ' in metadata')
+                                        logger.debug('finding parameter ' +
+                                            pn.name + ' in metadata')
                                         dfile = \
-                                            Dataset_File.objects.get(pk=current_df_id)
+                                            Dataset_File.objects.get(
+                                            pk=current_df_id)
                                         if pn.is_numeric:
                                             value = \
-                                                getParameterFromTechXML(tech_xml, pn.name)
+                                                getParameterFromTechXML(
+                                                tech_xml, pn.name)
                                             if value != None:
                                                 dp = \
-                                                    DatafileParameter(dataset_file=dfile, name=pn, string_value=None,
-                                                        numerical_value=float(value))
+                                                    DatafileParameter(
+                                                    dataset_file=dfile,
+                                                    name=pn, string_value=None,
+                                                numerical_value=float(value))
                                                 dp.save()
                                         else:
                                             dp = \
-                                                DatafileParameter(dataset_file=dfile, name=pn,
-                                                    string_value=getParameterFromTechXML(tech_xml,
-                                                    pn.name), numerical_value=None)
+                                                DatafileParameter(
+                                                dataset_file=dfile, name=pn,
+                                        string_value=getParameterFromTechXML(
+                                                tech_xml, pn.name),
+                                                numerical_value=None)
                                             dp.save()
                                     except e:
                                         logger.debug(e)
@@ -500,7 +523,8 @@ class ProcessExperiment:
                     current = 'file'
                     df = df + 1
                     datafile = dict()
-                    logger.debug('experiment: ' + str(e) + ' dataset: ' + str(ds) + ' datafile: ' + str(df))
+                    logger.debug('experiment: ' + str(e) + ' dataset: ' +
+                        str(ds) + ' datafile: ' + str(df))
                 elif line.startswith('<metadata'):
 
                     md = ''
@@ -537,8 +561,8 @@ class ProcessExperiment:
                         # logger.debug(filename)
 
                         dfile = Dataset_File(dataset=d,
-                                filename=filename, url=datafile['path'
-                                ], size=datafile['size'])
+                                filename=filename, url=datafile['path'],
+                                size=datafile['size'])
                         dfile.save()
 
                         logger.debug(dfile.id)
@@ -546,17 +570,19 @@ class ProcessExperiment:
 
                         logger.debug(datafile)
 
-                        if datafile.has_key('metadata'):
+                        if 'metadata' in datafile:
                             md = datafile['metadata']
                             xmlns = getXmlnsFromTechXMLRaw(md)
 
                             try:
-                                logger.debug('trying to find parameters with an xmlns of ' + xmlns)
+                                logger.debug('trying to find parameters with '
+                                    'an xmlns of ' + xmlns)
                                 schema = \
                                     Schema.objects.get(namespace__exact=xmlns)
 
                                 parameternames = \
-                                    ParameterName.objects.filter(schema__namespace__exact=schema.namespace)
+                                    ParameterName.objects.filter(
+                                    schema__namespace__exact=schema.namespace)
                                 parameternames = \
                                     parameternames.order_by('id')
 
@@ -564,22 +590,31 @@ class ProcessExperiment:
 
                                 for pn in parameternames:
                                     try:
-                                        logger.debug('finding parameter ' + pn.name + ' in metadata')
+                                        logger.debug('finding parameter ' +
+                                            pn.name + ' in metadata')
                                         dfile = \
-                                            Dataset_File.objects.get(pk=current_df_id)
+                                            Dataset_File.objects.get(
+                                            pk=current_df_id)
                                         if pn.is_numeric:
                                             value = \
-                                                getParameterFromTechXML(tech_xml, pn.name)
+                                                getParameterFromTechXML(
+                                                tech_xml, pn.name)
                                             if value != None:
                                                 dp = \
-                                                    DatafileParameter(dataset_file=dfile, name=pn, string_value=None,
-                                                        numerical_value=float(value))
+                                                    DatafileParameter(
+                                                    dataset_file=dfile,
+                                                    name=pn, string_value=None,
+                                                    numerical_value=float(
+                                                    value))
                                                 dp.save()
                                         else:
                                             dp = \
-                                                DatafileParameter(dataset_file=dfile, name=pn,
-                                                    string_value=getParameterFromTechXML(tech_xml,
-                                                    pn.name), numerical_value=None)
+                                                DatafileParameter(
+                                                dataset_file=dfile,
+                                                name=pn,
+                                        string_value=getParameterFromTechXML(
+                                                tech_xml,
+                                                pn.name), numerical_value=None)
                                             dp.save()
                                     except e:
                                         logger.debug(e)
@@ -599,27 +634,29 @@ class ProcessExperiment:
                             == 'organization':
                             contents = doc.childNodes
                             exp[tag_name] = getText(contents)
-                            logger.debug('\tADDED ' + tag_name + ': ' + getText(contents))
+                            logger.debug('\tADDED ' + tag_name + ': ' +
+                                getText(contents))
                         if tag_name == 'author':
                             contents = doc.childNodes
                             authors.append(getText(contents))
-                            logger.debug('\tADDED ' + tag_name + ': ' + getText(contents))
+                            logger.debug('\tADDED ' + tag_name + ': ' +
+                                getText(contents))
                     if current == 'dataset':
                         if tag_name == 'description':
                             contents = doc.childNodes
                             dataset[tag_name] = getText(contents)
-                            logger.debug('\t' + tag_name + ': ' + getText(contents))
+                            logger.debug('\t' + tag_name + ': ' +
+                                getText(contents))
                     if current == 'file':
                         if tag_name == 'name' or tag_name == 'size' \
                             or tag_name == 'path':
                             contents = doc.childNodes
                             datafile[tag_name] = getText(contents)
-                            logger.debug('\t' + tag_name + ': ' + getText(contents))
+                            logger.debug('\t' + tag_name + ': ' +
+                            getText(contents))
                 except:
                     pass
 
         logger.debug('DONE EXP: ' + str(experiment.id))
 
         return experiment.id
-
-
