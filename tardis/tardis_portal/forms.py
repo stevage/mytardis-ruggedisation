@@ -130,7 +130,7 @@ def createSearchDatafileForm(searchQueryType):
                     fields[parameterName.name] = \
                         forms.DecimalField(label=parameterName.full_name,
                             required=False)
-            else: # parameter is a string
+            else:  # parameter is a string
                 if parameterName.choices != '':
                     fields[parameterName.name] = \
                         forms.CharField(label=parameterName.full_name,

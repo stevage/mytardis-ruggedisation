@@ -937,7 +937,6 @@ def register_experiment_ws_xmldata(request):
                                    + '/experiment/register/internal/',
                                    data)
 
-
             RegisterThread().start()
 
             # create group
@@ -997,7 +996,6 @@ def register_experiment_ws_xmldata(request):
                         logger.debug(data)
 
                         urllib.urlopen(file_transfer_url, data)
-
 
                 FileTransferThread().start()
 
@@ -1295,7 +1293,7 @@ def __filterParameters(
                             searchFilterData[parameter.name]
                 else:
                     pass
-            else: # parameter.is_numeric == True:
+            else:  # parameter.is_numeric == True:
                 if parameter.comparison_type == \
                         ParameterName.RANGE_COMPARISON:
                     fromParam = searchFilterData[parameter.name + 'From']
