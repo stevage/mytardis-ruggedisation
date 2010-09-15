@@ -624,6 +624,9 @@ def view_experiment(request, experiment_id):
         except Experiment_Owner.DoesNotExist, eo:
             pass
 
+        DatafileSelectionForm = createSearchDatafileSelectionForm()
+        datafileSelectionForm = DatafileSelectionForm()
+
         c = Context({
             # 'totalfilesize': datafiles.aggregate(Sum('size'))['size__sum'],
             'experiment': experiment,
@@ -635,7 +638,7 @@ def view_experiment(request, experiment_id):
             'nav': [{'name': 'Data', 'link': '/experiment/view/'},
                     {'name': experiment.title, 'link': '/experiment/view/' +
                      str(experiment.id) + '/'}],
-            })
+            'searchDatafileSelectionForm': datafileSelectionForm})
     except Experiment.DoesNotExist, de:
         return return_response_not_found(request)
 
@@ -1141,6 +1144,9 @@ def search_experiment(request):
     if get:
         bodyclass = 'list'
 
+    DatafileSelectionForm = createSearchDatafileSelectionForm()
+    datafileSelectionForm = DatafileSelectionForm()
+
     c = Context({
         'submitted': get,
         'experiments': experiments,
@@ -1149,7 +1155,7 @@ def search_experiment(request):
             'link': '/search/experiment/'}],
         'bodyclass': bodyclass,
         'search_pressed': True,
-        })
+        'searchDatafileSelectionForm': datafileSelectionForm})
     return HttpResponse(render_response_index(request,
                         'tardis_portal/search_experiment.html', c))
 
@@ -1214,7 +1220,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
 
     datafile_results = \
         datafile_results.filter(
-    datafileparameterset__datafileparameter__name__schema__namespace__exact=constants.SCHEMA_DICT[
+datafileparameterset__datafileparameter__name__schema__namespace__exact=constants.SCHEMA_DICT[
         searchQueryType]['datafile']).distinct()
 
     # if filename is searchable which i think will always be the case...
@@ -1403,16 +1409,24 @@ def __forwardToSearchDatafileFormPage(searchQueryType,
 
     from itertools import groupby
 
+    DatafileSelectionForm = createSearchDatafileSelectionForm()
+    datafileSelectionForm = DatafileSelectionForm()
+
+    # sort the fields in the form as it will make grouping the related fields
+    # together in the next step easier
+    sortedSearchForm = sorted(searchForm, lambda x, y: cmp(x.name, y.name))
+
     # modifiedSearchForm will be used to customise how the range type of fields
     # will be displayed. range type of fields will be displayed side by side.
     modifiedSearchForm = [list(g) for k, g in groupby(
-        searchForm, lambda x: x.name.rsplit('To')[0].rsplit('From')[0])]
+        sortedSearchForm, lambda x: x.name.rsplit('To')[0].rsplit('From')[0])]
 
     # the searchForm will be used by custom written templates whereas the
     # modifiedSearchForm will be used by the 'generic template' that the
     # dynamic search datafiles form uses.
     return render_to_response(url, {'searchForm': searchForm,
-                              'modifiedSearchForm': modifiedSearchForm})
+                              'modifiedSearchForm': modifiedSearchForm,
+                              'searchDatafileSelectionForm': datafileSelectionForm})
 
 
 def __getSearchForm(request, searchQueryType):
@@ -1474,12 +1488,20 @@ def __processParameters(request, searchQueryType, form):
 
 
 @login_required()
-def search_datafile(request, searchQueryType):
+def search_datafile(request):
+
+    if 'type' in request.GET:
+        searchQueryType = request.GET.get('type')
+    else:
+        # for now we'll default to MX if nothing is provided
+        # TODO: should we forward the page to experiment search page if
+        #       nothing is provided in the future?
+        searchQueryType = 'mx'
 
     # TODO: check if going to /search/datafile will flag an error in unit test
     bodyclass = None
 
-    if 'page' not in request.GET and len(request.GET) > 0:
+    if 'page' not in request.GET and 'type' in request.GET and len(request.GET) > 1:
         # display the 1st page of the results
 
         form = __getSearchForm(request, searchQueryType)
@@ -1528,6 +1550,9 @@ def search_datafile(request, searchQueryType):
     cleanedUpQueryString = re.sub('&page=\d+', '',
         request.META['QUERY_STRING'])
 
+    DatafileSelectionForm = createSearchDatafileSelectionForm()
+    datafileSelectionForm = DatafileSelectionForm()
+
     c = Context({
         'datafiles': datafiles,
         'paginator': paginator,
@@ -1536,7 +1561,7 @@ def search_datafile(request, searchQueryType):
         'nav': [{'name': 'Search Datafile', 'link': '/search/datafile/'}],
         'bodyclass': bodyclass,
         'search_pressed': True,
-        })
+        'searchDatafileSelectionForm': datafileSelectionForm})
     url = 'tardis_portal/search_datafile_results.html'
     return HttpResponse(render_response_index(request, url, c))
 

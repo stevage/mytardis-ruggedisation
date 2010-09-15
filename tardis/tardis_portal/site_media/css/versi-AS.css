@@ -191,3 +191,11 @@ ul.errorlist {
     margin: 0 0 3px;
     padding: 4px 5px;
 }
+
+.searchdropdown {
+    border: 0 none #000000;
+    background-color: #000000;
+    color: #3C7BCF;
+    font-weight: bold;
+    width: 84px
+}

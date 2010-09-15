@@ -111,6 +111,8 @@ def createSearchDatafileForm(searchQueryType):
 
         fields['filename'] = forms.CharField(label='Filename',
                 max_length=100, required=False)
+        fields['type'] = forms.CharField(widget=forms.HiddenInput,
+                initial=searchQueryType)
 
         for parameterName in parameterNames:
             if parameterName.is_numeric:
@@ -175,3 +177,22 @@ def __getParameterChoices(choicesString):
         paramChoices.append((str(key), str(value)))
 
     return tuple(paramChoices)
+
+
+def createSearchDatafileSelectionForm():
+
+    from tardis.tardis_portal import constants
+
+    supportedDatafileSearches = [('-', 'Datafile')]
+    for key in constants.SCHEMA_DICT:
+        supportedDatafileSearches.append((key, key.upper()))
+
+    fields = {}
+    fields['type'] = \
+        forms.CharField(label='type',
+        widget=forms.Select(choices=tuple(supportedDatafileSearches)),
+        required=False)
+    fields['type'].widget.attrs['class'] = 'searchdropdown'
+
+    return type('DatafileSelectionForm', (forms.BaseForm, ),
+                    {'base_fields': fields})

@@ -47,6 +47,16 @@
 <script type="text/javascript" src="/site_media/js/jquery-1.3.1.js"></script>
 <script type="text/javascript" src="/site_media/js/jquery-ui-personalized-1.6rc6.js"></script>
 
+<script type="text/javascript">
+$(document).ready(function() {
+  $("#id_type").change(function () {
+	  if ($("#id_type").val() != '-') {
+	     $(this).parent().submit();
+	  }
+  });
+});
+</script>
+
 {% block script %}{% endblock %}
 
 </head><body>
@@ -76,8 +86,11 @@
 						<tr><td style="color:#FFFFFF; padding-left:20px; padding-top:3px">
 							Search:
 							 <span style="display: inline"><a style="color: #3C7BCF" href="/search/experiment/">Experiment</a></span>
-							/ <span style="display: inline"><a style="color: #3C7BCF" href="/search/datafile/mx">MX Datafile</a></span>
-							/ <span style="display: inline"><a style="color: #3C7BCF" href="/search/datafile/sax">SAX Datafile</a></span>
+							/ <form action="/search/datafile" method="GET" style="display: inline">
+							     {{ searchDatafileSelectionForm.type }}
+							     <noscript><input type="submit" value="Submit"></noscript>
+							  </form>
+															
 						</td><td style="color:#FFFFFF; text-align:right; padding-right:120px; padding-top:3px">
 {% if username %} {{ username }} {% endif %}
 						</td></tr>

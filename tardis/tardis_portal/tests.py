@@ -53,17 +53,19 @@ class SearchTestCase(TestCase):
         self.client = Client()
 
     def testSearchDatafileForm(self):
-        response = self.client.get('/search/datafile/sax/')
+        response = self.client.get('/search/datafile/', {'type': 'sax', })
 
         # check if the response is a redirect to the login page
         self.assertRedirects(response,
-            '/accounts/login/?next=/search/datafile/sax/')
+            '/accounts/login/?next=/search/datafile/%3Ftype%3Dsax')
 
         # let's try to login this time...
         self.client.login(username='test', password='test')
-        response = self.client.get('/search/datafile/sax/')
+        response = self.client.get('/search/datafile/', {'type': 'sax', })
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['searchForm'] is not None)
+        self.assertTrue(response.context['searchDatafileSelectionForm'] is not
+            None)
         self.assertTrue(response.context['modifiedSearchForm'] is not None)
         self.assertTemplateUsed(response,
             'tardis_portal/search_datafile_form.html')
@@ -71,21 +73,23 @@ class SearchTestCase(TestCase):
         self.client.logout()
 
     def testSearchDatafileAuthentication(self):
-        response = self.client.get('/search/datafile/sax/', {'filename': '', })
+        response = self.client.get('/search/datafile/',
+            {'type': 'sax', 'filename': '', })
 
         # check if the response is a redirect to the login page
         self.assertEqual(response.status_code, 302)
 
         # let's try to login this time...
         self.client.login(username='test', password='test')
-        response = self.client.get('/search/datafile/sax/', {'filename': '', })
+        response = self.client.get('/search/datafile/',
+            {'type': 'sax', 'filename': '', })
         self.assertEqual(response.status_code, 200)
         self.client.logout()
 
     def testSearchDatafileResults(self):
         self.client.login(username='test', password='test')
-        response = self.client.get('/search/datafile/sax/',
-            {'filename': 'air_0_001.tif', })
+        response = self.client.get('/search/datafile/',
+            {'type': 'sax', 'filename': 'air_0_001.tif', })
 
         # check for the existence of the contexts..
         self.assertTrue(response.context['datafiles'] is not None)
@@ -95,6 +99,8 @@ class SearchTestCase(TestCase):
         self.assertTrue(response.context['nav'] is not None)
         self.assertTrue(response.context['bodyclass'] is not None)
         self.assertTrue(response.context['search_pressed'] is not None)
+        self.assertTrue(response.context['searchDatafileSelectionForm'] is not
+            None)
 
         self.assertEqual(len(response.context['paginator'].object_list), 1)
         self.assertTemplateUsed(response,
@@ -107,14 +113,16 @@ class SearchTestCase(TestCase):
         # TODO: check if the schema is correct
 
         # check if searching for nothing would result to returning everything
-        response = self.client.get('/search/datafile/sax/', {'filename': '', })
+        response = self.client.get('/search/datafile/',
+            {'type': 'sax', 'filename': '', })
         self.assertEqual(len(response.context['paginator'].object_list), 129)
 
-        response = self.client.get('/search/datafile/sax/', {'io': '123', })
+        response = self.client.get('/search/datafile/',
+            {'type': 'sax', 'io': '123', })
         self.assertEqual(len(response.context['paginator'].object_list), 0)
 
-        response = self.client.get('/search/datafile/sax/',
-            {'frqimn': '0.0450647', })
+        response = self.client.get('/search/datafile/',
+            {'type': 'sax', 'frqimn': '0.0450647', })
         self.assertEqual(len(response.context['paginator'].object_list), 125)
         self.client.logout()
 
@@ -135,7 +143,7 @@ class UserInterfaceTestCase(TestCase):
         c = Client()
         urls = ['/login', '/about', '/partners', '/stats']
         urls += ['/experiment/register', '/experiment/view']
-        urls += ['/search/experiment', '/search/datafile/mx']
+        urls += ['/search/experiment', '/search/datafile?type=sax']
 
         for u in urls:
             response = c.get(u)
