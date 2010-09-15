@@ -39,8 +39,7 @@
              {# {{ searchForm.as_table }} #}
              {% for fields in modifiedSearchForm %}
                 <tr>
-                 {# for the 'from' and 'to' fields to be displayed properly, the for loop had to be reversed #}
-                 {% for field in fields reversed %}
+                 {% for field in fields %}
                  {% if not field.is_hidden %}
                  <th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td>
                  {% else %}
