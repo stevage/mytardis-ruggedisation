@@ -18,4 +18,7 @@ SCHEMA_DICT = {
         {'datafile':
          'http://www.tardis.edu.au/schemas/sax/datafile/2010/08/10',
         'dataset': 'http://www.tardis.edu.au/schemas/sax/dataset/2010/08/10'},
+    'ir':
+        {'datafile': 'http://www.tardis.edu.au/schemas/opusDatafile/1',
+         'dataset': 'http://www.tardis.edu.au/schemas/opusDataset/1'},
     }
