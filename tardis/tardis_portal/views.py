@@ -121,16 +121,19 @@ def get_accessible_datafiles_for_user(experiments):
 
     from django.db.models import Q
 
-    queries = [Q(dataset__experiment__id=e.id) for e in experiments]
+    if experiments is not None:
+        queries = [Q(dataset__experiment__id=e.id) for e in experiments]
 
-    query = queries.pop()
+        query = queries.pop()
 
-    for item in queries:
-        query |= item
+        for item in queries:
+            query |= item
 
-    dataset_files = Dataset_File.objects.filter(query)
+        dataset_files = Dataset_File.objects.filter(query)
 
-    return dataset_files
+        return dataset_files
+    else:
+        return []
 
 
 def get_owned_experiments(user_id):
@@ -160,9 +163,7 @@ def has_experiment_ownership(experiment_id, user_id):
 def experiment_ownership_required(f):
 
     def wrap(request, *args, **kwargs):
-
-                # if user isn't logged in it will redirect to login page
-
+        # if user isn't logged in it will redirect to login page
         if not request.user.is_authenticated():
             return HttpResponseRedirect('/login')
         if not has_experiment_ownership(kwargs['experiment_id'],
@@ -186,8 +187,7 @@ def experiment_access_required(f):
         if not has_experiment_access(kwargs['experiment_id'],
                 request.user):
 
-                    # if user isn't logged in it will redirect to login page
-
+            # if user isn't logged in it will redirect to login page
             if not request.user.is_authenticated():
                 return HttpResponseRedirect('/login')
             else:
@@ -208,8 +208,7 @@ def dataset_access_required(f):
     def wrap(request, *args, **kwargs):
         if not has_dataset_access(kwargs['dataset_id'], request.user):
 
-                    # if user isn't logged in it will redirect to login page
-
+            # if user isn't logged in it will redirect to login page
             if not request.user.is_authenticated():
                 return HttpResponseRedirect('/login')
             else:
@@ -231,8 +230,7 @@ def datafile_access_required(f):
         if not has_datafile_access(kwargs['dataset_file_id'],
                                    request.user):
 
-                    # if user isn't logged in it will redirect to login page
-
+            # if user isn't logged in it will redirect to login page
             if not request.user.is_authenticated():
                 return HttpResponseRedirect('/login')
             else:
@@ -307,15 +305,15 @@ def has_datafile_access(dataset_file_id, user):
 
 def in_group(user, group):
     """Returns True/False if the user is in the given group(s).
-....Usage::
-........{% if user|in_group:"Friends" %}
-........or
-........{% if user|in_group:"Friends,Enemies" %}
-...........
-........{% endif %}
-....You can specify a single group or comma-delimited list.
-....No white space allowed.
-...."""
+    Usage::
+        {% if user|in_group:"Friends" %}
+        or
+        {% if user|in_group:"Friends,Enemies" %}
+        {% endif %}
+    You can specify a single group or comma-delimited list.
+    No white space allowed.
+
+    """
 
     group_list = [group.name]
 
@@ -431,8 +429,6 @@ def downloadTar(request):
             from django.utils.safestring import SafeUnicode
             from django.core.servers.basehttp import FileWrapper
 
-            import os
-
             fileString = ''
             fileSize = 0
             for dfid in request.POST.getlist('datafile'):
@@ -470,8 +466,6 @@ def downloadTar(request):
             from django.utils.safestring import SafeUnicode
             from django.core.servers.basehttp import FileWrapper
 
-            import os
-
             fileString = ''
             fileSize = 0
             for url in request.POST.getlist('url'):
@@ -491,9 +485,6 @@ def downloadTar(request):
             tar_command = 'tar -C ' + settings.FILE_STORE_PATH + ' -c ' + \
                 fileString
 
-            import shlex
-            import subprocess
-
             response = \
                 HttpResponse(FileWrapper(subprocess.Popen(tar_command,
                              stdout=subprocess.PIPE,
@@ -511,14 +502,20 @@ def downloadTar(request):
         return return_response_not_found(request)
 
 
-def display_dataset_image(request, dataset_id, parameter_name):
+def display_dataset_image(
+    request,
+    dataset_id,
+    parameterset_id,
+    parameter_name,
+    ):
 
     # todo handle not exist
 
     dataset = Dataset.objects.get(pk=dataset_id)
     if has_experiment_access(dataset.experiment.id, request.user):
-        image = \
-            dataset.datasetparameter_set.get(name__name=parameter_name)
+
+        image = DatasetParameter.objects.get(name__name=parameter_name,
+                parameterset=parameterset_id)
 
         import base64
 
@@ -531,15 +528,20 @@ def display_dataset_image(request, dataset_id, parameter_name):
         return return_response_error(request)
 
 
-def display_datafile_image(request, dataset_file_id, parameter_name):
+def display_datafile_image(
+    request,
+    dataset_file_id,
+    parameterset_id,
+    parameter_name,
+    ):
 
     # todo handle not exist
 
     datafile = Dataset_File.objects.get(pk=dataset_file_id)
-    if has_experiment_access(datafile.dataset.experiment.id,
-                             request.user):
+    if has_experiment_access(datafile.dataset.experiment.id, request.user):
         image = \
-            datafile.datafileparameter_set.get(name__name=parameter_name)
+            DatafileParameter.objects.get(name__name=parameter_name,
+                parameterset=parameterset_id)
 
         import base64
 
@@ -646,7 +648,6 @@ def experiment_index(request):
     experiments = None
 
     # if logged in
-
     if request.user.is_authenticated():
         experiments = get_accessible_experiments(request.user.id)
         if experiments:
@@ -669,8 +670,6 @@ def experiment_index(request):
 
 
 # web service, depreciated
-
-
 def register_experiment_ws(request):
 
     # from java.lang import Exception
@@ -1019,10 +1018,10 @@ def register_experiment_ws_xmldata(request):
 @datafile_access_required
 def retrieve_parameters(request, dataset_file_id):
 
-    parameters = DatafileParameter.objects.all()
-    parameters = parameters.filter(dataset_file__pk=dataset_file_id)
+    parametersets = DatafileParameterSet.objects.all()
+    parametersets = parametersets.filter(dataset_file__pk=dataset_file_id)
 
-    c = Context({'parameters': parameters})
+    c = Context({'parametersets': parametersets})
 
     return HttpResponse(render_response_index(request,
                         'tardis_portal/ajax/parameters.html', c))
@@ -1186,6 +1185,7 @@ def search_quick(request):
                         'tardis_portal/search_experiment.html', c))
 
 
+@login_required()
 def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     """Filter the list of datafiles for the provided searchQueryType using the
     cleaned up searchFilterData.
@@ -1207,9 +1207,14 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
         get_accessible_datafiles_for_user(
         get_accessible_experiments(request.user.id))
 
+    # there's no need to do any filtering if we didn't find any
+    # datafiles that the user has access to
+    if len(datafile_results) == 0:
+        return datafile_results
+
     datafile_results = \
         datafile_results.filter(
-    datafileparameter__name__schema__namespace__exact=constants.SCHEMA_DICT[
+    datafileparameterset__datafileparameter__name__schema__namespace__exact=constants.SCHEMA_DICT[
         searchQueryType]['datafile']).distinct()
 
     # if filename is searchable which i think will always be the case...
@@ -1217,7 +1222,6 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
         datafile_results = \
             datafile_results.filter(
             filename__icontains=searchFilterData['filename'])
-
     # TODO: might need to cache the result of this later on
 
     # get all the datafile parameters for the given schema
@@ -1228,7 +1232,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
         ['datafile'])]
 
     datafile_results = __filterParameters(parameters, datafile_results,
-            searchFilterData, 'datafileparameter')
+            searchFilterData, 'datafileparameterset__datafileparameter')
 
     # get all the dataset parameters for given schema
     # TODO: if p is searchable
@@ -1238,7 +1242,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
         ['dataset'])]
 
     datafile_results = __filterParameters(parameters, datafile_results,
-            searchFilterData, 'dataset__datasetparameter')
+            searchFilterData, 'dataset__datasetparameterset__datasetparameter')
 
     # let's sort it in the end
     if datafile_results:
@@ -1273,27 +1277,34 @@ def __filterParameters(
         try:
 
             # if parameter is a string...
-            if parameter.is_numeric == False:
+            if not parameter.is_numeric:
                 if searchFilterData[parameter.name] != '':
-                    if parameter.comparison_type == \
-                            ParameterName.EXACT_VALUE_COMPARISON:
-                        kwargs[paramType + '__string_value__iexact'] = \
-                            searchFilterData[parameter.name]
-                    elif parameter.comparison_type == \
-                            ParameterName.CONTAINS_COMPARISON:
-                        # we'll implement exact comparison as 'icontains' for
-                        # now
-                        kwargs[paramType + '__string_value__icontains'] = \
-                            searchFilterData[parameter.name]
+                    # let's check if this is a field that's specified to be
+                    # displayed as a dropdown menu in the form
+                    if parameter.choices != '':
+                        if searchFilterData[parameter.name] != '-':
+                            kwargs[paramType + '__string_value__iexact'] = \
+                                searchFilterData[parameter.name]
                     else:
-                        # if comparison_type on a string is a comparison type
-                        # that can only be applied to a numeric value, we'll
-                        # default to just using 'icontains' comparison
-                        kwargs[paramType + '__string_value__icontains'] = \
-                            searchFilterData[parameter.name]
+                        if parameter.comparison_type == \
+                                ParameterName.EXACT_VALUE_COMPARISON:
+                            kwargs[paramType + '__string_value__iexact'] = \
+                                searchFilterData[parameter.name]
+                        elif parameter.comparison_type == \
+                                ParameterName.CONTAINS_COMPARISON:
+                            # we'll implement exact comparison as 'icontains' for
+                            # now
+                            kwargs[paramType + '__string_value__icontains'] = \
+                                searchFilterData[parameter.name]
+                        else:
+                            # if comparison_type on a string is a comparison type
+                            # that can only be applied to a numeric value, we'll
+                            # default to just using 'icontains' comparison
+                            kwargs[paramType + '__string_value__icontains'] = \
+                                searchFilterData[parameter.name]
                 else:
                     pass
-            else:  # parameter.is_numeric == True:
+            else:  # parameter.is_numeric:
                 if parameter.comparison_type == \
                         ParameterName.RANGE_COMPARISON:
                     fromParam = searchFilterData[parameter.name + 'From']
@@ -1310,8 +1321,10 @@ def __filterParameters(
                         # TODO: we should probably move the static value here
                         #       to the constants module
                         kwargs[paramType + '__numerical_value__range'] = \
-                            (fromParam is not None and fromParam or 1,
-                             toParam is not None and toParam or 9999999999)
+                            (fromParam is None and
+                             constants.FORM_RANGE_LOWEST_NUM or fromParam,
+                             toParam is not None and toParam or
+                             constants.FORM_RANGE_HIGHEST_NUM)
 
                 elif searchFilterData[parameter.name] is not None:
 
@@ -1362,6 +1375,7 @@ def __filterParameters(
             # filter (based on the 'passed' condition) in addition to the
             # initial value of kwargs
             if len(kwargs) > 1:
+                logger.debug(kwargs)
                 datafile_results = datafile_results.filter(**kwargs)
         except KeyError:
             pass
@@ -1652,6 +1666,7 @@ def publish_experiment(request, experiment_id):
         experiment.public = True
         experiment.save()
 
+        c = Context({})
         return HttpResponse(render_response_index(request,
                             'tardis_portal/index.html', c))
     else:

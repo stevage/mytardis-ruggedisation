@@ -205,12 +205,6 @@ class ExperimentParserTestCase(unittest.TestCase):
         self.assertTrue(self.experimentParser.getAbstract() ==
             'Test Abstract.', 'abstract is not the same')
 
-    def testGetPDBIDs(self):
-        self.assertTrue(len(self.experimentParser.getPDBIDs()) == 1,
-            'number of pdb ids should be 1')
-        self.assertTrue('SAMPLE_PDBID' in self.experimentParser.getPDBIDs(),
-            'pdb id should be "SAMPLE_PDBID"')
-
     def testGetRelationURLs(self):
         self.assertTrue('http://www.test.com' in
             self.experimentParser.getRelationURLs(),

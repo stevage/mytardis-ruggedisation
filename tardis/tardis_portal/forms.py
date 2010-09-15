@@ -162,6 +162,10 @@ def __getParameterChoices(choicesString):
     import string
     import re
     paramChoices = []
+
+    # we'll always add '-' as the default value for a dropdown menu just
+    # incase the user doesn't specify a value they'd like to search for
+    paramChoices.append(('-', '-'))
     dropDownEntryPattern = re.compile(r'\((.*):(.*)\)')
 
     dropDownEntryStrings = string.split(choicesString, ',')

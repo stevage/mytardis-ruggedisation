@@ -99,13 +99,6 @@ class ExperimentParser:
                                    self.__schema_mets]))
         return self.__getSingleResult(elements)
 
-    def getPDBIDs(self):
-        elements = self.tree.xpath(self.__xpath_findModsElement +
-                                   "//mods:identifier[@type='pdb']/text()",
-                                   namespaces=dict([self.__schema_mods,
-                                   self.__schema_mets]))
-        return self.__getStrippedElements(elements)
-
     def getRelationURLs(self):
         elements = self.tree.xpath(self.__xpath_findModsElement +
                                    '//mods:url/text()',

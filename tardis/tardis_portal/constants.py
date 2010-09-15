@@ -6,6 +6,10 @@ Created on 08/09/2010
 
 DATAFILE_RESULTS_PER_PAGE = 25
 
+FORM_RANGE_HIGHEST_NUM = 9999999999
+
+FORM_RANGE_LOWEST_NUM = 0
+
 SCHEMA_DICT = {
     'mx':
         {'datafile': 'http://www.tardis.edu.au/schemas/trdDatafile/1',
