@@ -1,7 +1,7 @@
 '''
-Created on 08/09/2010
+constants.py
 
-@author: gerson
+@author: Gerson Galang
 '''
 
 DATAFILE_RESULTS_PER_PAGE = 25
