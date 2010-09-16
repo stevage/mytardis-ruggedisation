@@ -41,6 +41,11 @@ from tardis.tardis_portal import ldap_auth
 from tardis.tardis_portal.MultiPartForm import MultiPartForm
 
 
+def getNewSearchDatafileSelectionForm():
+    DatafileSelectionForm = createSearchDatafileSelectionForm()
+    return DatafileSelectionForm()
+
+
 def render_response_index(request, *args, **kwargs):
 
     kwargs['context_instance'] = RequestContext(request)
@@ -335,7 +340,9 @@ def index(request):
 
     status = ''
 
-    c = Context({'status': status})
+    c = Context(
+        {'status': status,
+        'searchDatafileSelectionForm': getNewSearchDatafileSelectionForm()})
     return HttpResponse(render_response_index(request,
                         'tardis_portal/index.html', c))
 
@@ -624,9 +631,6 @@ def view_experiment(request, experiment_id):
         except Experiment_Owner.DoesNotExist, eo:
             pass
 
-        DatafileSelectionForm = createSearchDatafileSelectionForm()
-        datafileSelectionForm = DatafileSelectionForm()
-
         c = Context({
             # 'totalfilesize': datafiles.aggregate(Sum('size'))['size__sum'],
             'experiment': experiment,
@@ -638,7 +642,8 @@ def view_experiment(request, experiment_id):
             'nav': [{'name': 'Data', 'link': '/experiment/view/'},
                     {'name': experiment.title, 'link': '/experiment/view/' +
                      str(experiment.id) + '/'}],
-            'searchDatafileSelectionForm': datafileSelectionForm})
+            'searchDatafileSelectionForm':
+            getNewSearchDatafileSelectionForm()})
     except Experiment.DoesNotExist, de:
         return return_response_not_found(request)
 
@@ -759,7 +764,8 @@ def ldap_login(request):
         if 'next' in request.POST:
             next = request.POST['next']
 
-        c = Context({})
+        c = Context({'searchDatafileSelectionForm':
+            getNewSearchDatafileSelectionForm()})
 
         error_template_redirect = 'tardis_portal/login.html'
 
@@ -841,7 +847,8 @@ def ldap_login(request):
                     error_template_redirect,
                     "Sorry, username and password don't match")
 
-    c = Context({})
+    c = Context({'searchDatafileSelectionForm':
+            getNewSearchDatafileSelectionForm()})
     return HttpResponse(render_response_index(request,
                         'tardis_portal/login.html', c))
 
@@ -1144,9 +1151,6 @@ def search_experiment(request):
     if get:
         bodyclass = 'list'
 
-    DatafileSelectionForm = createSearchDatafileSelectionForm()
-    datafileSelectionForm = DatafileSelectionForm()
-
     c = Context({
         'submitted': get,
         'experiments': experiments,
@@ -1155,7 +1159,7 @@ def search_experiment(request):
             'link': '/search/experiment/'}],
         'bodyclass': bodyclass,
         'search_pressed': True,
-        'searchDatafileSelectionForm': datafileSelectionForm})
+        'searchDatafileSelectionForm': getNewSearchDatafileSelectionForm()})
     return HttpResponse(render_response_index(request,
                         'tardis_portal/search_experiment.html', c))
 
@@ -1298,8 +1302,8 @@ def __filterParameters(
                                 searchFilterData[parameter.name]
                         elif parameter.comparison_type == \
                                 ParameterName.CONTAINS_COMPARISON:
-                            # we'll implement exact comparison as 'icontains' for
-                            # now
+                            # we'll implement exact comparison as 'icontains'
+                            # for now
                             kwargs[paramType + '__string_value__icontains'] = \
                                 searchFilterData[parameter.name]
                         else:
@@ -1389,7 +1393,7 @@ def __filterParameters(
     return datafile_results
 
 
-def __forwardToSearchDatafileFormPage(searchQueryType,
+def __forwardToSearchDatafileFormPage(request, searchQueryType,
         searchForm=None):
     """Forward to the search data file form page."""
 
@@ -1409,9 +1413,6 @@ def __forwardToSearchDatafileFormPage(searchQueryType,
 
     from itertools import groupby
 
-    DatafileSelectionForm = createSearchDatafileSelectionForm()
-    datafileSelectionForm = DatafileSelectionForm()
-
     # sort the fields in the form as it will make grouping the related fields
     # together in the next step easier
     sortedSearchForm = sorted(searchForm, lambda x, y: cmp(x.name, y.name))
@@ -1424,9 +1425,11 @@ def __forwardToSearchDatafileFormPage(searchQueryType,
     # the searchForm will be used by custom written templates whereas the
     # modifiedSearchForm will be used by the 'generic template' that the
     # dynamic search datafiles form uses.
-    return render_to_response(url, {'searchForm': searchForm,
+    return render_to_response(url, {'username': request.user.username,
+                              'searchForm': searchForm,
                               'modifiedSearchForm': modifiedSearchForm,
-                              'searchDatafileSelectionForm': datafileSelectionForm})
+                              'searchDatafileSelectionForm':
+                              getNewSearchDatafileSelectionForm()})
 
 
 def __getSearchForm(request, searchQueryType):
@@ -1501,7 +1504,8 @@ def search_datafile(request):
     # TODO: check if going to /search/datafile will flag an error in unit test
     bodyclass = None
 
-    if 'page' not in request.GET and 'type' in request.GET and len(request.GET) > 1:
+    if 'page' not in request.GET and 'type' in request.GET and \
+            len(request.GET) > 1:
         # display the 1st page of the results
 
         form = __getSearchForm(request, searchQueryType)
@@ -1509,7 +1513,8 @@ def search_datafile(request):
         if datafile_results is not None:
             bodyclass = 'list'
         else:
-            return __forwardToSearchDatafileFormPage(searchQueryType, form)
+            return __forwardToSearchDatafileFormPage(
+                request, searchQueryType, form)
 
     else:
         if 'page' in request.GET:
@@ -1523,13 +1528,13 @@ def search_datafile(request):
                 if datafile_results is not None:
                     bodyclass = 'list'
                 else:
-                    return __forwardToSearchDatafileFormPage(searchQueryType,
-                        form)
+                    return __forwardToSearchDatafileFormPage(request,
+                        searchQueryType, form)
         else:
             # display the form
             if 'datafileResults' in request.session:
                 del request.session['datafileResults']
-            return __forwardToSearchDatafileFormPage(searchQueryType)
+            return __forwardToSearchDatafileFormPage(request, searchQueryType)
 
     # process the files to be displayed by the paginator...
     paginator = Paginator(datafile_results,
@@ -1550,9 +1555,6 @@ def search_datafile(request):
     cleanedUpQueryString = re.sub('&page=\d+', '',
         request.META['QUERY_STRING'])
 
-    DatafileSelectionForm = createSearchDatafileSelectionForm()
-    datafileSelectionForm = DatafileSelectionForm()
-
     c = Context({
         'datafiles': datafiles,
         'paginator': paginator,
@@ -1561,7 +1563,7 @@ def search_datafile(request):
         'nav': [{'name': 'Search Datafile', 'link': '/search/datafile/'}],
         'bodyclass': bodyclass,
         'search_pressed': True,
-        'searchDatafileSelectionForm': datafileSelectionForm})
+        'searchDatafileSelectionForm': getNewSearchDatafileSelectionForm()})
     url = 'tardis_portal/search_datafile_results.html'
     return HttpResponse(render_response_index(request, url, c))
 
