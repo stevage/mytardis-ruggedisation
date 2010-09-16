@@ -18,7 +18,8 @@ urlpatterns = patterns(
     # Uncomment the next line to enable the admin:
     '',
     (r'^$', 'tardis.tardis_portal.views.index'),
-    (r'^site-settings.xml/$', 'tardis.tardis_portal.views.site_settings'),
+    (r'^site-settings.xml/$', 'tardis.tardis_portal.views.site_settings'
+     ),
     (r'^about/$', 'tardis.tardis_portal.views.about'),
     (r'^partners/$', 'tardis.tardis_portal.views.partners'),
     (r'^stats/$', 'tardis.tardis_portal.views.stats'),
@@ -30,7 +31,8 @@ urlpatterns = patterns(
     (r'^experiment/register/$',
      'tardis.tardis_portal.views.register_experiment_ws_xmldata'),
     (r'^experiment/register/internal/$',
-     'tardis.tardis_portal.views.register_experiment_ws_xmldata_internal'),
+     'tardis.tardis_portal.views.register_experiment_ws_xmldata_internal'
+     ),
     (r'^experiment/view/(\d+)/download/$',
      'tardis.tardis_portal.views.download'),
     (r'^experiment/view/(?P<experiment_id>\d+)/publish/$',
