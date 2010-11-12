@@ -4,8 +4,8 @@
 """
 views.py
 
-@author Steve Androulakis
-@author Gerson Galang
+.. moduleauthor::  Steve Androulakis <steve.androulakis@monash.edu>
+.. moduleauthor::  Gerson Galang <gerson.galang@versi.edu.au>
 
 """
 

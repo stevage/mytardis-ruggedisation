@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 """
-views.py
+download.py
 
-@author Steve Androulakis
-@author Ulrich Felzmann
+.. moduleauthor::  Steve Androulakis <steve.androulakis@monash.edu>
+.. moduleauthor::  Ulrich Felzmann <ulrich.felzmann@versi.edu.au>
 
 """
 
