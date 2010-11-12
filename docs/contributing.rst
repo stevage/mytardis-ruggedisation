@@ -28,6 +28,14 @@ Make the patch using::
 and then add an issue to the `issue tracker <http://code.google.com/p/mytardis/issues/list>`_
 
 
+Generating Documentation
+------------------------
+
+Documentation is done in sphinx and can be built using the commands provided by the sphinx buildout recipe::
+
+   ./bin/sphinxbuilder
+
+
 Hudson
 ------
 
