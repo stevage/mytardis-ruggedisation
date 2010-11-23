@@ -131,10 +131,10 @@ def createSearchDatafileForm(searchQueryType):
                     == ParameterName.RANGE_COMPARISON:
                     fields[parameterName.name + 'From'] = \
                         forms.DecimalField(label=parameterName.full_name
-                            + ' From', required=False)
+                            + ' between', required=False)
                     fields[parameterName.name + 'To'] = \
-                        forms.DecimalField(label=parameterName.full_name
-                            + ' To', required=False)
+                        forms.DecimalField(label=parameterName.full_name, \
+                            required=False)
                 else:
                     # note that we'll also ignore the choices text box entry
                     # even if it's filled if the parameter is of numeric type
