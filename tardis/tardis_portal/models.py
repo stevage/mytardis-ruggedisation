@@ -73,6 +73,21 @@ class Experiment(models.Model):
     handle = models.TextField(null=True, blank=True)
     public = models.BooleanField()
 
+    def getOnlyOneParameterSet(self):
+        """Return the first parameterset associated with this experiment,
+        may be None. This function is usually used when an experiment needs
+        access to the equipment or sample parameter set.
+        
+        """
+        return self.experimentparameterset_set.all()[0]
+
+    def getParameterSets(self):
+        """Return all the experiment parametersets associated with this 
+        experiment.
+
+        """
+        return self.experimentparameterset_set.all()
+
     def __unicode__(self):
         return self.title
 
@@ -108,6 +123,24 @@ class Dataset(models.Model):
     experiment = models.ForeignKey(Experiment)
     description = models.TextField()
 
+    def getOnlyOneParameterSet(self):
+        """Return the first parameterset associated with this dataset. If none, 
+        inherit the parameterset from this dataset's parent Experiment. This
+        function is usually used when a dataset needs access to its own or
+        parent experiment's equipment or sample parameterset.
+
+        """
+        if self.datasetparameterset_set.all():
+            return self.datasetparameterset_set.all()[0]    
+        return self.experiment.getParameterSet()
+
+    def getParameterSets(self):
+        """Return all the dataset parametersets associated with this 
+        dataset.
+
+        """
+        return self.datasetparameterset_set.all()
+
     def __unicode__(self):
         return self.description
 
@@ -121,6 +154,24 @@ class Dataset_File(models.Model):
     protocol = models.CharField(blank=True, max_length=10)
     created_time = models.DateTimeField(null=True, blank=True)
 
+    def getOnlyOneParameterSet(self):
+        """Return the first parameterset associated with this datafile. If 
+        none, inherit the parameterset from this datafile's parent Dataset.
+        This function is usually used when a datafile needs access to its own
+        or parent dataset's equipment or sample parameterset.
+
+        """
+        if self.datafileparameterset_set.all():
+            return self.datafileparameterset_set.all()[0]    
+        return self.dataset.getParameterSet()
+
+    def getParameterSets(self):
+        """Return all the datafile parametersets associated with this 
+        datafile.
+
+        """
+        return self.datafileparameterset_set.all()
+
     def __unicode__(self):
         return self.filename
 
@@ -128,6 +179,7 @@ class Dataset_File(models.Model):
 class Schema(models.Model):
 
     namespace = models.URLField(verify_exists=False, max_length=400)
+    name = models.CharField(blank=True, max_length=50)
 
     def __unicode__(self):
         return self.namespace
@@ -135,10 +187,30 @@ class Schema(models.Model):
 
 class DatafileParameterSet(models.Model):
     schema = models.ForeignKey(Schema)
-    dataset_file = models.ForeignKey(Dataset_File)
+
+    # many to many link is needed so that sample and equipment parametersets
+    # will be able to find datafiles they are linked to
+    dataset_file = models.ManyToManyField(Dataset_File)
+
+    def getOnlyOneDatafile(self):
+        """A convenience method to find the only datafile linked to this
+        parameterset. This is used when the datafile parameterset is not used
+        to hold either sample or equipment parameterset.
+
+        """
+        return self.dataset_file.all()[0]
+
+    def getDatafiles(self):
+        """Returns all the datasets that might be linked to this particular
+        parameterset. This is used when this parameterset is used as a sample
+        or equipment parameterset.
+
+        """
+        return self.dataset_file.all()
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + self.dataset_file.filename
+        return self.schema.namespace + " / " + \
+            self.getOnlyOneDatafile().filename
 
     class Meta:
         ordering = ['id']
@@ -146,10 +218,30 @@ class DatafileParameterSet(models.Model):
 
 class DatasetParameterSet(models.Model):
     schema = models.ForeignKey(Schema)
-    dataset = models.ForeignKey(Dataset)
+
+    # many to many link is needed so that sample and equipment parametersets
+    # will be able to find datasets they are linked to
+    dataset = models.ManyToManyField(Dataset)
+
+    def getOnlyOneDataset(self):
+        """A convenience method to find the only dataset linked to this
+        dataset parameterset. This is used when the dataset parameterset is not
+        used to hold either sample or equipment parameterset.
+
+        """
+        return self.dataset.all()[0]
+
+    def getDatasets(self):
+        """Returns all the datasets that might be linked to this particular
+        parameterset. This is used when this parameterset is used as a sample
+        or equipment parameterset.
+
+        """
+        return self.dataset.all()
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + self.dataset.description
+        return self.schema.namespace + " / " + \
+            self.getOnlyOneDataset().description
 
     class Meta:
         ordering = ['id']
@@ -157,10 +249,30 @@ class DatasetParameterSet(models.Model):
 
 class ExperimentParameterSet(models.Model):
     schema = models.ForeignKey(Schema)
-    experiment = models.ForeignKey(Experiment)
+
+    # many to many link is needed so that sample and equipment parametersets
+    # will be able to find experiments they are linked to
+    experiment = models.ManyToManyField(Experiment)
+
+    def getOnlyOneExperiment(self):
+        """A convenience method to find the only experiment linked to this
+        experiment parameterset. This is used when the parameterset is not used
+        to hold either sample or equipment parameterset.
+
+        """
+        return self.experiment.all()[0]
+
+    def getExperiments(self):
+        """Returns all the experiments that might be linked to this particular
+        parameterset. This is used when this parameterset is used as a sample
+        or equipment parameterset.
+
+        """
+        return self.experiment.all()
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + self.experiment.title
+        return self.schema.namespace + " / " + \
+            self.getOnlyOneExperiment().title
 
     class Meta:
         ordering = ['id']
@@ -201,7 +313,10 @@ class ParameterName(models.Model):
     choices = models.CharField(max_length=500, blank=True)
 
     def __unicode__(self):
-        return self.name
+        return (self.schema.name or self.schema.namespace) + ": " + self.name
+
+    class Meta:
+        unique_together = (('schema', 'name'),)
 
 
 class DatafileParameter(models.Model):
