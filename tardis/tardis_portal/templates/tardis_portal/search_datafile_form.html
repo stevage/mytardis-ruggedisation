@@ -42,13 +42,13 @@
                  {% for field in fields %}
                  {% if not field.is_hidden %}
                      {% if fields|length == 1 %}
-                     <th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td>
+                     <th>{{ field.label }}</th><td>{{ field }}</td><td>{{field.field.unit}} {{ field.errors }}</td>
                      {% endif %}
                      {% if fields|length == 2 %}
                        {% if forloop.first %}
                            <th>{{ field.label }}</th><td>{{ field }} {{ field.errors }}</td>
                        {% else %}
-                           <td>{{ field }} {{ field.errors }}</td>
+                           <td>{{ field }} {{field.field.unit}} {{ field.errors }}</td>
                        {% endif %}                   
                      {% endif %}
                  

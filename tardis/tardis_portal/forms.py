@@ -103,6 +103,24 @@ class RegisterExperimentForm(forms.Form):
     originid = forms.CharField(max_length=400, required=False)
 
 
+class UnitTaggedDecimalField(forms.DecimalField):
+    """The unit-tagged Decimal Field class."""
+    
+    def __init__(self, unit=None, *args, **kwargs):
+        self._unit = unit or ''
+        forms.DecimalField.__init__(self, *args, **kwargs)
+    unit = property(lambda x: x._unit)
+
+
+class UnitTaggedCharField(forms.CharField):
+    """The unit-tagged Decimal Field class."""
+    
+    def __init__(self, unit=None, *args, **kwargs):
+        self._unit = unit or ''
+        forms.CharField.__init__(self, *args, **kwargs)
+    unit = property(lambda x: x._unit)
+
+
 def createSearchDatafileForm(searchQueryType):
 
     from errors import UnsupportedSearchQueryTypeError
@@ -120,39 +138,41 @@ def createSearchDatafileForm(searchQueryType):
 
         fields = {}
 
-        fields['filename'] = forms.CharField(label='Filename',
+        fields['filename'] = UnitTaggedCharField(label='Filename',
                 max_length=100, required=False)
-        fields['type'] = forms.CharField(widget=forms.HiddenInput,
+        fields['type'] = UnitTaggedCharField(widget=forms.HiddenInput,
                 initial=searchQueryType)
 
         for parameterName in parameterNames:
             if parameterName.is_numeric:
                 if parameterName.comparison_type \
-                    == ParameterName.RANGE_COMPARISON:
+                        == ParameterName.RANGE_COMPARISON:
                     fields[parameterName.name + 'From'] = \
-                        forms.DecimalField(label=parameterName.full_name
-                            + ' between', required=False)
+                        UnitTaggedDecimalField(label=parameterName.full_name
+                        + ' between', required=False, unit=parameterName.units)
                     fields[parameterName.name + 'To'] = \
-                        forms.DecimalField(label=parameterName.full_name, \
-                            required=False)
+                        UnitTaggedDecimalField(label=parameterName.full_name,
+                        required=False, unit=parameterName.units)
                 else:
                     # note that we'll also ignore the choices text box entry
                     # even if it's filled if the parameter is of numeric type
                     # TODO: decide if we are to raise an exception if
                     #       parameterName.choices is not empty
                     fields[parameterName.name] = \
-                        forms.DecimalField(label=parameterName.full_name,
-                            required=False)
+                        UnitTaggedDecimalField(label=parameterName.full_name,
+                        required=False, unit=parameterName.units)
             else:  # parameter is a string
                 if parameterName.choices != '':
                     fields[parameterName.name] = \
-                        forms.CharField(label=parameterName.full_name,
+                        UnitTaggedCharField(label=parameterName.full_name,
                         widget=forms.Select(choices=__getParameterChoices(
-                        parameterName.choices)), required=False)
+                        parameterName.choices)), required=False,
+                        unit=parameterName.units)
                 else:
                     fields[parameterName.name] = \
-                        forms.CharField(label=parameterName.full_name,
-                        max_length=255, required=False)
+                        UnitTaggedCharField(label=parameterName.full_name,
+                        max_length=255, required=False,
+                        unit=parameterName.units)
 
         return type('SearchDatafileForm', (forms.BaseForm, ),
                     {'base_fields': fields})
