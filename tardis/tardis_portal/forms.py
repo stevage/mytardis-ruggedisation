@@ -104,7 +104,7 @@ class RegisterExperimentForm(forms.Form):
 
 
 class UnitTaggedDecimalField(forms.DecimalField):
-    """The unit-tagged Decimal Field class."""
+    """The unit-tagged DecimalField class."""
     
     def __init__(self, unit=None, *args, **kwargs):
         self._unit = unit or ''
@@ -113,7 +113,7 @@ class UnitTaggedDecimalField(forms.DecimalField):
 
 
 class UnitTaggedCharField(forms.CharField):
-    """The unit-tagged Decimal Field class."""
+    """The unit-tagged CharField class."""
     
     def __init__(self, unit=None, *args, **kwargs):
         self._unit = unit or ''
