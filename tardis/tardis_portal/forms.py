@@ -113,11 +113,15 @@ def createSearchDatafileForm(searchQueryType):
     parameterNames = None
 
     if searchQueryType in Schema.getSubTypes():
+        print "GERSON", Schema.getNamespace(Schema.DATAFILE,
+            searchQueryType)
+        print searchQueryType
         parameterNames = \
             ParameterName.objects.filter(
             schema__namespace__in=[Schema.getNamespace(Schema.DATAFILE,
             searchQueryType), Schema.getNamespace(Schema.DATASET,
             searchQueryType)], is_searchable='True')
+        print "GERSON", parameterNames
 
         fields = {}
 
@@ -170,7 +174,7 @@ def createSearchExperimentForm():
 
     parameterNames = []
 
-    for experimentSchema in Schema.getNamespace(type=Schema.EXPERIMENT):
+    for experimentSchema in Schema.getNamespaces(type=Schema.EXPERIMENT):
         parameterNames += \
             ParameterName.objects.filter(
             schema__namespace__iexact=experimentSchema,

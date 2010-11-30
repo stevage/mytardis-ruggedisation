@@ -1100,7 +1100,7 @@ def __getFilteredExperiments(request, searchFilterData):
     parameters = []
 
     # get all the experiment parameters
-    for experimentSchema in Schema.getNamespace(Schema.EXPERIMENT):
+    for experimentSchema in Schema.getNamespaces(Schema.EXPERIMENT):
         parameters += ParameterName.objects.filter(
             schema__namespace__exact=experimentSchema)
 
