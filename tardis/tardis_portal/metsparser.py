@@ -438,7 +438,9 @@ class MetsMetadataInfoHandler(ContentHandler):
                     title=self.metsObject.title,
                     institution_name=self.metsObject.institution,
                     description=self.metsObject.description,
-                    created_by=self.createdBy)
+                    created_by=self.createdBy,
+                    start_time=None,
+                    end_time=None)
 
                 self.modelExperiment.save()
 

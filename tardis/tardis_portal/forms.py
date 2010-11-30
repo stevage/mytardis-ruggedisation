@@ -38,6 +38,7 @@ forms module
 '''
 
 from django import forms
+from tardis.tardis_portal.models import Schema
 
 
 class DatafileSearchForm(forms.Form):
@@ -107,16 +108,15 @@ def createSearchDatafileForm(searchQueryType):
 
     from errors import UnsupportedSearchQueryTypeError
     from tardis.tardis_portal.models import ParameterName
-    from tardis.tardis_portal import constants
 
     parameterNames = None
 
-    if searchQueryType in constants.SCHEMA_DICT:
+    if searchQueryType in Schema.getSubTypes():
         parameterNames = \
             ParameterName.objects.filter(
-            schema__namespace__in=[constants.SCHEMA_DICT[searchQueryType]\
-            ['datafile'], constants.SCHEMA_DICT[searchQueryType]['dataset']],
-            is_searchable='True')
+            schema__namespace__in=[Schema.getNamespace(Schema.DATAFILE,
+            searchQueryType), Schema.getNamespace(Schema.DATASET,
+            searchQueryType)], is_searchable='True')
 
         fields = {}
 
@@ -166,11 +166,10 @@ def createSearchExperimentForm():
 
     from django.forms.extras.widgets import SelectDateWidget
     from tardis.tardis_portal.models import ParameterName
-    from tardis.tardis_portal import constants
 
     parameterNames = []
 
-    for experimentSchema in constants.EXPERIMENT_SCHEMAS:
+    for experimentSchema in Schema.getNamespace(type=Schema.EXPERIMENT):
         parameterNames += \
             ParameterName.objects.filter(
             schema__namespace__iexact=experimentSchema,
@@ -255,7 +254,7 @@ def createSearchDatafileSelectionForm():
     from tardis.tardis_portal import constants
 
     supportedDatafileSearches = [('-', 'Datafile')]
-    for key in constants.SCHEMA_DICT:
+    for key in Schema.getSubTypes():
         supportedDatafileSearches.append((key, key.upper()))
 
     fields = {}

@@ -67,7 +67,8 @@ class Experiment(models.Model):
     description = models.TextField(blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    created_time = models.DateTimeField(auto_now_add=True)
+    created_time = models.DateTimeField(null=True, blank=True,
+        auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User)
     handle = models.TextField(null=True, blank=True)
@@ -178,11 +179,45 @@ class Dataset_File(models.Model):
 
 class Schema(models.Model):
 
+    EXPERIMENT = 1
+    DATASET = 2
+    DATAFILE = 3
+    SAMPLE = 4
+    EQUIPMENT = 5
+    _SCHEMA_TYPES = (
+        (EXPERIMENT, 'Experiment schema'),
+        (DATASET, 'Dataset schema'),
+        (DATAFILE, 'Datafile schema'),
+        (SAMPLE, 'Sample schema'),
+        (EQUIPMENT, 'Equipment schema'),
+    )
+
     namespace = models.URLField(verify_exists=False, max_length=400)
-    name = models.CharField(blank=True, max_length=50)
+    name = models.CharField(blank=True, null=True, max_length=50)
+    type = models.IntegerField(
+        choices=_SCHEMA_TYPES, default=EXPERIMENT)
+
+    # subtype will be used for categorising the type of experiment, dataset
+    # or datafile schemas. for example, the type of beamlines are usually used
+    # further categorise the experiment, dataset, and datafile schemas. the
+    # subtype might then allow for the following values: 'mx', 'ir', 'saxs'
+    subtype = models.CharField(blank=True, null=True, max_length=30)
+
+    def _getSchemaTypeName(self, typeNum):
+        return dict(self._SCHEMA_TYPES)[typeNum]
+
+    @classmethod
+    def getSubTypes(cls):
+        return set([schema.subtype for schema in Schema.objects.all() \
+            if schema.subtype])
+
+    @classmethod
+    def getNamespace(cls, type, subtype=None):
+        return Schema.objects.get(type=type, subtype=subtype).namespace
 
     def __unicode__(self):
-        return self.namespace
+        return self._getSchemaTypeName(self.type) + (self.subtype and ' for ' +
+            self.subtype.upper() or '') + ': ' + self.namespace
 
 
 class DatafileParameterSet(models.Model):
