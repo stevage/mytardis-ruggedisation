@@ -1015,7 +1015,7 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
 
     datafile_results = \
         datafile_results.filter(
-datafileparameterset__datafileparameter__name__schema__namespace__exact=Schema.getNamespace(
+datafileparameterset__datafileparameter__name__schema__namespace__in=Schema.getNamespaces(
         Schema.DATAFILE, searchQueryType)).distinct()
 
     # if filename is searchable which i think will always be the case...
@@ -1028,7 +1028,7 @@ datafileparameterset__datafileparameter__name__schema__namespace__exact=Schema.g
     # get all the datafile parameters for the given schema
     parameters = [p for p in
         ParameterName.objects.filter(
-        schema__namespace__exact=Schema.getNamespace(Schema.DATAFILE,
+        schema__namespace__in=Schema.getNamespaces(Schema.DATAFILE,
         searchQueryType))]
 
     datafile_results = __filterParameters(parameters, datafile_results,
@@ -1037,7 +1037,7 @@ datafileparameterset__datafileparameter__name__schema__namespace__exact=Schema.g
     # get all the dataset parameters for given schema
     parameters = [p for p in
         ParameterName.objects.filter(
-        schema__namespace__exact=Schema.getNamespace(Schema.DATASET,
+        schema__namespace__in=Schema.getNamespaces(Schema.DATASET,
         searchQueryType))]
 
     datafile_results = __filterParameters(parameters, datafile_results,

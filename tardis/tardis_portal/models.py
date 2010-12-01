@@ -215,21 +215,13 @@ class Schema(models.Model):
             if schema.subtype])
 
     @classmethod
-    def getNamespace(cls, type, subtype):
-        """Return the namespaces for the given type and subtype. This function
-        is used on dataset and datafile schemas.
-
-        """      
-        return Schema.objects.get(type=type, subtype=subtype).namespace
-
-    @classmethod
-    def getNamespaces(cls, type):
+    def getNamespaces(cls, type, subtype=None):
         """Return the list of namespaces for equipment, sample, and experiment
         schemas.
 
         """
         return [schema.namespace for schema in 
-            Schema.objects.filter(type=type)]
+            Schema.objects.filter(type=type, subtype=subtype or '')]
 
     def __unicode__(self):
         return self._getSchemaTypeName(self.type) + (self.subtype and ' for ' +
