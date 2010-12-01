@@ -237,10 +237,29 @@ class DatafileParameterSet(models.Model):
 
     # many to many link is needed so that sample and equipment parametersets
     # will be able to find datafiles they are linked to
-    dataset_file = models.ForeignKey(Dataset_File)
+    dataset_file = models.ManyToManyField(Dataset_File)
+
+    def getDatafiles(self):
+        """Returns the datafiles that this ParameterSet might be linked to 
+        if this parameter set is used to store datafile metadata. This will
+        return the list of datafiles this parameterSet is linked to if it is
+        used to hold Sample and Equipment metadata.
+
+        """       
+        if self.schema.type in [Schema.EQUIPMENT, Schema.SAMPLE]:
+            # return all the datafiles that this parameterset might be linked
+            return self.dataset_file.all()
+        elif self.schema.type == Schema.DATAFILE:
+            # if we are using this parameterset to hold datafile metadata
+            # we can only have a single datafile linking to this parameterset
+            assert self.dataset_file.all().count() == 1
+            return self.dataset_file.all()
+        else:
+            raise Schema.UnsupportedType
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + self.dataset_file.filename
+        return self.schema.namespace + " / " + \
+            self.getDatafiles()[0].filename
 
     class Meta:
         ordering = ['id']
@@ -251,10 +270,29 @@ class DatasetParameterSet(models.Model):
 
     # many to many link is needed so that sample and equipment parametersets
     # will be able to find datasets they are linked to
-    dataset = models.ForeignKey(Dataset)
+    dataset = models.ManyToManyField(Dataset)
+
+    def getDatasets(self):
+        """Returns the datasets that this ParameterSet might be linked to 
+        if this parameter set is used to store dataset metadata. This will
+        return the list of datasets this parameterSet is linked to if it is
+        used to hold Sample and Equipment metadata.
+
+        """       
+        if self.schema.type in [Schema.EQUIPMENT, Schema.SAMPLE]:
+            # return all the datasets that this parameterset might be linked
+            return self.dataset.all()
+        elif self.schema.type == Schema.DATASET:
+            # if we are using this parameterset to hold dataset metadata
+            # we can only have a single dataset linking to this parameterset
+            assert self.dataset.all().count() == 1
+            return self.dataset.all()
+        else:
+            raise Schema.UnsupportedType
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + self.dataset.description
+        return self.schema.namespace + " / " + \
+            self.getDatasets()[0].description
 
     class Meta:
         ordering = ['id']
@@ -265,10 +303,29 @@ class ExperimentParameterSet(models.Model):
 
     # many to many link is needed so that sample and equipment parametersets
     # will be able to find experiments they are linked to
-    experiment = models.ForeignKey(Experiment)
+    experiment = models.ManyToManyField(Experiment)
+
+    def getExperiments(self):
+        """Returns the experiment that this ParameterSet might be linked to 
+        if this parameter set is used to store experiment metadata. This will
+        return the list of experiments this parameterSet is linked to if it is
+        used to hold Sample and Equipment metadata.
+
+        """       
+        if self.schema.type in [Schema.EQUIPMENT, Schema.SAMPLE]:
+            # return all the experiments that this parameterset might be linked
+            return self.experiment.all()
+        elif self.schema.type == Schema.EXPERIMENT:
+            # if we are using this parameterset to hold experiment metadata
+            # we can only have a single experiment linking to this parameterset
+            assert self.experiment.all().count() == 1
+            return self.experiment.all()
+        else:
+            raise Schema.UnsupportedType
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + self.experiment.title
+        return self.schema.namespace + " / " + \
+            self.getExperiments()[0].title
 
     class Meta:
         ordering = ['id']

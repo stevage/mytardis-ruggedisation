@@ -192,8 +192,10 @@ class ProcessExperiment:
 
                                     parameterset = \
                                         ExperimentParameterSet(
-                                        schema=schema, experiment=experiment)
-
+                                    #    schema=schema, experiment=experiment)
+                                        schema=schema)
+                                    parameterset.save()
+                                    parameterset.experiment.add(experiment)
                                     parameterset.save()
 
                                     for pn in parameternames:
@@ -272,8 +274,10 @@ class ProcessExperiment:
 
                                         parameterset = \
                                             DatasetParameterSet(
-                                            schema=schema, dataset=d)
-
+                                        #    schema=schema, dataset=d)
+                                            schema=schema)
+                                        parameterset.save()
+                                        parameterset.dataset.add(d)
                                         parameterset.save()
 
                                         for pn in parameternames:
@@ -343,9 +347,11 @@ class ProcessExperiment:
                                 tech_xml = getTechXMLFromRaw(md)
 
                                 parameterset = \
-                                    DatafileParameterSet(schema=schema,
-                                    dataset_file=dfile)
-
+                                    DatafileParameterSet(
+                                #    schema=schema, dataset_file=dfile)
+                                    schema=schema)
+                                parameterset.save()
+                                parameterset.dataset_file.add(dfile)
                                 parameterset.save()
 
                                 for pn in parameternames:
@@ -462,8 +468,10 @@ class ProcessExperiment:
                                     tech_xml = getTechXMLFromRaw(md)
 
                                     parameterset = DatafileParameterSet(
-                                        schema=schema, dataset_file=dfile)
-
+                                    #    schema=schema, dataset_file=dfile)
+                                        schema=schema)
+                                    parameterset.save()
+                                    parameterset.dataset_file.add(dfile)
                                     parameterset.save()
 
                                     for pn in parameternames:

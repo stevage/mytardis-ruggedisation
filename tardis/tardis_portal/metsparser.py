@@ -546,8 +546,10 @@ class MetsMetadataInfoHandler(ContentHandler):
                     # create a new parameter set for the metadata
                     parameterSet = \
                         models.ExperimentParameterSet(
-                        schema=schema, experiment=self.modelExperiment)
-
+                    #    schema=schema, experiment=self.modelExperiment)
+                        schema=schema)
+                    parameterSet.save()
+                    parameterSet.experiment.add(self.modelExperiment)
                     parameterSet.save()
 
                     # now let's process the experiment parameters
@@ -571,7 +573,10 @@ class MetsMetadataInfoHandler(ContentHandler):
                     # create a new parameter set for the dataset metadata
                     parameterSet = \
                         models.DatasetParameterSet(
-                        schema=schema, dataset=self.modelDataset)
+                    #    schema=schema, dataset=self.modelDataset)
+                        schema=schema)
+                    parameterSet.save()
+                    parameterSet.dataset.add(self.modelDataset)
                     parameterSet.save()
 
                     # now let's process the dataset parameters
@@ -597,7 +602,10 @@ class MetsMetadataInfoHandler(ContentHandler):
                     # create a new parameter set for the metadata
                     parameterSet = \
                         models.DatafileParameterSet(
-                        schema=schema, dataset_file=self.modelDatafile)
+                    #    schema=schema, dataset_file=self.modelDatafile)
+                        schema=schema)
+                    parameterSet.save()
+                    parameterSet.dataset_file.add(self.modelDatafile)
                     parameterSet.save()
 
                     # now let's process the datafile parameters
