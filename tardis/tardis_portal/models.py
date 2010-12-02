@@ -139,6 +139,11 @@ class Dataset(models.Model):
         if schemaType in [Schema.EQUIPMENT, Schema.SAMPLE]:
             parameterSets = self.experimentparameterset_set.filter(
                 schema__type=schemaType)
+            # if there are no associated equipment or sample parameter sets
+            # to this dataset, let's try and inherit it from the parent
+            # experiment
+            if parameterSets.count() == 0:
+                return self.experiment.getParameterSets(schemaType)
             assert parameterSets.count() == 1
             return parameterSets
         elif schemaType == Schema.DATASET or schemaType is None:
@@ -168,6 +173,11 @@ class Dataset_File(models.Model):
         if schemaType in [Schema.EQUIPMENT, Schema.SAMPLE]:
             parameterSets = self.experimentparameterset_set.filter(
                 schema__type=schemaType)
+            # if there are no associated equipment or sample parameter sets
+            # to this datafile, let's try and inherit it from the parent
+            # dataset
+            if parameterSets.count() == 0:
+                return self.dataset.getParameterSets(schemaType)
             assert parameterSets.count() == 1
             return parameterSets
         elif schemaType == Schema.DATAFILE or schemaType is None:
