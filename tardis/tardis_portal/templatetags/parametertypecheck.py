@@ -24,7 +24,7 @@ def dsparametertypecheck(value, arg):
     datasetparameter = DatasetParameter.objects.get(id=arg)
 
     if datasetparameter.name.name.endswith('Image'):
-        dsid = datasetparameter.parameterset.dataset.id
+        dsid = datasetparameter.parameterset.getDatasets()[0].id
         psid = datasetparameter.parameterset.id
         return "<img src='/displayDatasetImage/" + str(dsid) + '/' \
             + str(psid) + '/' + datasetparameter.name.name + "/' />"

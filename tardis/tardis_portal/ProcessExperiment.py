@@ -191,12 +191,9 @@ class ProcessExperiment:
                                     tech_xml = getTechXMLFromRaw(md)
 
                                     parameterset = \
-                                        ExperimentParameterSet(
-                                    #    schema=schema, experiment=experiment)
-                                        schema=schema)
+                                        ExperimentParameterSet(schema=schema)
                                     parameterset.save()
                                     parameterset.experiment.add(experiment)
-                                    parameterset.save()
 
                                     for pn in parameternames:
                                         logger.debug(
@@ -273,12 +270,9 @@ class ProcessExperiment:
                                             getTechXMLFromRaw(md)
 
                                         parameterset = \
-                                            DatasetParameterSet(
-                                        #    schema=schema, dataset=d)
-                                            schema=schema)
+                                            DatasetParameterSet(schema=schema)
                                         parameterset.save()
                                         parameterset.dataset.add(d)
-                                        parameterset.save()
 
                                         for pn in parameternames:
                                             logger.debug(
@@ -347,12 +341,9 @@ class ProcessExperiment:
                                 tech_xml = getTechXMLFromRaw(md)
 
                                 parameterset = \
-                                    DatafileParameterSet(
-                                #    schema=schema, dataset_file=dfile)
-                                    schema=schema)
+                                    DatafileParameterSet(schema=schema)
                                 parameterset.save()
                                 parameterset.dataset_file.add(dfile)
-                                parameterset.save()
 
                                 for pn in parameternames:
                                     try:
@@ -467,12 +458,9 @@ class ProcessExperiment:
 
                                     tech_xml = getTechXMLFromRaw(md)
 
-                                    parameterset = DatafileParameterSet(
-                                    #    schema=schema, dataset_file=dfile)
-                                        schema=schema)
+                                    parameterset = DatafileParameterSet(schema=schema)
                                     parameterset.save()
                                     parameterset.dataset_file.add(dfile)
-                                    parameterset.save()
 
                                     for pn in parameternames:
                                         try:

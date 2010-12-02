@@ -696,6 +696,14 @@ def _registerExperimentDocument(filename, created_by, expid=None):
     firstline = f.readline()
     f.close()
 
+    # a bug fix -- there are times when the thread that runs this function
+    # is faster than the main thread. so for the main thread to catch up and
+    # create a placeholder experiment that the parser will modify, we'll
+    # need to sleep for a while.
+    logger.debug('sleeping for a second just to let the main thread catch up')
+    import time
+    time.sleep(1)
+                
     if firstline.startswith('<experiment'):
         logger.debug('processing simple xml')
         processExperiment = ProcessExperiment()
