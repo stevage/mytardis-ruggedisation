@@ -276,15 +276,12 @@ class MetsExperimentStructCreatorTestCase(TestCase):
         self.assertTrue(self.dataHolder.metadataMap[
             'A-7'].__class__.__name__ == 'Datafile',
             'metadata A-7 should be a Datafile type')
-        self.assertTrue(self.dataHolder.metadataMap[
-            'A-7'].metadataId == 'A-7',
-            'metadata A-7 should have metadata Id A-7')
-        self.assertTrue(self.dataHolder.metadataMap[
-            'A-1'].metadataId == 'A-1',
-            'metadata A-1 should have metadata Id A-1')
-        self.assertTrue(self.dataHolder.metadataMap[
-            'A-2'].metadataId == 'A-2',
-            'metadata A-2 should have metadata Id A-2')
+        self.assertTrue('A-7' in self.dataHolder.metadataMap[
+            'A-7'].metadataIds, 'metadata A-7 should have metadata Id A-7')
+        self.assertTrue('A-1' in self.dataHolder.metadataMap[
+            'A-1'].metadataIds, 'metadata A-1 should have metadata Id A-1')
+        self.assertTrue('A-2' in self.dataHolder.metadataMap[
+            'A-2'].metadataIds, 'metadata A-2 should have metadata Id A-2')
 
 
 class MetsMetadataInfoHandlerTestCase(TestCase):

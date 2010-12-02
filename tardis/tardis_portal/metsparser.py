@@ -111,16 +111,18 @@ class MetsExperimentStructCreator(ContentHandler):
             fileName = _getAttrValueByQName(attrs, 'OWNERID')
             fileId = _getAttrValueByQName(attrs, 'ID')
             fileSize = _getAttrValueByQName(attrs, 'SIZE')
-            fileMetadataId = _getAttrValueByQName(attrs, 'ADMID')
+            fileMetadataIds = _getAttrValueByQName(attrs, 'ADMID')
 
             # instantiate the datafile
             self.datafile = metsstruct.Datafile(
-                fileId, fileName, fileSize, fileMetadataId)
+                fileId, fileName, fileSize, fileMetadataIds is not None and
+                fileMetadataIds.split() or None)
 
             # add an entry for this datafile in the metadataMap so we can
             # easily look it up later on when we do our second parse
-            if fileMetadataId is not None:
-                self.metadataMap[fileMetadataId] = self.datafile
+            if fileMetadataIds is not None:
+                for fileMetadataId in fileMetadataIds.split():
+                    self.metadataMap[fileMetadataId] = self.datafile
 
         elif elName == 'FLocat' and self.inFileGrp and \
                 _getAttrValueByQName(attrs, 'LOCTYPE') == 'URL':
@@ -142,15 +144,17 @@ class MetsExperimentStructCreator(ContentHandler):
 
             # instantiate a new experiment
             experimentId = _getAttrValueByQName(attrs, 'DMDID')
-            experimentMetadataId = \
+            experimentMetadataIds = \
                 _getAttrValueByQName(attrs, 'ADMID')
             self.experiment = metsstruct.Experiment(experimentId,
-                experimentMetadataId)
+                experimentMetadataIds is not None and
+                experimentMetadataIds.split() or None)
 
             # add an entry for this experiment in the metadataMap so we can
             # easily look it up later on when we do our second parse
-            if experimentMetadataId is not None:
-                self.metadataMap[experimentMetadataId] = self.experiment
+            if experimentMetadataIds is not None:
+                for experimentMetadataId in experimentMetadataIds.split():
+                    self.metadataMap[experimentMetadataId] = self.experiment
 
             # we'll save all the div element entries in the metsStructMap so
             # we can easily look them up when we do our second parse
@@ -164,8 +168,10 @@ class MetsExperimentStructCreator(ContentHandler):
 
             # instantiate a new dataset
             datasetId = _getAttrValueByQName(attrs, 'DMDID')
-            datasetMetadataId = _getAttrValueByQName(attrs, 'ADMID')
-            self.dataset = metsstruct.Dataset(datasetId, datasetMetadataId)
+            datasetMetadataIds = _getAttrValueByQName(attrs, 'ADMID')
+            self.dataset = metsstruct.Dataset(datasetId,
+                datasetMetadataIds is not None and datasetMetadataIds.split()
+                or None)
 
             # we'll also link the newly created dataset with the current
             # experiment
@@ -173,8 +179,9 @@ class MetsExperimentStructCreator(ContentHandler):
 
             # add an entry for this dataset in the metadataMap so we can
             # easily look it up later on when we do our second parse
-            if datasetMetadataId is not None:
-                self.metadataMap[datasetMetadataId] = self.dataset
+            if datasetMetadataIds is not None:
+                for datasetMetadataId in datasetMetadataIds.split():
+                    self.metadataMap[datasetMetadataId] = self.dataset
 
             # we'll save all the div element entries in the metsStructMap so
             # we can easily look them up when we do our second parse
@@ -378,14 +385,19 @@ class MetsMetadataInfoHandler(ContentHandler):
                 thisFilesDataset = self.datasetLookupDict[
                     self.metsObject.dataset.id]
 
-                self.modelDatafile = models.Dataset_File(
-                    dataset=thisFilesDataset,
-                    filename=self.metsObject.name,
-                    url=self.metsObject.url,
-                    size=self.metsObject.size,
-                    protocol=self.metsObject.url.split('://')[0])
+                # also check if the file already exists
+                datafile = thisFilesDataset.dataset_file_set.filter(
+                    filename=self.metsObject.name, size=self.metsObject.size)
 
-                self.modelDatafile.save()
+                if datafile.count() == 0:
+                    self.modelDatafile = models.Dataset_File(
+                        dataset=thisFilesDataset,
+                        filename=self.metsObject.name,
+                        url=self.metsObject.url,
+                        size=self.metsObject.size,
+                        protocol=self.metsObject.url.split('://')[0])
+    
+                    self.modelDatafile.save()
 
                 # TODO: we need to note here that we are only creating a
                 #       datafile entry in the DB for files that have
