@@ -214,6 +214,28 @@ created_time
 
 
 class Schema(models.Model):
+    """A TARDIS schema is a named collection of Parameters that can be attached to an Experiment, Dataset or Datafile with a many-to-many relationship, e.g. each Experiment can have multiple ParameterSets, and each ParameterSet can be attached to multiple Experiments.
+
+Fields:
+
+namespace
+    A URL that uniquely identifies the Schema.
+
+name
+    A user friendly name identifying the Schema.
+
+type
+    One of:
+
+    * EQUIPMENT
+    * DATASET
+    * DATAFILE
+    * GENERAL
+
+    General Schema's may be attached to Equipment, Datasets or Datafiles.
+
+subtype
+    Used to group schema together when searching."""
 
     EXPERIMENT = 1
     DATASET = 2
@@ -279,8 +301,7 @@ class DatafileParameterSet(models.Model):
     dataset_file = models.ManyToManyField(Dataset_File)
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + \
-            self.getDatafiles()[0].filename
+        return "Datafile ParameterSet on " + self.schema.displayName()
 
     class Meta:
         ordering = ['id']
@@ -294,8 +315,7 @@ class DatasetParameterSet(models.Model):
     dataset = models.ManyToManyField(Dataset)
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + \
-            self.getDatasets()[0].description
+        return "Dataset ParameterSet on " + self.schema.displayName()
 
     class Meta:
         ordering = ['id']
@@ -309,8 +329,7 @@ class ExperimentParameterSet(models.Model):
     experiment = models.ManyToManyField(Experiment)
 
     def __unicode__(self):
-        return self.schema.namespace + " / " + \
-            self.getExperiments()[0].title
+        return "Experiment ParameterSet on " + self.schema.displayName()
 
     class Meta:
         ordering = ['id']
