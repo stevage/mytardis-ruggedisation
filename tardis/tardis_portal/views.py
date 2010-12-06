@@ -1014,17 +1014,18 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
 
     datafile_results = \
         get_accessible_datafiles_for_user(
-        get_accessible_experiments(request.user.id))
+        get_accessible_experiments(request.user.id)).distinct()
 
     # there's no need to do any filtering if we didn't find any
     # datafiles that the user has access to
     if len(datafile_results) == 0:
         return datafile_results
 
-    datafile_results = \
-        datafile_results.filter(
-datafileparameterset__datafileparameter__name__schema__namespace__in=Schema.getNamespaces(
-        Schema.DATAFILE, searchQueryType)).distinct()
+    namespaces = Schema.getNamespaces(Schema.DATAFILE, searchQueryType)
+    if len(namespaces) > 0:
+        datafile_results = \
+            datafile_results.filter(
+datafileparameterset__datafileparameter__name__schema__namespace__in=namespaces)
 
     # if filename is searchable which i think will always be the case...
     if searchFilterData['filename'] != '':

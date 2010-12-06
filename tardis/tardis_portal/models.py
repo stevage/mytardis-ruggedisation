@@ -57,6 +57,12 @@ class XSLT_docs(models.Model):
 
 
 class Author(models.Model):
+    """Author's are researchers associated with an experiment that do not have a TARDIS account.
+
+Fields:
+
+name
+    Author's full name"""
 
     name = models.CharField(max_length=255)
 
@@ -65,6 +71,42 @@ class Author(models.Model):
 
 
 class Experiment(models.Model):
+    """The Experiment is TARDIS' top level representation of data.  Experiments are composed of a number of Datasets, each of which contains any number of Datafiles.
+
+Fields:
+
+url
+
+approved
+
+title
+    Short name of the Experiment
+
+institution_name
+    The institution or facility where the Experiment was conducted.
+
+description
+    The description, or abstract, describing the Experiment.
+
+start_time
+    The timestamp indicating the date the experiment was started.
+
+end_time
+    The timestamp indicating the date the experiment was completed.
+created_time
+    Auto-generated, the timestamp indicating the date / time the experiment was created, typically when metadata was uploaded in to TARDIS.
+
+update_time
+    Auto-generated, the timestamp indicating the date / time that the experiment was last modified.
+
+created_by
+    The User account used to initially upload the Experiment.
+
+handle
+    ???
+
+public
+    Boolean flag indicating whether the Experiment is publically accessible."""
 
     url = models.URLField(verify_exists=False, max_length=255)
     approved = models.BooleanField()
@@ -79,22 +121,6 @@ class Experiment(models.Model):
     created_by = models.ForeignKey(User)
     handle = models.TextField(null=True, blank=True)
     public = models.BooleanField()
-
-    def getParameterSets(self, schemaType=None):
-        """Return the experiment parametersets associated with this 
-        experiment.
-
-        """
-        if schemaType in [Schema.EQUIPMENT, Schema.SAMPLE]:
-            parameterSets = self.experimentparameterset_set.filter(
-                schema__type=schemaType)
-            assert parameterSets.count() == 1
-            return parameterSets
-        elif schemaType == Schema.EXPERIMENT or schemaType is None:
-            return self.experimentparameterset_set.filter(
-                schema__type=Schema.EXPERIMENT)
-        else:
-            raise Schema.UnsupportedType
 
     def __unicode__(self):
         return self.title
@@ -127,36 +153,54 @@ class Author_Experiment(models.Model):
 
 
 class Dataset(models.Model):
+    """The Dataset groups Datafiles together.  TARDIS doesn't place any interpretation on the meaning of the group, which should be meaningful to the researcher.
+
+Examples of groups include:
+
+ * Experimental Data, Derived Data, Final Data
+ * Grouped by equipment
+ * Grouped by configuration (equipment settings)
+ * Time sequence
+
+The description should include enough information for the researcher to interpret the grouping.
+
+Fields:
+
+experiment
+    The Experiment to which the Dataset belongs
+
+description
+    A free-format description of the Dataset"""
 
     experiment = models.ForeignKey(Experiment)
     description = models.TextField()
-
-    def getParameterSets(self, schemaType=None):
-        """Return the dataset parametersets associated with this 
-        experiment.
-
-        """
-        if schemaType in [Schema.EQUIPMENT, Schema.SAMPLE]:
-            parameterSets = self.experimentparameterset_set.filter(
-                schema__type=schemaType)
-            # if there are no associated equipment or sample parameter sets
-            # to this dataset, let's try and inherit it from the parent
-            # experiment
-            if parameterSets.count() == 0:
-                return self.experiment.getParameterSets(schemaType)
-            assert parameterSets.count() == 1
-            return parameterSets
-        elif schemaType == Schema.DATASET or schemaType is None:
-            return self.experimentparameterset_set.filter(
-                schema__type=Schema.DATASET)
-        else:
-            raise Schema.UnsupportedType
 
     def __unicode__(self):
         return self.description
 
 
 class Dataset_File(models.Model):
+    """A Dataset_File record is created for each file contained in the Experiment, and belongs to a single Dataset.
+
+Fields:
+
+dataset
+    Foreign key to the containing Dataset
+
+filename
+    The name of the file :-)
+
+url
+    The location of the file.  (Add note about plugable protocol handling)
+
+size
+    The file size (in bytes?)
+
+protocol
+    The protocol used to download the file
+
+created_time
+    The creation date of the file(?)"""
 
     dataset = models.ForeignKey(Dataset)
     filename = models.CharField(max_length=400)
@@ -164,27 +208,6 @@ class Dataset_File(models.Model):
     size = models.CharField(blank=True, max_length=400)
     protocol = models.CharField(blank=True, max_length=10)
     created_time = models.DateTimeField(null=True, blank=True)
-
-    def getParameterSets(self, schemaType=None):
-        """Return datafile parametersets associated with this 
-        experiment.
-
-        """
-        if schemaType in [Schema.EQUIPMENT, Schema.SAMPLE]:
-            parameterSets = self.experimentparameterset_set.filter(
-                schema__type=schemaType)
-            # if there are no associated equipment or sample parameter sets
-            # to this datafile, let's try and inherit it from the parent
-            # dataset
-            if parameterSets.count() == 0:
-                return self.dataset.getParameterSets(schemaType)
-            assert parameterSets.count() == 1
-            return parameterSets
-        elif schemaType == Schema.DATAFILE or schemaType is None:
-            return self.experimentparameterset_set.filter(
-                schema__type=Schema.DATAFILE)
-        else:
-            raise Schema.UnsupportedType
 
     def __unicode__(self):
         return self.filename
@@ -195,14 +218,12 @@ class Schema(models.Model):
     EXPERIMENT = 1
     DATASET = 2
     DATAFILE = 3
-    SAMPLE = 4
-    EQUIPMENT = 5
+    GENERAL = 6
     _SCHEMA_TYPES = (
         (EXPERIMENT, 'Experiment schema'),
         (DATASET, 'Dataset schema'),
         (DATAFILE, 'Datafile schema'),
-        (SAMPLE, 'Sample schema'),
-        (EQUIPMENT, 'Equipment schema'),
+        (GENERAL, 'General schema'),
     )
 
     namespace = models.URLField(verify_exists=False, max_length=400)
@@ -237,6 +258,14 @@ class Schema(models.Model):
         return self._getSchemaTypeName(self.type) + (self.subtype and ' for ' +
             self.subtype.upper() or '') + ': ' + self.namespace
 
+    def displayName(self):
+        """displayName() returns a string that is user friendly to display"""
+        if self.name is None:
+            return self.namespace
+        else:
+            return self.name
+
+
     class UnsupportedType(Exception):
         def __init__(self, msg):
             Exception.__init__(self, msg)
@@ -248,24 +277,6 @@ class DatafileParameterSet(models.Model):
     # many to many link is needed so that sample and equipment parametersets
     # will be able to find datafiles they are linked to
     dataset_file = models.ManyToManyField(Dataset_File)
-
-    def getDatafiles(self):
-        """Returns the datafiles that this ParameterSet might be linked to 
-        if this parameter set is used to store datafile metadata. This will
-        return the list of datafiles this parameterSet is linked to if it is
-        used to hold Sample and Equipment metadata.
-
-        """       
-        if self.schema.type in [Schema.EQUIPMENT, Schema.SAMPLE]:
-            # return all the datafiles that this parameterset might be linked
-            return self.dataset_file.all()
-        elif self.schema.type == Schema.DATAFILE:
-            # if we are using this parameterset to hold datafile metadata
-            # we can only have a single datafile linking to this parameterset
-            assert self.dataset_file.all().count() == 1
-            return self.dataset_file.all()
-        else:
-            raise Schema.UnsupportedType
 
     def __unicode__(self):
         return self.schema.namespace + " / " + \
@@ -282,24 +293,6 @@ class DatasetParameterSet(models.Model):
     # will be able to find datasets they are linked to
     dataset = models.ManyToManyField(Dataset)
 
-    def getDatasets(self):
-        """Returns the datasets that this ParameterSet might be linked to 
-        if this parameter set is used to store dataset metadata. This will
-        return the list of datasets this parameterSet is linked to if it is
-        used to hold Sample and Equipment metadata.
-
-        """       
-        if self.schema.type in [Schema.EQUIPMENT, Schema.SAMPLE]:
-            # return all the datasets that this parameterset might be linked
-            return self.dataset.all()
-        elif self.schema.type == Schema.DATASET:
-            # if we are using this parameterset to hold dataset metadata
-            # we can only have a single dataset linking to this parameterset
-            assert self.dataset.all().count() == 1
-            return self.dataset.all()
-        else:
-            raise Schema.UnsupportedType
-
     def __unicode__(self):
         return self.schema.namespace + " / " + \
             self.getDatasets()[0].description
@@ -314,24 +307,6 @@ class ExperimentParameterSet(models.Model):
     # many to many link is needed so that sample and equipment parametersets
     # will be able to find experiments they are linked to
     experiment = models.ManyToManyField(Experiment)
-
-    def getExperiments(self):
-        """Returns the experiment that this ParameterSet might be linked to 
-        if this parameter set is used to store experiment metadata. This will
-        return the list of experiments this parameterSet is linked to if it is
-        used to hold Sample and Equipment metadata.
-
-        """       
-        if self.schema.type in [Schema.EQUIPMENT, Schema.SAMPLE]:
-            # return all the experiments that this parameterset might be linked
-            return self.experiment.all()
-        elif self.schema.type == Schema.EXPERIMENT:
-            # if we are using this parameterset to hold experiment metadata
-            # we can only have a single experiment linking to this parameterset
-            assert self.experiment.all().count() == 1
-            return self.experiment.all()
-        else:
-            raise Schema.UnsupportedType
 
     def __unicode__(self):
         return self.schema.namespace + " / " + \

@@ -29,7 +29,7 @@
 -->
 {% load parametertypecheck %}
 {% for parameterset in parametersets %}
-	<p><strong><em>Schema: {{parameterset.schema}}</strong></em></p>
+	<p><strong><em>Schema: {{parameterset.schema.displayName}}</strong></em></p>
     {% autoescape off %}
 	{% for parameter in parameterset.datafileparameter_set.all %}
 		<li><strong>{{ parameter.name.full_name }}: </strong>
