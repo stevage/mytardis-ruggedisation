@@ -544,7 +544,8 @@ class MetsMetadataInfoHandler(ContentHandler):
                             if createParamSetFlag['experiment']:
                                 # create a new parameter set for the metadata
                                 parameterSet = \
-                                    models.ExperimentParameterSet(schema=schema)
+                                    models.ExperimentParameterSet(
+                                    schema=schema, experiment=self.modelExperiment)
                                 parameterSet.save()
             
                                 # now let's process the experiment parameters
@@ -558,9 +559,6 @@ class MetsMetadataInfoHandler(ContentHandler):
                                                 parameterSet)
                                 
                                 createParamSetFlag['experiment'] = False
-        
-                                # now link this parameterset with the experiment
-                                parameterSet.experiment.add(self.modelExperiment)
                             else:
                                 # this is not even allowed as there's only going
                                 # to be one experiment per METS file

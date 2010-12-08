@@ -57,12 +57,13 @@ class XSLT_docs(models.Model):
 
 
 class Author(models.Model):
-    """Author's are researchers associated with an experiment that do not have a TARDIS account.
+    """
+    Author's are researchers associated with an experiment that do not have a TARDIS account.
 
-Fields:
+    Fields:
 
-name
-    Author's full name"""
+    :attribute name: Author's full name
+    """
 
     name = models.CharField(max_length=255)
 
@@ -71,42 +72,35 @@ name
 
 
 class Experiment(models.Model):
-    """The Experiment is TARDIS' top level representation of data.  Experiments are composed of a number of Datasets, each of which contains any number of Datafiles.
+    """
+    The Experiment is TARDIS' top level representation of data.  Experiments are composed of a number of Datasets, each of which contains any number of Datafiles.
 
-Fields:
+    An Experiment is a self-contained entity so that it may be transferred to other federated instances of TARDIS.
 
-url
+    Fields:
 
-approved
-
-title
-    Short name of the Experiment
-
-institution_name
-    The institution or facility where the Experiment was conducted.
-
-description
-    The description, or abstract, describing the Experiment.
-
-start_time
-    The timestamp indicating the date the experiment was started.
-
-end_time
-    The timestamp indicating the date the experiment was completed.
-created_time
-    Auto-generated, the timestamp indicating the date / time the experiment was created, typically when metadata was uploaded in to TARDIS.
-
-update_time
-    Auto-generated, the timestamp indicating the date / time that the experiment was last modified.
-
-created_by
-    The User account used to initially upload the Experiment.
-
-handle
-    ???
-
-public
-    Boolean flag indicating whether the Experiment is publically accessible."""
+    :attribute url: Description needed.
+    :attribute approved: Description needed.
+    :attribute title:
+        Short name of the Experiment
+    :attribute institution_name:
+        The institution or facility where the Experiment was conducted.
+    :attribute description:
+        The description, or abstract, describing the Experiment.
+    :attribute start_time:
+        The timestamp indicating the date the experiment was started.
+    :attribute end_time:
+        The timestamp indicating the date the experiment was completed.
+    :attribute created_time:
+        Auto-generated, the timestamp indicating the date / time the experiment was created, typically when metadata was uploaded in to TARDIS.
+    :attribute update_time:
+        Auto-generated, the timestamp indicating the date / time that the experiment was last modified.
+    :attribute created_by:
+        The User account used to initially upload the Experiment.
+    :attribute handle: ???
+    :attribute public:
+        Boolean flag indicating whether the Experiment is publically accessible.
+    """
 
     url = models.URLField(verify_exists=False, max_length=255)
     approved = models.BooleanField()
@@ -153,24 +147,23 @@ class Author_Experiment(models.Model):
 
 
 class Dataset(models.Model):
-    """The Dataset groups Datafiles together.  TARDIS doesn't place any interpretation on the meaning of the group, which should be meaningful to the researcher.
+    """
+    The Dataset groups Datafiles together.  TARDIS doesn't place any interpretation on the meaning of the group, which should be meaningful to the researcher.
 
-Examples of groups include:
+    Examples of groups include:
 
- * Experimental Data, Derived Data, Final Data
- * Grouped by equipment
- * Grouped by configuration (equipment settings)
- * Time sequence
+     * Experimental Data, Derived Data, Final Data
+     * Grouped by equipment
+     * Grouped by configuration (equipment settings)
+     * Time sequence
 
-The description should include enough information for the researcher to interpret the grouping.
+    The description should include enough information for the researcher to interpret the grouping.
 
-Fields:
+    Fields:
 
-experiment
-    The Experiment to which the Dataset belongs
-
-description
-    A free-format description of the Dataset"""
+    :attribute experiment: The Experiment to which the Dataset belongs
+    :attribute description: A free-format description of the Dataset
+    """
 
     experiment = models.ForeignKey(Experiment)
     description = models.TextField()
@@ -180,27 +173,18 @@ description
 
 
 class Dataset_File(models.Model):
-    """A Dataset_File record is created for each file contained in the Experiment, and belongs to a single Dataset.
+    """
+    A Dataset_File record, commonly referred to as a Datafile, is created for each file contained in the Experiment, and belongs to a single Dataset.
 
-Fields:
+    Fields:
 
-dataset
-    Foreign key to the containing Dataset
-
-filename
-    The name of the file :-)
-
-url
-    The location of the file.  (Add note about plugable protocol handling)
-
-size
-    The file size (in bytes?)
-
-protocol
-    The protocol used to download the file
-
-created_time
-    The creation date of the file(?)"""
+    :attribute dataset: Foreign key to the containing Dataset
+    :attribute filename: The name of the file :-)
+    :attribute url: The location of the file.  (Add note about plugable protocol handling)
+    :attribute size: The file size (in bytes?)
+    :attribute protocol: The protocol used to download the file
+    :attribute created_time: The creation date of the file(?)
+    """
 
     dataset = models.ForeignKey(Dataset)
     filename = models.CharField(max_length=400)
@@ -214,28 +198,16 @@ created_time
 
 
 class Schema(models.Model):
-    """A TARDIS schema is a named collection of Parameters that can be attached to an Experiment, Dataset or Datafile with a many-to-many relationship, e.g. each Experiment can have multiple ParameterSets, and each ParameterSet can be attached to multiple Experiments.
+    """
+    A TARDIS schema is a named collection of Parameters that can be attached to an Experiment, Dataset or Datafile.  A schema is instantiated as a parameter set, one of ExperimentParameterSet, DatasetParameterSet or DatafileParameterSet.
 
-Fields:
+    Fields:
 
-namespace
-    A URL that uniquely identifies the Schema.
-
-name
-    A user friendly name identifying the Schema.
-
-type
-    One of:
-
-    * EQUIPMENT
-    * DATASET
-    * DATAFILE
-    * GENERAL
-
-    General Schema's may be attached to Equipment, Datasets or Datafiles.
-
-subtype
-    Used to group schema together when searching."""
+    :attribute namespace: A URL that uniquely identifies the Schema.
+    :attribute name: A user friendly name identifying the Schema.
+    :attribute subtype: Used to group schema together when searching.
+    :attribute description: A free format text description of the schema.
+    """
 
     EXPERIMENT = 1
     DATASET = 2
@@ -252,6 +224,7 @@ subtype
     name = models.CharField(blank=True, null=True, max_length=50)
     type = models.IntegerField(
         choices=_SCHEMA_TYPES, default=EXPERIMENT)
+    description = models.TextField()
 
     # subtype will be used for categorising the type of experiment, dataset
     # or datafile schemas. for example, the type of beamlines are usually used
@@ -294,10 +267,9 @@ subtype
 
 
 class DatafileParameterSet(models.Model):
-    schema = models.ForeignKey(Schema)
+    """DatafileParameterSet is the instantiation of a schema attached to a Datafile.  Each Datafile may have multiple DatafileParameterSets, and a DatafileParameterSet may be attached to multiple Datafiles within an experiment."""
 
-    # many to many link is needed so that sample and equipment parametersets
-    # will be able to find datafiles they are linked to
+    schema = models.ForeignKey(Schema)
     dataset_file = models.ManyToManyField(Dataset_File)
 
     def __unicode__(self):
@@ -308,10 +280,11 @@ class DatafileParameterSet(models.Model):
 
 
 class DatasetParameterSet(models.Model):
-    schema = models.ForeignKey(Schema)
+    """
+    DatasetParameterSet is the instantiation of a schema attached to a Dataset.  Each Dataset may have multiple DatasetParameterSets, and a DatasetParameterSet may be attached to multiple Datasets within an experiment.
+    """
 
-    # many to many link is needed so that sample and equipment parametersets
-    # will be able to find datasets they are linked to
+    schema = models.ForeignKey(Schema)
     dataset = models.ManyToManyField(Dataset)
 
     def __unicode__(self):
@@ -322,11 +295,12 @@ class DatasetParameterSet(models.Model):
 
 
 class ExperimentParameterSet(models.Model):
-    schema = models.ForeignKey(Schema)
+    """
+    ExperimentParameterSet is the instantiation of a schema attached to an Experiment.  Each Experiment may have multiple ExperimentParameterSets.  However, unlike DatasetParameterSets and DatafileParameterSets, an ExperimentParameterSet may only be attached to one Experiment.
+    """
 
-    # many to many link is needed so that sample and equipment parametersets
-    # will be able to find experiments they are linked to
-    experiment = models.ManyToManyField(Experiment)
+    schema = models.ForeignKey(Schema)
+    experiment = models.ForeignKey(Experiment)
 
     def __unicode__(self):
         return "Experiment ParameterSet on " + self.schema.displayName()
@@ -336,6 +310,21 @@ class ExperimentParameterSet(models.Model):
 
 
 class ParameterName(models.Model):
+    """
+    A ParameterName defines an item of metadata that may be stored as part of a ParameterSet.
+
+    Fields:
+
+    :attribute schema: The schema to which this Parameter belongs.
+    :attribute name: A short name used to identify the parameter.
+    :attribute full_name: The display name used to identify the parameter to a user.
+    :attribute units: The units of the parameter.  This is only used for display purposes.  TARDIS doesn't place any interpretation on the units.
+    :attribute is_numeric: Flag whether the parameter is a string or number (Float).
+    :attribute comparison_type: An enumerated value indicating what type of match the search engine should perform.
+    :attribute is_searchable: Flag whether to display the parameter on the search page.
+    :attribute choices: ???
+    :attribute description: A free format description of the parameter.
+    """
 
     EXACT_VALUE_COMPARISON = 1
     NOT_EQUAL_COMPARISON = 2
@@ -368,6 +357,7 @@ class ParameterName(models.Model):
     # TODO: we'll need to rethink the way choices for drop down menus are
     #       represented in the DB. doing it this way is just a bit wasteful.
     choices = models.CharField(max_length=500, blank=True)
+    description = models.TextField()
 
     def __unicode__(self):
         return (self.schema.name or self.schema.namespace) + ": " + self.name

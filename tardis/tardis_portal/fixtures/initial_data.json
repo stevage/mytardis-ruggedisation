@@ -82,6 +82,7 @@
     {
         "fields": {
             "name": "AS Sample Schema", 
+            "description": "The Sample schema is used to identify the material being analysed.  Ideally, Sample would contain enough information to reproduce the experiment.\r\n\r\nSample information may be inherited, i.e. if a Datafile doesn't contain a sample, search in the containing Dataset, if not there, search in the Experiment.", 
             "namespace": "http://www.tardis.edu.au/schemas/as/sample/2010/12/02", 
             "subtype": "sample", 
             "type": 6
@@ -92,6 +93,7 @@
     {
         "fields": {
             "name": "AS Equipment", 
+            "description": "Equipment identifies the equipment used to record the data.  Ideally it will contain a basic identifier and URL to additional information.", 
             "namespace": "http://www.tardis.edu.au/schemas/as/equipment/2010/12/06", 
             "subtype": "equipment", 
             "type": 2
@@ -1685,6 +1687,7 @@
         "fields": {
             "choices": "", 
             "comparison_type": 1, 
+            "description": "A link to additional information about the equipment.", 
             "full_name": "URL", 
             "is_numeric": false, 
             "is_searchable": false, 
