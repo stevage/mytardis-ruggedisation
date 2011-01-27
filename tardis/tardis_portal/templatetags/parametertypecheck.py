@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 from django import template
 from django.utils.safestring import mark_safe
@@ -18,6 +17,12 @@ def eparametertypecheck(value, arg):
         result = "<img src='/displayExperimentImage/%s/%s/%s/'" \
             % (eid, psid, experimentparameter.name.name)
         return mark_safe(result)
+    elif experimentparameter.name.name.startswith('/'):
+        result = "<a href='%s/%s/' >%s</a> " \
+            % (experimentparameter.name.name,
+               experimentparameter.string_value,
+               experimentparameter.string_value)
+        return mark_safe(result)
     else:
         return value
 
@@ -32,6 +37,12 @@ def dsparametertypecheck(value, arg):
         result = "<img src='/displayDatasetImage/%s/%s/%s/'" \
             % (dsid, psid, datasetparameter.name.name)
         return mark_safe(result)
+    elif datasetparameter.name.name.startswith('/'):
+        result = "<a href='%s/%s/' >%s</a> " \
+            % (datasetparameter.name.name,
+               datasetparameter.string_value,
+               datasetparameter.string_value)
+        return mark_safe(result)
     else:
         return value
 
@@ -45,6 +56,12 @@ def dfparametertypecheck(value, arg):
         psid = datafileparameter.parameterset.id
         result = "<img src='/displayDatafileImage/%s/%s/%s/'" \
             % (dfid, psid, datafileparameter.name.name)
+        return mark_safe(result)
+    elif datafileparameter.name.name.startswith('/'):
+        result = "<a href='%s/%s/' >%s</a> " \
+            % (datafileparameter.name.name,
+               datafileparameter.string_value,
+               datafileparameter.string_value)
         return mark_safe(result)
     else:
         return value

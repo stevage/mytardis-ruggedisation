@@ -394,9 +394,6 @@
 
 									<div class="dataset_description">
 									<strong>Dataset Description</strong>: {{ dataset.description|safe }} <br>
-									<strong>Dataset Equipment</strong>:
-									{% for eq in dataset.equipment_set.all %}																	<a href="/equipment/{{eq.id}}">{{ eq.key }}</a>
-									{% endfor %}
 									</div>
 									<div class="dataset_extrainfo">
 										{% if dataset.datasetparameterset_set.count %}

@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010, Monash e-Research Centre
@@ -66,7 +65,7 @@ class Author(models.Model):
 
 class Experiment(models.Model):
 
-    url = models.URLField(verify_exists=False, max_length=255)
+    url = models.URLField(blank=True, verify_exists=False, max_length=255)
     approved = models.BooleanField()
     title = models.CharField(max_length=400)
     institution_name = models.CharField(max_length=400)
@@ -269,19 +268,3 @@ class XML_data(models.Model):
 
     def __unicode__(self):
         return self.xmlns
-
-
-class Equipment(models.Model):
-    key = models.CharField(unique=True, max_length=30)
-    dataset = models.ManyToManyField(Dataset, null=True, blank=True)
-    description = models.TextField(blank=True)
-    make = models.CharField(max_length=60, blank=True)
-    model = models.CharField(max_length=60, blank=True)
-    type = models.CharField(max_length=60, blank=True)
-    serial = models.CharField(max_length=60, blank=True)
-    comm = models.DateField(null=True, blank=True)
-    decomm = models.DateField(null=True, blank=True)
-    url = models.URLField(null=True, blank=True, verify_exists=False, max_length=255)
-
-    def __unicode__(self):
-        return self.key

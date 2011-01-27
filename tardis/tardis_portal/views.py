@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 """
@@ -1695,29 +1694,3 @@ def import_params(request):
                         'tardis_portal/import_params.html', c))
 
 
-def search_equipment(request):
-    if request.method == 'POST':
-        form = EquipmentSearchForm(request.POST)
-        if form.is_valid():
-            data = form.cleaned_data
-            q = Equipment.objects.all()
-            if data['key']:
-                q = q.filter(key__icontains=data['key'])
-            if data['description']:
-                q = q.filter(description__icontains=data['description'])
-            if data['make']:
-                q = q.filter(make__icontains=data['make'])
-            if data['serial']:
-                q = q.filter(serial__icontains=data['serial'])
-            if data['type']:
-                q = q.filter(type__icontains=data['type'])
-
-            c = Context({'object_list': q,
-                         'searchDatafileSelectionForm': getNewSearchDatafileSelectionForm()})
-            return render_to_response('tardis_portal/equipment_list.html', c)
-    else:
-        form = EquipmentSearchForm()
-
-    c = Context({'form': form,
-                 'searchDatafileSelectionForm': getNewSearchDatafileSelectionForm()})
-    return render_to_response('tardis_portal/search_equipment.html', c)

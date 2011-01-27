@@ -50,4 +50,4 @@ admin.site.register(ExperimentParameter)
 admin.site.register(DatafileParameterSet)
 admin.site.register(DatasetParameterSet)
 admin.site.register(ExperimentParameterSet)
-admin.site.register(Equipment)
+

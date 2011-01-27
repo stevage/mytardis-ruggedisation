@@ -2,7 +2,7 @@ import logging
 from os import path
 
 DATABASE_ENGINE = 'sqlite3'
-DATABASE_NAME = ':memory:'
+DATABASE_NAME = 'sqlite.sql'
 ROOT_URLCONF = 'tardis.urls'
 DEBUG = True
 STATIC_DOC_ROOT = path.join(path.abspath(path.dirname(__file__)),
@@ -32,6 +32,7 @@ INSTALLED_APPS = (
         'django.contrib.admindocs',
         'django_extensions',
         'tardis.tardis_portal',
+        'tardis.apps.*',
         'registration',
         'tardis.tardis_portal.templatetags',
         'django_nose',
