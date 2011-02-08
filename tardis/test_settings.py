@@ -62,10 +62,3 @@ VBLSTORAGEGATEWAY = \
 
 TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
-LOG_FILENAME = None
-# LOG_FILENAME = '/var/log/tardis/tardis.log'
-
-LOG_FORMAT = "%(asctime)s - %(levelname)-8s - %(message)s"
-
-# logging levels are: DEBUG, INFO, WARN, ERROR, CRITICAL
-LOG_LEVEL = logging.ERROR

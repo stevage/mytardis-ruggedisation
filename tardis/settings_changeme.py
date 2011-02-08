@@ -40,13 +40,21 @@ ADMINS = (('bob', 'bob@bobmail.com'), )
 
 MANAGERS = ADMINS
 
-# 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_ENGINE = 'postgresql_psycopg2'
-DATABASE_NAME = 'tardis'  # Or path to database file if using sqlite3.
-DATABASE_USER = 'x'  # Not used with sqlite3.
-DATABASE_PASSWORD = ''  # Not used with sqlite3.
-DATABASE_HOST = ''  # Set to empty string for localhost. Not used with sqlite3.
-DATABASE_PORT = ''  # Set to empty string for default. Not used with sqlite3.
+# Dictionary containing the settings for all databases to be used.
+# The DATABASES setting must configure a default database;
+# any number of additional databases may also be specified.
+DATABASES = {
+    'default': {
+        # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        # Name of the database to use. For SQLite, it's the full path.
+        'NAME': 'tardis',
+        'USER': 'postgres',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
+    }
+}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -88,7 +96,7 @@ MIDDLEWARE_CLASSES = ('django.middleware.common.CommonMiddleware',
 ROOT_URLCONF = 'tardis.urls'
 
 TEMPLATE_CONTEXT_PROCESSORS = ('django.core.context_processors.request',
-                               'django.core.context_processors.auth',
+                               'django.contrib.auth.context_processors.auth',
                                'django.core.context_processors.debug',
                                'django.core.context_processors.i18n')
 

@@ -33,12 +33,15 @@ views.py
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 .. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
+.. moduleauthor:: Ulrich Felzmaann <ulrich.felzmann@versi.edu.au>
 
 """
 
 from base64 import b64decode
 import urllib2
 from urllib import urlencode, unquote_plus, urlopen
+
+import logging
 
 from django.template import Context
 from django.conf import settings
@@ -77,6 +80,9 @@ from tardis.tardis_portal.MultiPartForm import MultiPartForm
 from tardis.tardis_portal.metsparser import parseMets
 
 
+logger = logging.getLogger(__name__)
+
+
 def getNewSearchDatafileSelectionForm():
     DatafileSelectionForm = createSearchDatafileSelectionForm()
     return DatafileSelectionForm()
@@ -92,7 +98,6 @@ def logout(request):
 
 
 def index(request):
-
     status = ''
     c = Context({'status': status,
                  'searchDatafileSelectionForm':

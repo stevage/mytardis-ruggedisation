@@ -37,53 +37,10 @@ logger.py
 
 """
 
-import logging.handlers
+import logging
 
 from django.conf import settings
 
-
-def init_logging():
-    """
-    logging facility for tardis
-    sends logging output to a disk file
-    supports rotation of disk log files
-    fallback on console if disk log file cannot be openend
-
-    http://docs.python.org/library/logging.html
-
-    >>> from tardis.tardis_portal.logger import logger
-    >>> logger.info('Hello world.')
-
-    """
-
-    logger = logging.getLogger(__name__)
-    try:
-        logger.setLevel(settings.LOG_LEVEL)
-    except AttributeError:
-        logger.setLevel(logging.DEBUG)
-
-    hd = None
-    try:
-        hd = \
-            logging.handlers.RotatingFileHandler(settings.LOG_FILENAME,
-                maxBytes=1000000, backupCount=5)
-    except:
-        hd = logging.StreamHandler()
-
-    fm = None
-    try:
-        fm = logging.Formatter(settings.LOG_FORMAT)
-    except AttributeError:
-        fm = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-
-    hd.setFormatter(fm)
-    logger.addHandler(hd)
-
-    logging.getLogger('suds').setLevel(logging.INFO)
-
-    return logger
-
-
 logger = None
 if not logger:
-    logger = init_logging()
+    logger = logging.getLogger('tardis.tardis_portal')
