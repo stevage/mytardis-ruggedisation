@@ -181,12 +181,17 @@ EMAIL_HOST_PASSWORD = 'bob'
 
 EMAIL_USE_TLS = True
 
-LOG_FILENAME = '/var/tmp/tardis.log'
-
-LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-
 # logging levels are: DEBUG, INFO, WARN, ERROR, CRITICAL
-LOG_LEVEL = logging.DEBUG
+SYSTEM_LOG_LEVEL = 'DEBUG'
+MODULE_LOG_LEVEL = 'INFO'
+
+SYSTEM_LOG_FILENAME = 'request.log'
+MODULE_LOG_FILENAME = 'tardis.log'
+
+# Rollover occurs whenever the current log file is nearly maxBytes in length;
+# if maxBytes is zero, rollover never occurs
+SYSTEM_LOG_MAXBYTES = 0
+MODULE_LOG_MAXBYTES = 0
 
 # Uploadify root folder path, relative to MEDIA_ROOT
 UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
