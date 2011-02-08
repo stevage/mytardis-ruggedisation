@@ -95,8 +95,11 @@ class LoggingMiddleware(object):
         self.logger = logging.getLogger(__name__)
 
     def process_response(self, request, response):
+        try:
+            user = request.user
+        except:
+            user =''
         ip = request.META['REMOTE_ADDR']
-        user = request.user
         method = request.method
         status = response.status_code
         extra = {'ip': ip, 'user': user, 'method': method, 'status': status}
@@ -109,13 +112,19 @@ class LoggingMiddleware(object):
             self.logger.error(request.path, extra=extra)
 
         from django.db import connection
-        self.logger.debug(connection.queries, extra=extra)
+        sql = connection.queries
+        if sql:
+            extra = {'ip': ip, 'user': user, 'method': 'SQL', 'status': status}
+            self.logger.debug(sql, extra=extra)
 
         return response
 
     def process_exception(self, request, exception):
+        try:
+            user = request.user
+        except:
+            user = ''
         ip = request.META['REMOTE_ADDR']
-        user = request.user
         method =  request.method,
         status = 500
 
