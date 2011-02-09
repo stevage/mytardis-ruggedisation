@@ -133,6 +133,8 @@ def stage_files(datafiles,
 
         copyfrom = path.join(staging, urlpath)  # to be url
         copyto = path.join(experiment_path, urlpath)
+        logger.debug("copy from: %s" % copyfrom)
+        logger.debug("copy to: %s" % copyto)
         if path.exists(copyto):
             logger.error("can't stage %s destination exists" % copyto)
 
