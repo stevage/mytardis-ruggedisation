@@ -17,7 +17,9 @@ core_urls = patterns(
     (r'^about/$', 'about'),
     (r'^partners/$', 'partners'),
     (r'^stats/$', 'stats'),
-    (r'^import_params/$', 'import_params'),
+    (r'^import_params/$', 'import_params'),   
+    (r'^rif-cs/$',
+     'rif_cs'),
 )
 
 experiment_urls = patterns(
@@ -107,12 +109,26 @@ display_urls = patterns(
      '(?P<parameterset_id>\d+)/(?P<parameter_name>\w+)/$',
      'display_datafile_image'),
     )
+    
+pilot_urls = patterns(
+    'tardis.tardis_portal',
+    (r'GetMonashIDbyAuthcate/(?P<authcate>\w+)/$',
+     'pilot.GetMonashIDbyAuthcate'),    
+    (r'^GetActivitySummarybyMonashID/(?P<monash_id>\w+)/$',
+     'pilot.GetActivitySummarybyMonashID'),
+    (r'^GetActivitybyGrantID/$',
+     'pilot.GetActivitybyGrantID'),   
+    (r'^GetPartybyMonashID/$',
+     'pilot.GetPartybyMonashID'),
+    )    
 
 
 urlpatterns = patterns(
     # (r'^search/quick/$', 'tardis.tardis_portal.views.search_quick'),
     '',
     (r'', include(core_urls)),
+    
+    (r'^pilot/', include(pilot_urls)),    
 
     # Experiment Views
     (r'^experiment/', include(experiment_urls)),

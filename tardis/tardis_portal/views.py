@@ -64,7 +64,7 @@ from tardis.tardis_portal.staging import add_datafile_to_dataset,\
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     DatafileParameter, DatasetParameter, ExperimentACL, Dataset_File, \
     DatafileParameterSet, XML_data, ParameterName, GroupAdmin, Schema, \
-    Dataset, Equipment
+    Dataset, Equipment, ExperimentParameterSet
 from tardis.tardis_portal import constants
 from tardis.tardis_portal.auth import ldap_auth
 from tardis.tardis_portal.auth.localdb_auth import django_user, django_group
@@ -1939,3 +1939,218 @@ def search_equipment(request):
                  'searchDatafileSelectionForm':
                      getNewSearchDatafileSelectionForm()})
     return render_to_response('tardis_portal/search_equipment.html', c)
+
+
+def rif_cs(request):
+    import datetime
+
+    experiments = Experiment.objects.filter(public=True)
+
+    activity_url = settings.DEBUG_BASE_URL + "pilot/GetActivitybyGrantID/"
+    requestmp = urllib2.Request(activity_url)
+    activity_rif_cs = urllib2.urlopen(requestmp).read()    
+
+    party_url = settings.DEBUG_BASE_URL + "pilot/GetPartybyMonashID/"
+    requestmp = urllib2.Request(party_url)
+    party_rif_cs = urllib2.urlopen(requestmp).read()
+
+    activity_keys = ExperimentParameter.objects.filter(name__name="activity_id")
+    party_keys = ExperimentParameter.objects.filter(name__name="party_id")    
+
+    c = Context({
+        'experiments': experiments,
+        'now': datetime.datetime.now(),
+        'party_rif_cs': party_rif_cs,
+        'activity_rif_cs': activity_rif_cs,
+        'activity_keys': activity_keys,
+        'party_keys': party_keys,
+    })
+    return HttpResponse(render_response_index(request, 'tardis_portal/rif-cs.xml', c), mimetype='application/xml')
+    
+
+def publish_experiment(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    username = str(request.user).partition('_')[2]
+    
+    if request.method == 'POST':  # If the form has been submitted...
+        if not experiment.public:
+            publish_to_tardis_edu_au = False
+
+            # right now the publish to TARDIS.edu.au central index feature is disabled
+            # the publish action still works for making an experiment public and exposing rif-cs
+
+            if publish_to_tardis_edu_au:
+
+                filename = settings.FILE_STORE_PATH + '/' + experiment_id + \
+                    '/METS.XML'
+
+                mpform = MultiPartForm()
+                mpform.add_field('username', settings.TARDIS_USERNAME)
+                mpform.add_field('password', settings.TARDIS_PASSWORD)
+                mpform.add_field('url', request.build_absolute_uri('/'))
+                mpform.add_field('mytardis_id', experiment_id)
+
+                f = open(filename, 'r')
+
+                # Add a fake file
+
+                mpform.add_file('xmldata', 'METS.xml', fileHandle=f)
+
+                logger.debug('about to send register request to site')
+
+                # Build the request
+
+                requestmp = urllib2.Request(settings.TARDIS_REGISTER_URL)
+                requestmp.add_header('User-agent',
+                                     'PyMOTW (http://www.doughellmann.com/PyMOTW/)')
+                body = str(mpform)
+                requestmp.add_header('Content-type', mpform.get_content_type())
+                requestmp.add_header('Content-length', len(body))
+                requestmp.add_data(body)
+
+                print
+                logger.debug('OUTGOING DATA:')
+                logger.debug(requestmp.get_data())
+
+                print
+                logger.debug('SERVER RESPONSE:')
+                logger.debug(urllib2.urlopen(requestmp).read())
+
+            print request.POST
+
+            monash_id_url = settings.DEBUG_BASE_URL + "pilot/GetMonashIDbyAuthcate/" + username
+
+            requestmp = urllib2.Request(monash_id_url)
+            monash_id = urllib2.urlopen(requestmp).read()
+
+            save_party_parameter(experiment, monash_id)
+
+            for authcate in request.POST['parties'].split(","):
+
+                monash_id_url = settings.DEBUG_BASE_URL + "pilot/GetMonashIDbyAuthcate/" + str(authcate.strip())
+
+                requestmp = urllib2.Request(monash_id_url)
+                monash_id = urllib2.urlopen(requestmp).read()
+
+                save_party_parameter(experiment, monash_id)
+
+            for activity_id in request.POST.getlist('activity'):
+                save_activity_parameter(experiment, activity_id)
+
+            #TODO uncomment
+            experiment.public = True
+            experiment.save()
+
+            c = Context({'user': request.user, 'experiment': experiment})
+            return HttpResponseRedirect('/experiment/view/')
+        else:
+            return return_response_error(request)
+    else:
+        from xml.dom.minidom import parse, parseString
+
+        print username
+        monash_id_url = settings.DEBUG_BASE_URL + "pilot/GetMonashIDbyAuthcate/" + username
+
+        requestmp = urllib2.Request(monash_id_url)
+        monash_id = urllib2.urlopen(requestmp).read()  
+
+        activity_url = settings.DEBUG_BASE_URL + "pilot/GetActivitySummarybyMonashID/" + monash_id + "/"
+        requestmp = urllib2.Request(activity_url)
+        doc_string = urllib2.urlopen(requestmp).read()
+
+        dom = parseString(doc_string)
+        doc = dom.documentElement
+
+        activity_summary=dom.getElementsByTagName('activity_summary')
+
+        activities = []        
+        for node in activity_summary:
+
+            activity = {}
+
+            grant_id=node.getElementsByTagName('grant_id')[0].childNodes[0].nodeValue
+            print grant_id
+            activity['grant_id'] = grant_id
+
+            title=node.getElementsByTagName('title')[0].childNodes[0].nodeValue
+            activity['title'] = title            
+
+            funding_body=node.getElementsByTagName('funding_body')[0].childNodes[0].nodeValue
+            activity['funding_body'] = funding_body                      
+
+            description=node.getElementsByTagName('description')[0].childNodes[0].nodeValue
+            activity['description'] = description                      
+
+            memberList = []
+            members=node.getElementsByTagName('members')[0].getElementsByTagName('member')
+
+            for m in members:
+                membertext = m.childNodes[0].nodeValue
+                memberList.append(membertext)
+
+            activity['members'] = memberList
+
+            activities.append(activity)
+
+        c = Context({'username': username,
+                'experiment': experiment,
+                'activities': activities,
+                })
+        return HttpResponse(render_response_index(request,
+                            'tardis_portal/publish_experiment.html', c))
+                            
+def save_party_parameter(experiment, monash_id):
+    # save party experiment parameter
+
+    schema = \
+        Schema.objects.get(
+        namespace__exact="http://localhost/pilot/party/1.0/")
+
+    parametername = \
+        ParameterName.objects.get(
+        schema__namespace__exact=schema.namespace,
+        name="party_id")
+
+    try:
+        parameterset = ExperimentParameterSet.objects.get(schema=schema, experiment=experiment)      
+    except ExperimentParameterSet.DoesNotExist, e:
+        parameterset = \
+            ExperimentParameterSet(
+            schema=schema, experiment=experiment)
+
+        parameterset.save()
+
+    ep = ExperimentParameter(
+        parameterset=parameterset,
+        name=parametername,
+        string_value=monash_id,
+        numerical_value=None)
+    ep.save()
+
+def save_activity_parameter(experiment, activity_id):
+    # save party experiment parameter
+
+    schema = \
+        Schema.objects.get(
+        namespace__exact="http://localhost/pilot/activity/1.0/")
+
+    parametername = \
+        ParameterName.objects.get(
+        schema__namespace__exact=schema.namespace,
+        name="activity_id")
+
+    try:
+        parameterset = ExperimentParameterSet.objects.get(schema=schema, experiment=experiment)      
+    except ExperimentParameterSet.DoesNotExist, e:
+        parameterset = \
+            ExperimentParameterSet(
+            schema=schema, experiment=experiment)
+
+        parameterset.save()
+
+    ep = ExperimentParameter(
+        parameterset=parameterset,
+        name=parametername,
+        string_value=activity_id,
+        numerical_value=None)
+    ep.save()                            

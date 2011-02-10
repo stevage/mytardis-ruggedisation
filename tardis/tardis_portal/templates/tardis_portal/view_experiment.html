@@ -428,6 +428,10 @@
                                                         </div>
 
                             <p align="right">
+								{% if not experiment.public %}
+								<strong><a href="publish/">Publish Experiment</a></strong><br/>
+								{% endif %}	
+	
 							<br/>
 			    {% if owners %}
                             <strong>Experiment Administrators </strong><br/>

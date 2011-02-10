@@ -1,0 +1,41 @@
+<activity_summaries xmlns="http://localhost/pilot/activity_summaries/1.0/">
+	<activity_summary>
+		<grant_id>49283</grant_id>
+		<title>Control of proteases in infectious, degenerative and cardiovascular
+		disease</title>
+		<funding_body>NHMRC</funding_body>
+		<description>
+			Proteases are enzymes that control key processes in humans. The research in this program
+			will result in major discoveries in the field of proteases and their inhibitors, with a focus
+			on inflammatory, cardiovascular and degenerative disease. The knowledge gained from
+			this strong foundation of fundamental research will underpin the translational outcomes
+			necessary to combat the debilitating effects of immunological dysfunction,
+			conformational and cardiovascular disease.
+		</description>
+		<members>
+			<member>Prof James Whisstock</member>
+			<member>Dr Philip Bird</member>
+			<member>Dr Ashley Buckle</member>
+			<member>Mr Steve Androulakis</member>
+		</members>
+	</activity_summary>
+	<activity_summary>
+		<grant_id>48526</grant_id>
+		<title>Genetic and Bioinformatic analysis of complex human diseases
+		</title>
+		<funding_body>NHMRC</funding_body>
+		<description>
+			Some human diseases are common in families; examples include prostate cancer, blood
+			cancers, epilepsy and diabetes. Therefore, close relatives of individuals with a disease
+			have an increased risk of being affected by this disease, implying a genetic basis. Finding
+			the cause of these diseases is difficult, we will be developing novel approaches to the
+			identification of genes responsible for these diseases. This is the first step towards the
+			development of treatments for affected individuals.
+		</description>
+		<members>
+			<member>Prof Simon Foote</member>
+			<member>Prof Terrence Speed</member>
+			<member>Mr Steve Androulakis</member>
+		</members>
+	</activity_summary>	
+</activity_summaries>
