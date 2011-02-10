@@ -658,3 +658,23 @@ ul.errorlist {
     color: white;
     background: red url(/media/img/admin/icon_alert.gif) 5px .3em no-repeat;
 }
+
+.publishform h3
+{
+    font-family: Tahoma, Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.activity {
+    padding: 12px;
+    margin: 5px;
+    border-color: black;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.activity .members {
+    padding: 5px;
+    padding-left: 20px;
+}
