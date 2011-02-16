@@ -48,7 +48,7 @@ from django.contrib.auth.models import User, Group
 from django.utils.safestring import SafeUnicode
 
 from tardis.tardis_portal.managers import ExperimentManager
-
+from tardis.tardis_portal.logger import logger
 
 class UserProfile(models.Model):
     """
@@ -275,7 +275,7 @@ class Dataset(models.Model):
         if url:
             datafile.url = url
         else:
-            datafile.url = 'file:/' + filepath
+            datafile.url = 'file://' + filepath
 
         if size:
             datafile.size = size
@@ -549,6 +549,37 @@ class ExperimentParameter(models.Model):
 
     class Meta:
         ordering = ['id']
+
+
+def save_Parameter(sender, **kwargs):
+
+    # the object can be accessed via kwargs 'instance' key.
+    parameter = kwargs['instance']
+
+    if parameter.name.units.startswith('image'):
+        if parameter.string_value:
+            from base64 import b64decode
+            from os import mkdir
+            from os.path import exists, join
+            from uuid import uuid4 as uuid
+
+            exp_id = parameter.parameterset.dataset_file.dataset.experiment.id
+            dirname = join(settings.FILE_STORE_PATH, str(exp_id))
+            filename = str(uuid())
+            filepath = join(dirname, filename)
+
+            if not exists(dirname):
+                mkdir(dirname)
+            f = open(filepath, 'w')
+            f.write(b64decode(parameter.string_value))
+            f.close()
+
+            parameter.string_value = filename
+
+
+pre_save.connect(save_Parameter, sender=ExperimentParameter)
+pre_save.connect(save_Parameter, sender=DatasetParameter)
+pre_save.connect(save_Parameter, sender=DatafileParameter)
 
 
 class XML_data(models.Model):
