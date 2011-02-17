@@ -299,8 +299,8 @@ def experiment_description(request, experiment_id):
             size = size + long(df.size)
         except:
             pass
-    c['size'] = size
 
+    c['size'] = size
     c['protocols'] = [df['protocol'] for df in
                       c['datafiles'].values('protocol').distinct()]
 
@@ -1753,7 +1753,8 @@ def add_experiment_access_group(request, experiment_id, groupname):
         user.groups.add(group)
         user.save()
 
-    c = Context({'group': group})
+    c = Context({'experiment_id': experiment_id,
+                 'group': group})
     return HttpResponse(render_response_index(request,
         'tardis_portal/ajax/add_group_result.html', c))
 
@@ -1912,9 +1913,9 @@ def import_params(request):
     else:
         form = ImportParamsForm()
 
-    c = Context({'form': form, 'subtitle': 'Import Parameters'})
+    c = Context({'form': form, 'header': 'Import Parameters'})
     return HttpResponse(render_response_index(request,
-                        'tardis_portal/import_params.html', c))
+                        'tardis_portal/form_template.html', c))
 
 
 def upload_complete(request,
@@ -2014,7 +2015,8 @@ def search_equipment(request):
     else:
         form = EquipmentSearchForm()
 
+    url = 'tardis_portal/search_equipment.html'
     c = Context({'form': form,
                  'searchDatafileSelectionForm':
                      getNewSearchDatafileSelectionForm()})
-    return render_to_response('tardis_portal/search_equipment.html', c)
+    return HttpResponse(render_response_index(request, url, c))
