@@ -454,7 +454,7 @@ def create_experiment(request,
 
 @login_required
 def edit_experiment(request, experiment_id,
-                      template="tardis_portal/create_experiment.html"):
+                    template="tardis_portal/create_experiment.html"):
     """Edit an existing experiment.
 
     :param request: a HTTP Request instance

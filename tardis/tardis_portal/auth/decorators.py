@@ -35,6 +35,7 @@ from django.db.models import Q
 
 from tardis.tardis_portal.models import Experiment, Dataset_File, GroupAdmin
 from tardis.tardis_portal.shortcuts import return_response_error
+from tardis.tardis_portal.auth.localdb_auth import django_user
 
 
 def get_accessible_experiments(request):
@@ -92,6 +93,86 @@ def has_datafile_access(request, dataset_file_id):
         return True
     else:
         return False
+
+
+def has_write_permissions(request, experiment_id):
+
+    experiment = Experiment.safe.get(pk=experiment_id)
+
+    # does the user own this experiment
+    query = Q(experiment=experiment,
+              pluginId=django_user,
+              entityId=str(request.user.id),
+              isOwner=True)
+
+    # check if there is a user based authorisation role
+    query |= Q(experiment=experiment,
+               pluginId=django_user,
+               entityId=str(request.user.id),
+               canWrite=True)\
+               & (Q(effectiveDate__lte=datetime.today())
+                  | Q(effectiveDate__isnull=True))\
+               & (Q(expiryDate__gte=datetime.today())
+                  | Q(expiryDate__isnull=True))
+
+    # and finally check all the group based authorisation roles
+    for name, group in request.groups:
+        query |= Q(pluginId=name,
+                   entityId=str(group),
+                   experiment=experiment,
+                   canWrite=True)\
+                   & (Q(effectiveDate__lte=datetime.today())
+                      | Q(effectiveDate__isnull=True))\
+                   & (Q(expiryDate__gte=datetime.today())
+                      | Q(expiryDate__isnull=True))
+
+    # is there at least one ACL rule which satisfies the rules?
+    from tardis.tardis_portal.models import ExperimentACL
+    acl = ExperimentACL.objects.filter(query)
+    if acl.count() == 0:
+        return False
+    else:
+        return True
+
+
+def has_delete_permissions(request, experiment_id):
+
+    experiment = Experiment.safe.get(pk=experiment_id)
+
+    # does the user own this experiment
+    query = Q(experiment=experiment,
+              pluginId=django_user,
+              entityId=str(request.user.id),
+              isOwner=True)
+
+    # check if there is a user based authorisation role
+    query |= Q(experiment=experiment,
+               pluginId=django_user,
+               entityId=str(request.user.id),
+               canDelete=True)\
+               & (Q(effectiveDate__lte=datetime.today())
+                  | Q(effectiveDate__isnull=True))\
+               & (Q(expiryDate__gte=datetime.today())
+                  | Q(expiryDate__isnull=True))
+
+    # and finally check all the group based authorisation roles
+    for name, group in request.groups:
+        query |= Q(pluginId=name,
+                   entityId=str(group),
+                   experiment=experiment,
+                   canDelete=True)\
+                   & (Q(effectiveDate__lte=datetime.today())
+                      | Q(effectiveDate__isnull=True))\
+                   & (Q(expiryDate__gte=datetime.today())
+                      | Q(expiryDate__isnull=True))
+
+    # is there at least one ACL rule which satisfies the rules?
+    from tardis.tardis_portal.models import ExperimentACL
+    acl = ExperimentACL.objects.filter(query)
+    if acl.count() == 0:
+        return False
+    else:
+        return True
 
 
 @login_required
@@ -162,6 +243,32 @@ def datafile_access_required(f):
     def wrap(request, *args, **kwargs):
 
         if not has_datafile_access(request, kwargs['dataset_file_id']):
+            return return_response_error(request)
+        return f(request, *args, **kwargs)
+
+    wrap.__doc__ = f.__doc__
+    wrap.__name__ = f.__name__
+    return wrap
+
+
+def write_permissions_required(f):
+
+    def wrap(request, *args, **kwargs):
+
+        if not has_write_permissions(request, kwargs['experiment_id']):
+            return return_response_error(request)
+        return f(request, *args, **kwargs)
+
+    wrap.__doc__ = f.__doc__
+    wrap.__name__ = f.__name__
+    return wrap
+
+
+def delete_permissions_required(f):
+
+    def wrap(request, *args, **kwargs):
+
+        if not has_delete_permissions(request, kwargs['experiment_id']):
             return return_response_error(request)
         return f(request, *args, **kwargs)
 
