@@ -166,7 +166,7 @@ class ProcessExperiment:
                     if 'metadata' in exp:
                         for md in exp['metadata']:
                             xmlns = getXmlnsFromTechXMLRaw(md)
-                            logger.debug('schema %s' % xmlns)
+                            # logger.debug('schema %s' % xmlns)
                             schema = None
                             try:
                                 schema = Schema.objects.get(
@@ -239,9 +239,9 @@ class ProcessExperiment:
                             if 'metadata' in dataset:
                                 xmlns = getXmlnsFromTechXMLRaw(md)
 
-                                logger.debug(
-                                    'trying to find parameters with ' +
-                                    'an xmlns of ' + xmlns)
+                                #logger.debug(
+                                #    'trying to find parameters with ' +
+                                #    'an xmlns of ' + xmlns)
 
                                 schema = None
                                 try:
@@ -497,24 +497,28 @@ class ProcessExperiment:
                 doc = dom.documentElement
 
                 tag_name = doc.tagName
-                logger.debug(tag_name + ' discovered')
+                # logger.debug(tag_name + ' discovered')
                 if current == 'experiment':
                     if tag_name in ['title', 'organization',
                                     'starttime', 'endtime']:
                         contents = doc.childNodes
-                        exp[tag_name] = getText(contents)
+                        if contents:
+                            exp[tag_name] = getText(contents)
                     if tag_name == 'author':
                         contents = doc.childNodes
-                        authors.append(getText(contents))
+                        if contents:
+                            authors.append(getText(contents))
                 if current == 'dataset':
                     if tag_name == 'description':
                         contents = doc.childNodes
-                        dataset[tag_name] = getText(contents)
+                        if contents:
+                            dataset[tag_name] = getText(contents)
                 if current == 'file':
                     if tag_name == 'name' or tag_name == 'size' or \
                             tag_name == 'path':
                         contents = doc.childNodes
-                        datafile[tag_name] = getText(contents)
+                        if contents:
+                            datafile[tag_name] = getText(contents)
             except:
                 pass
 

@@ -101,13 +101,20 @@ group_urls = patterns(
 
 display_urls = patterns(
     'tardis.tardis_portal.views',
-    (r'^(?P<experiment_id>\d+)/'
+    (r'^ExperimentImage/load/(?P<parameter_id>\d+)/$',
+     'load_experiment_image'),
+    (r'^DatasetImage/load/(?P<parameter_id>\d+)/'
+     '(?P<parameter_name>\w+)/$',
+     'load_dataset_image'),
+    (r'^DatafileImage/load/(?P<parameter_id>\d+)/$',
+     'load_datafile_image'),
+    (r'^ExperimentImage/(?P<experiment_id>\d+)/'
      '(?P<parameterset_id>\d+)/(?P<parameter_name>\w+)/$',
      'display_experiment_image'),
-    (r'^(?P<dataset_id>\d+)/(?P<parameterset_id>\d+)/'
+    (r'^DatasetImage/(?P<dataset_id>\d+)/(?P<parameterset_id>\d+)/'
      '(?P<parameter_name>\w+)/$',
      'display_dataset_image'),
-    (r'^/(?P<dataset_file_id>\d+)/'
+    (r'^DatafileImage/(?P<dataset_file_id>\d+)/'
      '(?P<parameterset_id>\d+)/(?P<parameter_name>\w+)/$',
      'display_datafile_image'),
     )
@@ -147,7 +154,7 @@ urlpatterns = patterns(
      {'queryset': Equipment.objects.all()}),
 
     # Display Views
-    (r'^displayDatafileImage/', include(display_urls)),
+    (r'^display/', include(display_urls)),
 
     # Login/out
     (r'^login/$', 'tardis.tardis_portal.views.login'),

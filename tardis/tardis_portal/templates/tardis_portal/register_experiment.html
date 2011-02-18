@@ -1,4 +1,4 @@
-{% extends "tardis_portal/data_browsing_template.html" %}
+{% extends "tardis_portal/portal_template.html" %}
 
 {% block content %}
 
@@ -20,7 +20,6 @@
 	    {% if edit %}<input type="hidden" name="eid" value="{{ experiment_id }}"/>{% endif %}
 	    <input type="submit" value="Submit" />
 	  </form>
-
 	</p>
       </div>
     </div>
