@@ -812,6 +812,14 @@ def retrieve_datafile_list(request, dataset_id):
                         'tardis_portal/ajax/datafile_list.html', c))
 
 
+@authz.dataset_access_required
+def retrieve_dataset_metadata(request, dataset_id):
+    dataset = Dataset.objects.get(pk=dataset_id)
+    c = Context({'dataset': dataset, })
+    return HttpResponse(render_response_index(request,
+                        'tardis_portal/ajax/dataset_metadata.html', c))
+
+
 @login_required()
 def control_panel(request):
 

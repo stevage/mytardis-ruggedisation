@@ -64,6 +64,7 @@ ajax_urls = patterns(
     'tardis.tardis_portal.views',
     (r'^parameters/(?P<dataset_file_id>\d+)/$', 'retrieve_parameters'),
     (r'^xml_data/(?P<dataset_file_id>\d+)/$', 'retrieve_xml_data'),
+    (r'^dataset_metadata/(?P<dataset_id>\d+)/$', 'retrieve_dataset_metadata'),
     (r'^datafile_list/(?P<dataset_id>\d+)/$', 'retrieve_datafile_list'),
     (r'^user_list/$', 'retrieve_user_list'),
     (r'^group_list/$', 'retrieve_group_list'),
