@@ -609,25 +609,14 @@ def _registerExperimentDocument(filename, created_by, expid=None,
     firstline = f.readline()
     f.close()
 
-    try:
-        if firstline.startswith('<experiment'):
-            logger.debug('processing simple xml')
-            processExperiment = ProcessExperiment()
-            eid = processExperiment.process_simple(filename, created_by, expid)
-        else:
-            logger.debug('processing METS')
-            eid = parseMets(filename, created_by, expid)
-    except:
-        logger.exception('rolling back ingestion')
-        #transaction.rollback()
-        # TODO: uncomment this bit if we hear back from Steve that returning
-        #       the experiment ID won't be needed anymore
-        #Experiment.objects.get(id=expid).delete()
-        return expid
+    if firstline.startswith('<experiment'):
+        logger.debug('processing simple xml')
+        processExperiment = ProcessExperiment()
+        eid = processExperiment.process_simple(filename, created_by, expid)
+
     else:
-        logger.debug('committing ingestion')
-        #transaction.commit()
-        return eid
+        logger.debug('processing METS')
+        eid = parseMets(filename, created_by, expid)
 
     # for each PI
     for owner in owners:
@@ -699,10 +688,8 @@ def register_experiment_ws_xmldata(request):
 
             eid = e.id
 
-
             # TODO: this entire function needs a fancy class with functions for
             # each part..
-
             from os import makedirs, system
             from os.path import exists, join
             dir = join(settings.FILE_STORE_PATH, str(eid))
@@ -732,6 +719,7 @@ def register_experiment_ws_xmldata(request):
                         logger.info('=== processing experiment %s: DONE' % eid)
                     except:
                         logger.exception('=== processing experiment %s: FAILED!' % eid)
+
             RegisterThread().start()
 
             if from_url:

@@ -119,7 +119,6 @@ display_urls = patterns(
      'display_datafile_image'),
     )
 
-
 urlpatterns = patterns(
     # (r'^search/quick/$', 'tardis.tardis_portal.views.search_quick'),
     '',
