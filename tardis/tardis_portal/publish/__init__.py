@@ -28,8 +28,3 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-
-from tardis.tardis_portal.publish.publishservice import PublishService
-
-# The auth_service ``singleton``
-auth_service = PublishService()

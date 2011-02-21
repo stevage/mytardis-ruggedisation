@@ -35,6 +35,9 @@
 
 
 class PublishProvider:
+    def __init__(self, experiment_id):
+        raise NotImplemented()
+    
     def execute_publish(self, request):
         """
         return the user dictionary in the format of::

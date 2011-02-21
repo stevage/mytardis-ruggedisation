@@ -4,10 +4,11 @@ from django.core.exceptions import ImproperlyConfigured
 
 
 class PublishService():
-    def __init__(self, settings=settings):
+    def __init__(self, experiment_id, settings=settings):
         self._publish_providers = []
         self._initialised = False
         self.settings = settings
+        self.experiment_id = experiment_id
     
     def _manual_init(self):
         """Manual init had to be called by all the functions of the PublishService
@@ -38,19 +39,17 @@ class PublishService():
             raise ImproperlyConfigured('Publish module "%s" does not define a "%s" class' %
                                        (publish_module, publish_classname))
         
-        publish_instance = publish_class()
+        publish_instance = publish_class(self.experiment_id)
         return publish_instance
     
     def get_publishers(self):
-        """Return a list of tuples containing publish plugin name
+        """Return a list publish providers
         
         """
         if not self._initialised:
             self._manual_init()
-        publicaton_list = []
-        for pp in self._publish_providers:
-            # logger.debug("group provider: " + gp.name)
-            publicaton_list.append(pp.name)
+        
+        publicaton_list = [pp for pp in self._publish_providers]
         return publicaton_list
     
     def get_template_paths(self):
@@ -63,4 +62,26 @@ class PublishService():
         for pp in self._publish_providers:
             # logger.debug("group provider: " + gp.name)
             path_list.append(pp.get_template_path())
-        return path_list        
+        return path_list
+    
+    def execute_publishers(self, request):
+        """Return a list of tuples containing publish plugin name
+        
+        """
+        if not self._initialised:
+            self._manual_init()
+        
+        pp_status_list = []
+        for pp in self._publish_providers:
+            
+            pp_status = False
+            pp_result = "Successful"
+            
+            try:
+                pp_response = pp.execute_publish(request)
+            except Exception as inst:
+                pp_response = {'status': False, 'message': inst}
+            pp_status_list.append({'name': pp.name,
+            'status': pp_response['status'],
+            'message': pp_response['message']})
+        return pp_status_list
