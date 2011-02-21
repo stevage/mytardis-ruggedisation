@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
-
+from tardis.tardis_portal.models import Experiment
 
 class PublishService():
     def __init__(self, experiment_id, settings=settings):
@@ -61,8 +61,22 @@ class PublishService():
         path_list = []
         for pp in self._publish_providers:
             # logger.debug("group provider: " + gp.name)
-            path_list.append(pp.get_template_path())
+            path_list.append(pp.get_path())
         return path_list
+    
+    def get_contexts(self, request):
+        """Return a list of tuples containing publish plugin name
+        
+        """
+        if not self._initialised:
+            self._manual_init()
+        contexts = {}
+        for pp in self._publish_providers:
+            # logger.debug("group provider: " + gp.name)
+            context = pp.get_context(request)
+            if context:
+                contexts = dict(contexts, **context)
+        return contexts
     
     def execute_publishers(self, request):
         """Return a list of tuples containing publish plugin name
@@ -80,6 +94,11 @@ class PublishService():
             try:
                 pp_response = pp.execute_publish(request)
             except Exception as inst:
+                # perhaps erroneous logic to be fixed later..
+                exp = Experiment.objects.get(id=self.experiment_id)
+                exp.public = False
+                exp.save()
+                
                 pp_response = {'status': False, 'message': inst}
             pp_status_list.append({'name': pp.name,
             'status': pp_response['status'],

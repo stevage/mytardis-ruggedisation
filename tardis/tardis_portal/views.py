@@ -94,15 +94,8 @@ def logout(request):
 
 def index(request):
     
-    from tardis.tardis_portal.publish.publishservice import PublishService
-    publishService = PublishService(1)
-    
-    print publishService.get_publishers()
-    print publishService.get_template_paths()
-    
     status = ''
     c = Context({'status': status,
-                 'publish_forms': publishService.get_template_paths(),
                  'searchDatafileSelectionForm':
                      getNewSearchDatafileSelectionForm()})
     return HttpResponse(render_response_index(request,
@@ -1715,55 +1708,6 @@ def remove_experiment_access_group(request, experiment_id, group_id):
     return return_response_error(request)
 
 
-# @authz.experiment_ownership_required
-# def publish_experiment(request, experiment_id):
-#
-#     experiment = Experiment.objects.get(id=experiment_id)
-#
-#     if not experiment.public:
-#         filename = settings.FILE_STORE_PATH + '/' + experiment_id + \
-#             '/METS.XML'
-#
-#         mpform = MultiPartForm()
-#         mpform.add_field('username', settings.TARDIS_USERNAME)
-#         mpform.add_field('password', settings.TARDIS_PASSWORD)
-#         mpform.add_field('url', request.build_absolute_uri('/'))
-#         mpform.add_field('mytardis_id', experiment_id)
-#
-#         f = open(filename, 'r')
-#
-#         # Add a fake file
-#
-#         mpform.add_file('xmldata', 'METS.xml', fileHandle=f)
-#
-#         logger.debug('about to send register request to site')
-#
-#         # Build the request
-#
-#         requestmp = urllib2.Request(settings.TARDIS_REGISTER_URL)
-#         requestmp.add_header('User-agent',
-#                              'PyMOTW (http://www.doughellmann.com/PyMOTW/)')
-#         body = str(mpform)
-#         requestmp.add_header('Content-type', mpform.get_content_type())
-#         requestmp.add_header('Content-length', len(body))
-#         requestmp.add_data(body)
-#
-#         logger.debug('OUTGOING DATA:')
-#         logger.debug(requestmp.get_data())
-#
-#         logger.debug('SERVER RESPONSE:')
-#         logger.debug(urllib2.urlopen(requestmp).read())
-#
-#         experiment.public = True
-#         experiment.save()
-#
-#         c = Context({})
-#         return HttpResponse(render_response_index(request,
-#                             'tardis_portal/index.html', c))
-#     else:
-#         return return_response_error(request)
-
-
 def stats(request):
     
     # stats
@@ -1982,193 +1926,21 @@ def publish_experiment(request, experiment_id):
     
     publishService = PublishService(experiment.id)
     
+    context_dict = \
+    {'username': username,
+    'publish_forms': publishService.get_template_paths(),
+    'experiment': experiment,
+    }
+    
     if request.method == 'POST':  # If the form has been submitted...
         if not experiment.public:
-            publish_to_tardis_edu_au = False
             
-            # right now the publish to TARDIS.edu.au central index feature is disabled
-            # the publish action still works for making an experiment public and exposing rif-cs
+            context_dict['publish_result'] = publishService.execute_publishers(request)
             
-            if publish_to_tardis_edu_au:
-                
-                filename = settings.FILE_STORE_PATH + '/' + experiment_id + \
-                    '/METS.XML'
-                
-                mpform = MultiPartForm()
-                mpform.add_field('username', settings.TARDIS_USERNAME)
-                mpform.add_field('password', settings.TARDIS_PASSWORD)
-                mpform.add_field('url', request.build_absolute_uri('/'))
-                mpform.add_field('mytardis_id', experiment_id)
-                
-                f = open(filename, 'r')
-                
-                # Add a fake file
-                
-                mpform.add_file('xmldata', 'METS.xml', fileHandle=f)
-                
-                logger.debug('about to send register request to site')
-                
-                # Build the request
-                
-                requestmp = urllib2.Request(settings.TARDIS_REGISTER_URL)
-                requestmp.add_header('User-agent',
-                                     'PyMOTW (http://www.doughellmann.com/PyMOTW/)')
-                body = str(mpform)
-                requestmp.add_header('Content-type', mpform.get_content_type())
-                requestmp.add_header('Content-length', len(body))
-                requestmp.add_data(body)
-                
-                print
-                logger.debug('OUTGOING DATA:')
-                logger.debug(requestmp.get_data())
-                
-                print
-                logger.debug('SERVER RESPONSE:')
-                logger.debug(urllib2.urlopen(requestmp).read())
-            
-            # print request.POST
-            #
-            # monash_id_url = settings.DEBUG_BASE_URL + "pilot/GetMonashIDbyAuthcate/" + username
-            #
-            # requestmp = urllib2.Request(monash_id_url)
-            # monash_id = urllib2.urlopen(requestmp).read()
-            #
-            # save_party_parameter(experiment, monash_id)
-            #
-            # for authcate in request.POST['parties'].split(","):
-            #
-            #     monash_id_url = settings.DEBUG_BASE_URL + "pilot/GetMonashIDbyAuthcate/" + str(authcate.strip())
-            #
-            #     requestmp = urllib2.Request(monash_id_url)
-            #     monash_id = urllib2.urlopen(requestmp).read()
-            #
-            #     save_party_parameter(experiment, monash_id)
-            #
-            # for activity_id in request.POST.getlist('activity'):
-            #     save_activity_parameter(experiment, activity_id)
-            #
-            # #TODO uncomment
-            # experiment.public = True
-            # experiment.save()
-            
-            publish_result = publishService.execute_publishers(request)
-            print publish_result
-            
-            c = Context({'username': username,
-            'publish_forms': publishService.get_template_paths(),
-            'publish_result': publish_result,
-            'experiment': experiment,
-                    # 'activities': activities,
-                    })
-            return HttpResponse(render_response_index(request,
-                                'tardis_portal/publish_experiment.html', c))
-    else:
-        # from xml.dom.minidom import parse, parseString
-        #
-        # print username
-        # monash_id_url = settings.DEBUG_BASE_URL + "pilot/GetMonashIDbyAuthcate/" + username
-        #
-        # requestmp = urllib2.Request(monash_id_url)
-        # monash_id = urllib2.urlopen(requestmp).read()
-        #
-        # activity_url = settings.DEBUG_BASE_URL + "pilot/GetActivitySummarybyMonashID/" + monash_id + "/"
-        # requestmp = urllib2.Request(activity_url)
-        # doc_string = urllib2.urlopen(requestmp).read()
-        #
-        # dom = parseString(doc_string)
-        # doc = dom.documentElement
-        #
-        # activity_summary=dom.getElementsByTagName('activity_summary')
-        #
-        # activities = []
-        # for node in activity_summary:
-        #
-        #     activity = {}
-        #
-        #     grant_id=node.getElementsByTagName('grant_id')[0].childNodes[0].nodeValue
-        #     print grant_id
-        #     activity['grant_id'] = grant_id
-        #
-        #     title=node.getElementsByTagName('title')[0].childNodes[0].nodeValue
-        #     activity['title'] = title
-        #
-        #     funding_body=node.getElementsByTagName('funding_body')[0].childNodes[0].nodeValue
-        #     activity['funding_body'] = funding_body
-        #
-        #     description=node.getElementsByTagName('description')[0].childNodes[0].nodeValue
-        #     activity['description'] = description
-        #
-        #     memberList = []
-        #     members=node.getElementsByTagName('members')[0].getElementsByTagName('member')
-        #
-        #     for m in members:
-        #         membertext = m.childNodes[0].nodeValue
-        #         memberList.append(membertext)
-        #
-        #     activity['members'] = memberList
-        #
-        #     activities.append(activity)
-        
-        c = Context({'username': username,
-        'publish_forms': publishService.get_template_paths(),
-                'experiment': experiment,
-                # 'activities': activities,
-                })
-        return HttpResponse(render_response_index(request,
-                            'tardis_portal/publish_experiment.html', c))
-
-def save_party_parameter(experiment, monash_id):
-    # save party experiment parameter
+            print context_dict['publish_result']
     
-    schema = \
-        Schema.objects.get(
-        namespace__exact="http://localhost/pilot/party/1.0/")
+    context_dict = dict(context_dict, **publishService.get_contexts(request))
     
-    parametername = \
-        ParameterName.objects.get(
-        schema__namespace__exact=schema.namespace,
-        name="party_id")
-    
-    try:
-        parameterset = ExperimentParameterSet.objects.get(schema=schema, experiment=experiment)
-    except ExperimentParameterSet.DoesNotExist, e:
-        parameterset = \
-            ExperimentParameterSet(
-            schema=schema, experiment=experiment)
-        
-        parameterset.save()
-    
-    ep = ExperimentParameter(
-        parameterset=parameterset,
-        name=parametername,
-        string_value=monash_id,
-        numerical_value=None)
-    ep.save()
-
-def save_activity_parameter(experiment, activity_id):
-    # save party experiment parameter
-    
-    schema = \
-        Schema.objects.get(
-        namespace__exact="http://localhost/pilot/activity/1.0/")
-    
-    parametername = \
-        ParameterName.objects.get(
-        schema__namespace__exact=schema.namespace,
-        name="activity_id")
-    
-    try:
-        parameterset = ExperimentParameterSet.objects.get(schema=schema, experiment=experiment)
-    except ExperimentParameterSet.DoesNotExist, e:
-        parameterset = \
-            ExperimentParameterSet(
-            schema=schema, experiment=experiment)
-        
-        parameterset.save()
-    
-    ep = ExperimentParameter(
-        parameterset=parameterset,
-        name=parametername,
-        string_value=activity_id,
-        numerical_value=None)
-    ep.save()                            
+    c = Context(context_dict)
+    return HttpResponse(render_response_index(request,
+                        'tardis_portal/publish_experiment.html', c))

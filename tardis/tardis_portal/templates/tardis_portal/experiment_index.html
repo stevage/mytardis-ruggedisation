@@ -6,7 +6,7 @@
  All rights reserved.
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions are met:
- 
+    
     *  Redistributions of source code must retain the above copyright
        notice, this list of conditions and the following disclaimer.
     *  Redistributions in binary form must reproduce the above copyright
@@ -29,9 +29,9 @@
 -->
 {% extends "tardis_portal/data_browsing_template.html" %}
 {% load experimentstats %}
-
+		
 		{% block content %}
-
+		
 		<div id="content">
 			{% if user.is_authenticated %}
 			<div class="post">
@@ -40,37 +40,36 @@
 				</h1>
 				 {% if experiments %}
 		            <strong>{{ experiments.count }}</strong> experiments
-
+			    
 			    {% endif %}
-				<br/><br/>			
+				<br/><br/>
 				
 				{% if experiments %}
 						<table class="experiment-table">
 						{% for experiment in experiments %}
 							<tr>
 								<th>
-									<a href="{{ experiment.get_absolute_url }}">{{ experiment.title }}
-
-										</a>
+									<a href="{{ experiment.get_absolute_url }}">{{ experiment.title }}</a>
+									{% if experiment.public %}(public){% endif %}
 								</th>
-								
-							</tr>	
+							
+							</tr>
 							
 							<tr>
-								
+									
 									<td>From <strong>{{experiment.institution_name}}</strong>, deposited <strong>{{ experiment.update_time|date:"jS F Y" }}</strong></td>
 							
 							</tr>
 							
 							<tr>
-								
-									<td class="experiment-table-stats"><strong>{{ experiment.dataset_set.all.count }}</strong> dataset(s), containing <strong>{{ experiment.id|experiment_file_count }}</strong> files 
+									
+									<td class="experiment-table-stats"><strong>{{ experiment.dataset_set.all.count }}</strong> dataset(s), containing <strong>{{ experiment.id|experiment_file_count }}</strong> files
 								<br/><br/>
-							</tr>				
+							</tr>
 						
 						{%endfor %}
-					</table>					
-						
+					</table>
+				
 				{% else %}
 					No experiments available at this time.
 				{% endif %}
@@ -83,41 +82,41 @@
 				</h1>
 				 {% if experiments %}
 		            <strong>{{ public_experiments.count }}</strong> public experiments
-
+			    
 			    {% endif %}
-				<br/><br/>			
+				<br/><br/>
 				
 				{% if public_experiments %}
 						<table class="experiment-table">
 						{% for public_experiment in public_experiments %}
 							<tr>
 								<th>
-									<a href="../view/{{ public_experiment.id }}">{{ public_experiment.title }}									
+									<a href="../view/{{ public_experiment.id }}">{{ public_experiment.title }}
 										
 										</a>
 								</th>
-								
-							</tr>	
+							
+							</tr>
 							
 							<tr>
-								
+									
 									<td>From <strong>{{public_experiment.institution_name}}</strong>, deposited <strong>{{ public_experiment.update_time|date:"jS F Y" }}</strong></td>
 							
 							</tr>
 							
 							<tr>
-								
-									<td class="experiment-table-stats"><strong>{{ public_experiment.dataset_set.all.count }}</strong> dataset(s), containing <strong>{{ public_experiment.id|experiment_file_count }}</strong> files 
+									
+									<td class="experiment-table-stats"><strong>{{ public_experiment.dataset_set.all.count }}</strong> dataset(s), containing <strong>{{ public_experiment.id|experiment_file_count }}</strong> files
 								<br/><br/>
-							</tr>				
+							</tr>
 						
 						{%endfor %}
-					</table>					
-						
+					</table>
+				
 				{% else %}
 					No public experiments at the moment.
 				{% endif %}
-			</div>			
+			</div>
 		</div>
-
+		
 		{% endblock %}

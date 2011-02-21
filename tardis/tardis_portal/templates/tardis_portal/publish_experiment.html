@@ -45,13 +45,11 @@
 			
 			<form action="." method="POST" class="publishform">
 				<p>
-					<h3>Experiment Name</h3>
-					{{ experiment.title }}
+					<strong>Experiment Name:</strong> {{ experiment.title }}
 				</p>
 				
 				<p>
 					{% for result in publish_result %}
-						
 						<div {% if not result.status %}style="color: red"{% endif %}>
 							<strong>{{result.name}}</strong><br/>
 							{{result.message}}
@@ -62,37 +60,12 @@
 				</p>
 				
 				{% for form in publish_forms %}
-					{% include form %}
+					<div style="border-width: 1px; border-style: solid;
+					 padding: 10px; margin: 10px">
+						{% include form %}
+					</div>
 				{% endfor %}
-				
-				{# <p> #}
-				{# 	<h3>Related Parties</h3> #}
-				{# 	<p><em>Please select activities related to this experiment</em></p> #}
-				{# 	{{ username }} (primary investigator) and... #}
-				{# 	<input id="parties" name="parties" type="text"/> (comma separate) #}
-				{# </p> #}
-				{#  #}
-				{# <p> #}
-				{# 	<h3>Related Activities</h3> #}
-				{# 	<em>The following activities were retrieved for {{username}}... Please select activities related to this experiment</em> #}
-				{# 	 #}
-				{# 	{% for activity in activities %} #}
-				{# 		<div class="activity"> #}
-				{# 			<strong>Grant ID:</strong> {{ activity.grant_id }}<br/> #}
-				{# 			<strong>Title:</strong> {{ activity.title }}<br/> #}
-				{# 			<strong>Funding Body:</strong> {{ activity.funding_body }}<br/> #}
-				{# 			<strong>Description:</strong> {{ activity.description }}<br/> #}
-				{# 			<strong>Members:</strong><br/> #}
-				{# 				<div class="members"> #}
-				{# 				{% for member in activity.members %} #}
-				{# 					{{ member }}<br/> #}
-				{# 				{% endfor %} #}
-				{# 				</div> #}
-				{# 			<div align="right"><strong>Include this activity</strong> <input type="checkbox" name="activity" value="{{activity.grant_id}}"></div> #}
-				{# 		</div> #}
-				{# 	{% endfor %} #}
-				{# 	 #}
-				{# </p> #}
+			
 			
 			<br/>
 			<input id="button" type="submit" value="Publish Experiment"/>

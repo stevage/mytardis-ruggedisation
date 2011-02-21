@@ -38,9 +38,8 @@ class DefaultPublishProvider(PublishProvider):
         #         userObj.last_name, 'email': userObj.email}
         return {'status': False, 'message': 'Unknown error'}
     
-    def get_template_path(self):
+    def get_context(self, request):
         
-        print "PUB EXP: " + str(self.experiment_id)
         """
         return a list of user descriptions from the auth domain.
         
@@ -50,5 +49,13 @@ class DefaultPublishProvider(PublishProvider):
             "display": "John Smith",
             "email": "john@example.com"}
         
+        """
+        default_test = 'hello my name is steve'
+        
+        return {'test': default_test}
+    
+    def get_path(self):
+        """
+        get path
         """
         return "default/form.html"
