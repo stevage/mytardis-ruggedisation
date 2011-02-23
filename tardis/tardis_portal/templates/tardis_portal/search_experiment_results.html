@@ -21,7 +21,7 @@ No experiments found
     <td>
       From <strong>{{ experiment.institution_name }}</strong>,
       deposited <strong>{{ experiment.created_time|date:"jS F Y" }}</strong>,
-      modified <strong>{{ experiment.update_time|date:"jS F Y" }}</strong>
+      last modified <strong>{{ experiment.update_time|date:"jS F Y" }}</strong>
     </td>
   </tr>
   {% if experiment.start_time and experiment.end_time %}
