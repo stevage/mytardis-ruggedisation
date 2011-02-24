@@ -2047,7 +2047,9 @@ def search_equipment(request):
             c = Context({'object_list': q,
                          'searchDatafileSelectionForm':
                              getNewSearchDatafileSelectionForm()})
-            return render_to_response('tardis_portal/equipment_list.html', c)
+            url = 'tardis_portal/equipment_list.html'
+            return HttpResponse(render_response_index(request, url, c))
+
     else:
         form = EquipmentSearchForm()
 
