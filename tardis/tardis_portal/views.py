@@ -1894,20 +1894,24 @@ def search_equipment(request):
 
 
 def rif_cs(request):
+    #this function is highly dependent on production requirements
+    
     import datetime
     
     experiments = Experiment.objects.filter(public=True)
     
-    activity_url = settings.DEBUG_BASE_URL + "pilot/GetActivitybyGrantID/"
+    activity_url = settings.TEST_MONASH_ANDS_URL + "pilot/GetActivitybyGrantID/"
     requestmp = urllib2.Request(activity_url)
     activity_rif_cs = urllib2.urlopen(requestmp).read()
     
-    party_url = settings.DEBUG_BASE_URL + "pilot/GetPartybyMonashID/"
+    party_url = settings.TEST_MONASH_ANDS_URL + "pilot/GetPartybyMonashID/"
     requestmp = urllib2.Request(party_url)
     party_rif_cs = urllib2.urlopen(requestmp).read()
     
-    activity_keys = ExperimentParameter.objects.filter(name__name="activity_id")
-    party_keys = ExperimentParameter.objects.filter(name__name="party_id")
+    activity_keys = \
+    ExperimentParameter.objects.filter(name__name="activity_id")
+    party_keys = \
+    ExperimentParameter.objects.filter(name__name="party_id")
     
     c = Context({
         'experiments': experiments,
@@ -1917,7 +1921,9 @@ def rif_cs(request):
         'activity_keys': activity_keys,
         'party_keys': party_keys,
     })
-    return HttpResponse(render_response_index(request, 'tardis_portal/rif-cs.xml', c), mimetype='application/xml')
+    return HttpResponse(render_response_index(request,\
+    'rif_cs_profile/rif-cs.xml', c),
+    mimetype='application/xml')
 
 
 def publish_experiment(request, experiment_id):
@@ -1935,11 +1941,13 @@ def publish_experiment(request, experiment_id):
     if request.method == 'POST':  # If the form has been submitted...
         if not experiment.public:
             
-            context_dict['publish_result'] = publishService.execute_publishers(request)
+            context_dict['publish_result'] = \
+            publishService.execute_publishers(request)
             
             print context_dict['publish_result']
     
-    context_dict = dict(context_dict, **publishService.get_contexts(request))
+    context_dict = dict(context_dict, \
+    **publishService.get_contexts(request))
     
     c = Context(context_dict)
     return HttpResponse(render_response_index(request,
