@@ -1938,6 +1938,7 @@ def publish_experiment(request, experiment_id):
     'experiment': experiment,
     }
     
+    success = True
     if request.method == 'POST':  # If the form has been submitted...
         if not experiment.public:
             
@@ -1945,6 +1946,11 @@ def publish_experiment(request, experiment_id):
             publishService.execute_publishers(request)
             
             print context_dict['publish_result']
+            for result in context_dict['publish_result']:
+                if not result['status']:
+                    success = False
+    
+    context_dict['success'] = success
     
     context_dict = dict(context_dict, \
     **publishService.get_contexts(request))

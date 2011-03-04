@@ -92,6 +92,7 @@ class rif_cs_PublishProvider(PublishProvider):
             schema__namespace__exact=schema.namespace,
             name="profile")
         
+        parameterset = None
         try:
             parameterset = \
                          ExperimentParameterSet.objects.get(schema=schema,
@@ -101,6 +102,15 @@ class rif_cs_PublishProvider(PublishProvider):
                                                   experiment=experiment)
             
             parameterset.save()
+        
+        # if a profile param already exists
+        if self.get_profile():
+            ep = ExperimentParameter.objects.filter(name=parametername,
+            parameterset=parameterset,
+            parameterset__experiment__id=self.experiment_id)
+            
+            for p in ep:
+                p.delete()
         
         ep = ExperimentParameter(
             parameterset=parameterset,

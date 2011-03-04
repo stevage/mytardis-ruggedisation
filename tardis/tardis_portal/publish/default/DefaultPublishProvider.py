@@ -28,7 +28,7 @@ class DefaultPublishProvider(PublishProvider):
                 experiment = Experiment.objects.get(id=self.experiment_id)
                 experiment.public = True
                 experiment.save()
-                return {'status': True, 'message': 'Experiment Public'}
+                return {'status': True, 'message': 'Legal Agreement Accepted'}
             else:
                 return {'status': False, 'message': 'Please accept the legal agreement'}
         

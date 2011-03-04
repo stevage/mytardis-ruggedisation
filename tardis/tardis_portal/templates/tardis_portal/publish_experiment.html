@@ -42,33 +42,47 @@
 				<div class="post">
 					<h1 class="title"><a name="abouttardis">Publish Experiment</a></h1>
 					<div class="entry">
+						
+						{% if publish_result %}
+						<p>
+							{% if success %}
+								<h3>Experiment Publication Successful</strong></h3>
+								<a href="{{ experiment.get_absolute_url }}">Go back to your experiment.</a>
+							{% else %}
+								<h3><span style="color: red;">Experiment Publication Failed</span></h3>
+								See messages below for more information. <a href=".">Try to publish again</a>
+							{% endif %}
+								
+								<div class="publish_results" style="padding: 20px">
+								{% for result in publish_result %}
+									<div {% if not result.status %}style="color: red;"{% endif %}>
+										<strong>{{result.name}}</strong><br/>
+										{{result.message}}
+										<br/><br/>
+									</div>
+								{% endfor %}
+								</div>
+						
+						</p>
+						{% else %}
+							
+							<form action="." method="POST" class="publishform">
+							<p>
+								<strong>Experiment Name:</strong> {{ experiment.title }}
+							</p>
+							
+							{% for form in publish_forms %}
+								<div style="border-width: 1px; border-style: solid;
+								 padding: 10px; margin: 10px">
+									{% include form %}
+								</div>
+							{% endfor %}
+							
+							<br/>
+							<input id="button" type="submit" value="Publish Experiment"/>
+						
+						{% endif %}
 			
-			<form action="." method="POST" class="publishform">
-				<p>
-					<strong>Experiment Name:</strong> {{ experiment.title }}
-				</p>
-				
-				<p>
-					{% for result in publish_result %}
-						<div {% if not result.status %}style="color: red"{% endif %}>
-							<strong>{{result.name}}</strong><br/>
-							{{result.message}}
-							<br/><br/>
-						</div>
-					
-					{% endfor %}
-				</p>
-				
-				{% for form in publish_forms %}
-					<div style="border-width: 1px; border-style: solid;
-					 padding: 10px; margin: 10px">
-						{% include form %}
-					</div>
-				{% endfor %}
-			
-			
-			<br/>
-			<input id="button" type="submit" value="Publish Experiment"/>
 			</div>
 			
 			</form>
