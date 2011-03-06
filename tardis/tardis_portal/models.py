@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-# Copyright (c) 2010, Monash e-Research Centre
+# Copyright (c) 2010-2011, Monash e-Research Centre
 #   (Monash University, Australia)
-# Copyright (c) 2010, VeRSI Consortium
+# Copyright (c) 2010-2011, VeRSI Consortium
 #   (Victorian eResearch Strategic Initiative, Australia)
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
@@ -32,18 +32,20 @@
 """
 models.py
 
-.. moduleauthor: Steve Androulakis
-.. moduleauthor: Gerson Galang
-.. moduleauthor: Ulrich Felzmann
+.. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
+.. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
+.. moduleauthor:: Russell Sim <russell.sim@monash.edu>
 
 """
 
+from os import path
+from urlparse import urlparse
 
+from django.conf import settings
 from django.db import models
 from django.db.models.signals import pre_save
 from django.contrib.auth.models import User, Group
 from django.utils.safestring import SafeUnicode
-from django.conf import settings
 
 from tardis.tardis_portal.managers import ExperimentManager
 
@@ -51,12 +53,13 @@ from tardis.tardis_portal.managers import ExperimentManager
 class UserProfile(models.Model):
     """
     UserProfile class is an extension to the Django standard user model.
-
+    
     :attribute isDjangoAccount: is the user a local DB user
-    :attribute user: a foreign key to the :class:`django.contrib.auth.models.User`
+    :attribute user: a foreign key to the
+       :class:`django.contrib.auth.models.User`
     """
     user = models.ForeignKey(User, unique=True)
-
+    
     # This flag will tell us if the main User account was created using any
     # non localdb auth methods. For example, if a first time user authenticates
     # to the system using the VBL auth method, an account will be created for
@@ -64,24 +67,27 @@ class UserProfile(models.Model):
     # False.
     isDjangoAccount = models.BooleanField(
         null=False, blank=False, default=True)
-
+    
     def getUserAuthentications(self):
         return self.userAuthentication_set.all()
-
+    
     def __unicode__(self):
         return self.user.username
 
 
 class GroupAdmin(models.Model):
+    """GroupAdmin links the Django User and Group tables for group
+    administrators
+    
+    :attribute user: a forign key to the
+       :class:`django.contrib.auth.models.User`
+    :attribute group: a forign key to the
+       :class:`django.contrib.auth.models.Group`
     """
-    GroupAdmin links the Django User and Group tables for group administrators
-    :attribute user: a forign key to the :class:`django.contrib.auth.models.User`
-    :attribute group: a forign key to the :class:`django.contrib.auth.models.Group`
-    """
-
+    
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group)
-
+    
     def __unicode__(self):
         return '%s: %s' % (self.user.username, self.group.name)
 
@@ -92,43 +98,51 @@ class UserAuthentication(models.Model):
     userProfile = models.ForeignKey(UserProfile)
     username = models.CharField(max_length=50)
     authenticationMethod = models.CharField(max_length=30, choices=CHOICES)
-
+    
     def __init__(self, *args, **kwargs):
         # instantiate comparisonChoices based on settings.AUTH PROVIDERS
         self.CHOICES = ()
         for authMethods in settings.AUTH_PROVIDERS:
             self.CHOICES += ((authMethods[0], authMethods[1]),)
         self._comparisonChoicesDict = dict(self.CHOICES)
-
+        
         super(UserAuthentication, self).__init__(*args, **kwargs)
-
+    
     def getAuthMethodDescription(self):
         return self._comparisonChoicesDict[self.authenticationMethod]
-
+    
     def __unicode__(self):
         return self.username + ' - ' + self.getAuthMethodDescription()
 
 
 class XSLT_docs(models.Model):
-
+    
     xmlns = models.URLField(max_length=255, primary_key=True)
     data = models.TextField()
-
+    
     def __unicode__(self):
         return self.xmlns
 
 
-class Author(models.Model):
-
-    name = models.CharField(max_length=255)
-
-    def __unicode__(self):
-        return self.name
-
-
 class Experiment(models.Model):
-
-    url = models.URLField(verify_exists=False, max_length=255, null=True, blank=True)
+    """The ``Experiment`` model inherits from :class:`django.db.models.Model`
+    
+    :attribute url: **Undocumented**
+    :attribute approved: **Undocumented**
+    :attribute title: the title of the experiment.
+    :attribute institution_name: the name of the institution who created
+       the dataset.
+    :attribute start_time: **Undocumented**
+    :attribute end_time: **Undocumented**
+    :attribute created_time: **Undocumented**
+    :attribute handle: **Undocumented**
+    :attribute public: **Undocumented**
+    :attribute objects: default model manager
+    :attribute safe: ACL aware model manager
+    
+    """
+    url = models.URLField(verify_exists=False, max_length=255,
+                          null=True, blank=True)
     approved = models.BooleanField()
     title = models.CharField(max_length=400)
     institution_name = models.CharField(max_length=400)
@@ -142,19 +156,56 @@ class Experiment(models.Model):
     public = models.BooleanField()
     objects = models.Manager()  # The default manager.
     safe = ExperimentManager()  # The acl-aware specific manager.
-
+    
     def __unicode__(self):
         return self.title
+    
+    @models.permalink
+    def get_absolute_url(self):
+        """Return the absolute url to the current ``Experiment``"""
+        return ('tardis.tardis_portal.views.view_experiment', (),
+                {'experiment_id': self.id})
+    
+    @models.permalink
+    def get_edit_url(self):
+        """Return the absolute url to the edit view of the current
+        ``Experiment``
+        
+        """
+        return ('tardis.tardis_portal.views.edit_experiment', (),
+                {'experiment_id': self.id})
+    
+    def profile(self):
+        """Return the rif-cs profile template location
+            as determined by the profile ExperimentParameter
+        
+        """
+        
+        profile_template_location = "rif_cs_profile/profiles/"
+        
+        try:
+            from tardis.tardis_portal.publish.rif_cs_profile.rif_cs_PublishProvider import rif_cs_PublishProvider
+            
+            rif_cs_pp = rif_cs_PublishProvider(self.id)
+            
+            profile = rif_cs_pp.get_profile()
+            if not profile:
+                return profile_template_location + "default.xml"
+            
+            return profile_template_location + profile
+        
+        except ImportError:
+            return profile_template_location + "default.xml"
 
 
 class ExperimentACL(models.Model):
-
-    """
-    The ExperimentACL table is the core of the Tardis Authodrisation framework
-    http://code.google.com/p/mytardis/wiki/AuthorisationEngineAlt
+    """The ExperimentACL table is the core of the `Tardis Authorisation framework
+    <http://code.google.com/p/mytardis/wiki/AuthorisationEngineAlt>`_
+    
     :attribute pluginId: the the name of the auth plugin being used
     :attribute entityId: a foreign key to auth plugins
-    :attribute experimentId: a forign key to the :class:`tardis.tardis_portal.models.Experiment`
+    :attribute experimentId: a forign key to the
+       :class:`tardis.tardis_portal.models.Experiment`
     :attribute canRead: gives the user read access
     :attribute canWrite: gives the user write access
     :attribute canDelete: gives the user delete permission
@@ -162,19 +213,21 @@ class ExperimentACL(models.Model):
     :attribute effectiveDate: the date when access takes into effect
     :attribute expiryDate: the date when access ceases
     :attribute aclOwnershipType: system-owned or user-owned.
+    
     System-owned ACLs will prevent users from removing or
     editing ACL entries to a particular experiment they
     own. User-owned ACLs will allow experiment owners to
     remove/add/edit ACL entries to the experiments they own.
+    
     """
-
+    
     OWNER_OWNED = 1
     SYSTEM_OWNED = 2
     __COMPARISON_CHOICES = (
         (OWNER_OWNED, 'Owner-owned'),
         (SYSTEM_OWNED, 'System-owned'),
     )
-
+    
     pluginId = models.CharField(null=False, blank=False, max_length=30)
     entityId = models.CharField(null=False, blank=False, max_length=320)
     experiment = models.ForeignKey(Experiment)
@@ -186,75 +239,108 @@ class ExperimentACL(models.Model):
     expiryDate = models.DateField(null=True, blank=True)
     aclOwnershipType = models.IntegerField(
         choices=__COMPARISON_CHOICES, default=OWNER_OWNED)
-
+    
     def __unicode__(self):
         return '%i | %s' % (self.experiment.id, self.experiment.title)
-
+    
     class Meta:
         ordering = ['experiment__id']
 
 
 class Author_Experiment(models.Model):
-
+    
     experiment = models.ForeignKey(Experiment)
-    author = models.ForeignKey(Author)
+    author = models.CharField(max_length=255)
     order = models.PositiveIntegerField()
-
+    
+    class Meta:
+        ordering = ('order', )
+    
     def __unicode__(self):
         return SafeUnicode(self.author.name) + ' | ' \
             + SafeUnicode(self.experiment.id) + ' | ' \
             + SafeUnicode(self.order)
-
+    
     class Meta:
         ordering = ['order']
         unique_together = (('experiment', 'author'),)
 
 
 class Dataset(models.Model):
-
-    """
-    Class to link datasets to experiments
-
-    :attribute experiment: a forign key to the :class:`tardis.tardis_portal.models.Experiment`
+    """Class to link datasets to experiments
+    
+    :attribute experiment: a forign key to the
+       :class:`tardis.tardis_portal.models.Experiment`
     :attribute description: description of this dataset
     """
-
+    
     experiment = models.ForeignKey(Experiment)
     description = models.TextField(blank=True)
-
+    
+    def addDatafile(self, filepath,
+                    protocol='', url='',
+                    size=None, commit=True):
+        """Add Datafile helper function
+        
+        :param filepath: the file path within the repository
+        :type filepath: string
+        """
+        full_file_path = path.join(settings.FILE_STORE_PATH,
+                                   str(self.experiment.id),
+                                   filepath)
+        
+        datafile = Dataset_File(dataset=self)
+        datafile.filename = path.basename(filepath)
+        if protocol:
+            datafile.protocol = protocol
+        
+        if url:
+            datafile.url = url
+        else:
+            datafile.url = 'file:/' + filepath
+        
+        if size:
+            datafile.size = size
+        elif path.exists(full_file_path):
+            datafile.size = path.getsize(full_file_path)
+    
     def __unicode__(self):
         return self.description
 
 
 class Dataset_File(models.Model):
-
-    """
-    Class to store meta-data about a physical file
-
-    :attribute dataset: a forign key to the :class:`tardis.tardis_portal.models.Dataset`
-    :attribute filename: basename of the file
-    :attribute url: location (path) of the file
-    :attribute size: file size
-    :attribute protocol: special download protocol to be used
+    """Class to store meta-data about a physical file
+    
+    :attribute dataset: the foreign key to the
+       :class:`tardis.tardis_portal.models.Dataset` the file belongs to.
+    :attribute filename: the name of the file, excluding the path.
+    :attribute url: the url that the datafile is located at
+    :attribute size: the size of the file.
+    :attribute protocol: the protocol used to access the file.
     :attribute created_time: time the file was added to tardis
     :attribute modification_time: last modification time of the file
     :attribute mimetype: for example 'application/pdf'
     :attribute md5sum: digest of length 32, containing only hexadecimal digits
+    
+    The `protocol` field is only used for rendering the download link, this
+    done by insterting the protocol into the url generated to the download
+    location. If the `protocol` field is blank then the `file` protocol will
+    be used.
     """
-
+    
     dataset = models.ForeignKey(Dataset)
     filename = models.CharField(max_length=400)
     url = models.CharField(max_length=400)
-    size = models.CharField(blank=False, max_length=400)
+    size = models.CharField(blank=True, max_length=400)
     protocol = models.CharField(blank=True, max_length=10)
     created_time = models.DateTimeField(null=True, blank=True)
     modification_time = models.DateTimeField(null=True, blank=True)
     mimetype = models.CharField(blank=True, max_length=80)
     md5sum = models.CharField(blank=True, max_length=32)
-
+    
     def __unicode__(self):
         return self.filename
-
+    
     def get_mimetype(self):
         if self.mimetype:
             return self.mimetype
@@ -265,9 +351,25 @@ class Dataset_File(models.Model):
                 return mimetypes.types_map['.%s' % suffix.lower()]
             except KeyError:
                 return 'application/octet-stream'
-
+    
+    def get_download_url(self):
+        from django.core.urlresolvers import reverse, get_script_prefix
+        
+        if urlparse(self.url).scheme and not self.url.startswith('file://'):
+            return self.url
+        
+        url = reverse('tardis.tardis_portal.download.download_datafile',
+                      None, (), {'datafile_id': self.id})
+        
+        if self.protocol:
+            prefix_len = len(get_script_prefix())
+            url = '/'.join(s.strip('/') for s in [url[:prefix_len],
+                                                  self.protocol,
+                                                  url[prefix_len:]])
+        return url
+    
     def get_absolute_filepath(self):
-
+        
         # check for empty protocol field (historical reason) or
         # 'tardis' which indicates a location within the tardis file
         # store
@@ -277,33 +379,37 @@ class Dataset_File(models.Model):
                 FILE_STORE_PATH = settings.FILE_STORE_PATH
             except AttributeError:
                 return ''
-
+            
             from os.path import abspath, join
             return abspath(join(FILE_STORE_PATH,
                                 str(self.dataset.experiment.id),
                                 self.url.partition('://')[2]))
-
+        
         # file should refer to an absolute location
         elif self.protocol == 'file':
             return self.url.partition('://')[2]
-
+        
         # ok, it doesn't look like the file is stored locally
         else:
             return ''
-
+    
     def _set_size(self):
-
+        
         from os.path import getsize
         self.size = str(getsize(self.get_absolute_filepath()))
-
+    
     def _set_mimetype(self):
-
-        from magic import Magic
-        self.mimetype = Magic(mime=True).from_file(self.get_absolute_filepath())
-
-
+        
+        try:
+            from magic import Magic
+        except:
+            # TODO log that this failed
+            return
+        self.mimetype = Magic(mime=True).from_file(
+            self.get_absolute_filepath())
+    
     def _set_md5sum(self):
-
+        
         f = open(self.get_absolute_filepath(), 'rb')
         import hashlib
         md5 = hashlib.new('md5')
@@ -314,13 +420,13 @@ class Dataset_File(models.Model):
 
 
 def save_DatasetFile(sender, **kwargs):
-
+    
     # the object can be accessed via kwargs 'instance' key.
     df = kwargs['instance']
-
+    
     if not df.get_absolute_filepath():
         return
-
+    
     try:
         if not df.size:
             df._set_size()
@@ -328,8 +434,10 @@ def save_DatasetFile(sender, **kwargs):
             df._set_md5sum()
         if not df.mimetype:
             df._set_mimetype()
-
+    
     except IOError:
+        pass
+    except OSError:
         pass
 
 
@@ -337,9 +445,9 @@ pre_save.connect(save_DatasetFile, sender=Dataset_File)
 
 
 class Schema(models.Model):
-
+    
     namespace = models.URLField(verify_exists=False, max_length=400)
-
+    
     def __unicode__(self):
         return self.namespace
 
@@ -347,10 +455,10 @@ class Schema(models.Model):
 class DatafileParameterSet(models.Model):
     schema = models.ForeignKey(Schema)
     dataset_file = models.ForeignKey(Dataset_File)
-
+    
     def __unicode__(self):
         return '%s / %s' % (self.schema.namespace, self.dataset_file.filename)
-
+    
     class Meta:
         ordering = ['id']
 
@@ -358,10 +466,10 @@ class DatafileParameterSet(models.Model):
 class DatasetParameterSet(models.Model):
     schema = models.ForeignKey(Schema)
     dataset = models.ForeignKey(Dataset)
-
+    
     def __unicode__(self):
         return '%s / %s' % (self.schema.namespace, self.dataset.description)
-
+    
     class Meta:
         ordering = ['id']
 
@@ -369,16 +477,16 @@ class DatasetParameterSet(models.Model):
 class ExperimentParameterSet(models.Model):
     schema = models.ForeignKey(Schema)
     experiment = models.ForeignKey(Experiment)
-
+    
     def __unicode__(self):
         return '%s / %s' % (self.schema.namespace, self.experiment.title)
-
+    
     class Meta:
         ordering = ['id']
 
 
 class ParameterName(models.Model):
-
+    
     EXACT_VALUE_COMPARISON = 1
     NOT_EQUAL_COMPARISON = 2
     RANGE_COMPARISON = 3
@@ -398,7 +506,7 @@ class ParameterName(models.Model):
         (LESS_THAN_COMPARISON, 'Less than'),
         (LESS_THAN_EQUAL_COMPARISON, 'Less than or equal'),
     )
-
+    
     schema = models.ForeignKey(Schema)
     name = models.CharField(max_length=60)
     full_name = models.CharField(max_length=60)
@@ -410,41 +518,41 @@ class ParameterName(models.Model):
     # TODO: we'll need to rethink the way choices for drop down menus are
     #       represented in the DB. doing it this way is just a bit wasteful.
     choices = models.CharField(max_length=500, blank=True)
-
+    
     def __unicode__(self):
         return self.name
 
 
 class DatafileParameter(models.Model):
-
+    
     parameterset = models.ForeignKey(DatafileParameterSet)
     name = models.ForeignKey(ParameterName)
     string_value = models.TextField(null=True, blank=True)
     numerical_value = models.FloatField(null=True, blank=True)
-
+    
     def __unicode__(self):
         if self.name.is_numeric:
             return 'Datafile Param: %s=%s' % (self.name.name,
                 self.numerical_value)
         return 'Datafile Param: %s=%s' % (self.name.name, self.string_value)
-
+    
     class Meta:
         ordering = ['id']
 
 
 class DatasetParameter(models.Model):
-
+    
     parameterset = models.ForeignKey(DatasetParameterSet)
     name = models.ForeignKey(ParameterName)
     string_value = models.TextField(null=True, blank=True)
     numerical_value = models.FloatField(null=True, blank=True)
-
+    
     def __unicode__(self):
         if self.name.is_numeric:
             return 'Dataset Param: %s=%s' % (self.name.name,
                 self.numerical_value)
         return 'Dataset Param: %s=%s' % (self.name.name, self.string_value)
-
+    
     class Meta:
         ordering = ['id']
 
@@ -454,13 +562,13 @@ class ExperimentParameter(models.Model):
     name = models.ForeignKey(ParameterName)
     string_value = models.TextField(null=True, blank=True)
     numerical_value = models.FloatField(null=True, blank=True)
-
+    
     def __unicode__(self):
         if self.name.is_numeric:
             return 'Experiment Param: %s=%s' % (self.name.name,
                 self.numerical_value)
         return 'Experiment Param: %s=%s' % (self.name.name, self.string_value)
-
+    
     class Meta:
         ordering = ['id']
 
@@ -471,7 +579,7 @@ class XML_data(models.Model):
     experiment = models.OneToOneField(Experiment, null=True, blank=True)
     xmlns = models.URLField(max_length=400)
     data = models.TextField()
-
+    
     def __unicode__(self):
         return self.xmlns
 
@@ -489,6 +597,6 @@ class Equipment(models.Model):
     url = models.URLField(null=True, blank=True,
                           verify_exists=False,
                           max_length=255)
-
+    
     def __unicode__(self):
         return self.key

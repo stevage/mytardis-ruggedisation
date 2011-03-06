@@ -1,0 +1,11 @@
+<strong>Research Data Australia Profile</strong>
+
+<p>
+	Publish under this profile (leave 'default' if unsure):
+	<select name="profile">
+		{% for profile in rif_cs_profiles %}
+			<option value="{{profile}}" {% if profile == "default.xml" %}selected{% endif %}>{{profile}}</option>
+		{% endfor %}
+	</select>
+
+</p>
