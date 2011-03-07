@@ -1,5 +1,6 @@
 <strong>Australian National Data Service Publish</strong>
 
+{% if activities %}
 <p>
 	<h3>Related Parties</h3>
 	<p><em>Please select at least one activity related to this experiment</em></p>
@@ -28,3 +29,10 @@
 	{% endfor %}
 
 </p>
+{% else %}
+
+<p>
+	There are already party and activity entries for this experiment.
+</p>
+
+{% endif %}
