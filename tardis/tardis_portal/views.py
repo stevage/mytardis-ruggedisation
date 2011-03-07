@@ -1908,18 +1908,11 @@ def rif_cs(request):
     requestmp = urllib2.Request(party_url)
     party_rif_cs = urllib2.urlopen(requestmp).read()
     
-    activity_keys = \
-    ExperimentParameter.objects.filter(name__name="activity_id")
-    party_keys = \
-    ExperimentParameter.objects.filter(name__name="party_id")
-    
     c = Context({
         'experiments': experiments,
         'now': datetime.datetime.now(),
         'party_rif_cs': party_rif_cs,
         'activity_rif_cs': activity_rif_cs,
-        'activity_keys': activity_keys,
-        'party_keys': party_keys,
     })
     return HttpResponse(render_response_index(request,\
     'rif_cs_profile/rif-cs.xml', c),
@@ -1927,20 +1920,37 @@ def rif_cs(request):
 
 
 def publish_experiment(request, experiment_id):
+    import os
+    
     experiment = Experiment.objects.get(id=experiment_id)
     username = str(request.user).partition('_')[2]
     
     publishService = PublishService(experiment.id)
     
+    TARDIS_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__)))
+    legalpath = os.path.join(TARDIS_ROOT,
+                  "publish/legal.txt")
+    legalfile = open(legalpath, 'r')
+    
+    legaltext = legalfile.read()
+    legalfile.close()
+    
     context_dict = \
     {'username': username,
     'publish_forms': publishService.get_template_paths(),
     'experiment': experiment,
+    'legaltext': legaltext,
     }
     
+    legal = True
     success = True
+    
     if request.method == 'POST':  # If the form has been submitted...
-        if not experiment.public:
+        
+        context_dict['publish_result'] = ""
+        if 'legal' in request.POST:
+            experiment.public = True
+            experiment.save()
             
             context_dict['publish_result'] = \
             publishService.execute_publishers(request)
@@ -1949,7 +1959,11 @@ def publish_experiment(request, experiment_id):
             for result in context_dict['publish_result']:
                 if not result['status']:
                     success = False
+        
+        else:
+            legal = False
     
+    context_dict['legal'] = legal
     context_dict['success'] = success
     
     context_dict = dict(context_dict, \

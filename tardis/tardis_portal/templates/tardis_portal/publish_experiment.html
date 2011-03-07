@@ -42,26 +42,37 @@
 				<div class="post">
 					<h1 class="title"><a name="abouttardis">Publish Experiment</a></h1>
 					<div class="entry">
-						
-						{% if publish_result %}
+							
+							
+							{% if publish_result %}
 						<p>
-							{% if success %}
-								<h3>Experiment Publication Successful</strong></h3>
-								<a href="{{ experiment.get_absolute_url }}">Go back to your experiment.</a>
-							{% else %}
-								<h3><span style="color: red;">Experiment Publication Failed</span></h3>
-								See messages below for more information. <a href=".">Try to publish again</a>
-							{% endif %}
+							{% if legal %}
 								
-								<div class="publish_results" style="padding: 20px">
-								{% for result in publish_result %}
-									<div {% if not result.status %}style="color: red;"{% endif %}>
-										<strong>{{result.name}}</strong><br/>
-										{{result.message}}
-										<br/><br/>
+								{% if success %}
+									<h3>Experiment Publication Successful</strong></h3>
+									<a href="{{ experiment.get_absolute_url }}">Go back to your experiment.</a>
+								{% else %}
+									<h3><span style="color: red;">Experiment Publication Failed</span></h3>
+									See messages below for more information. <a href=".">Try to publish again</a>
+								
+								{% endif %}
+							
+							{% else %}
+								
+								<h3><span style="color: red;">Experiment Publication Failed</span></h3>
+								Please accept the legal agreement.
+							
+							{% endif %}
+									
+									<div class="publish_results" style="padding: 20px">
+									{% for result in publish_result %}
+										<div {% if not result.status %}style="color: red;"{% endif %}>
+											<strong>{{result.name}}</strong><br/>
+											{{result.message}}
+											<br/><br/>
+										</div>
+									{% endfor %}
 									</div>
-								{% endfor %}
-								</div>
 						
 						</p>
 						{% else %}
@@ -69,6 +80,14 @@
 							<form action="." method="POST" class="publishform">
 							<p>
 								<strong>Experiment Name:</strong> {{ experiment.title }}
+							</p>
+							
+							<strong>Legal Agreement:</strong>
+							<p>
+								{{legaltext}}
+							<p>
+							{{default_test}}
+							<input type="checkbox" name="legal" value="Agree">I agree to the above terms and wish to make my data publicly available<br>
 							</p>
 							
 							{% for form in publish_forms %}

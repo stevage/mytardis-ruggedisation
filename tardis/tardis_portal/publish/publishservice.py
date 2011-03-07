@@ -100,6 +100,8 @@ class PublishService():
                 exp.save()
                 
                 pp_response = {'status': False, 'message': inst}
+                
+            
             pp_status_list.append({'name': pp.name,
             'status': pp_response['status'],
             'message': pp_response['message']})
