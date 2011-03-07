@@ -1,8 +1,9 @@
 {% load xmldate %}
+{% load partyactivitykeys %}
 <registryObject group="Monash University">
 	<key>MONASH-SQUIRREL-{{experiment.id}}</key>
 	<originatingSource>http://www.tardis.edu.au</originatingSource>
-	<collection type="dataset" dateAccessioned="{{experiment.update_time|toxmldatetime}}"  dateModified="{{experiment.update_time|toxmldatetime}}">
+	<collection type="dataset" dateAccessioned="{{experiment.update_time|toxmldatetime}}" dateModified="{{experiment.update_time|toxmldatetime}}">
 		<identifier type="local">experiment/view/{{experiment.id}}</identifier>
 		<identifier type="handle">hdl:{{experiment.handle}}</identifier>
 		<name type="primary">
@@ -14,10 +15,11 @@
 			<address>
 				<electronic type="url">
 					<value>{{experiment.id}}</value>
-				</electronic>
-				<physical>
-					<addressPart type="text">{{experiment.institution_name}}</addressPart>
-				</physical>
+					</electronic>
+					<physical>
+						<addressPart type="text">{{experiment.institution_name}}
+						</addressPart>
+					</physical>
 			</address>
 		</location>
 		<relatedObject>
@@ -27,6 +29,18 @@
 				<url>http://www.tardis.edu.au</url>
 			</relation>
 		</relatedObject>
+		{% for party_key in experiment.id|party_keys %}
+		   <relatedObject>
+				<key>{{party_key.string_value}}</key>
+				<relation type="isPartOf"/>
+			</relatedObject>
+		{% endfor %}
+		{% for activity_key in experiment.id|activity_keys %}
+		   <relatedObject>
+				<key>{{activity_key.string_value}}</key>
+				<relation type="isPartOf"/>
+			</relatedObject>
+		{% endfor %}
 		<subject type="anzsrc-for" xml:lang="en">0601</subject>
 		<subject type="anzsrc-for" xml:lang="en">1101</subject>
 		<subject type="local" xml:lang="en">Macromolecular Crystallography</subject>
@@ -35,6 +49,5 @@
 		<subject type="local" xml:lang="en">X-Ray</subject>
 		<subject type="local" xml:lang="en">Synchrotron</subject>
 		<description type="about">{{experiment.description}}</description>
-	
 	</collection>
 </registryObject>
