@@ -9,19 +9,19 @@ class PublishService():
         self._initialised = False
         self.settings = settings
         self.experiment_id = experiment_id
-    
+
     def _manual_init(self):
         """Manual init had to be called by all the functions of the PublishService
         class to initialise the instance variables. This block of code used to
         be in the __init__ function but has been moved to its own init function
         to get around the problems with cyclic imports to static variables
         being exported from auth related modules.
-        
+
         """
         for pp in self.settings.PUBLISH_PROVIDERS:
             self._publish_providers.append(self._safe_import(pp))
         self._initialised = True
-    
+
     def _safe_import(self, path):
         try:
             dot = path.rindex('.')
@@ -38,23 +38,23 @@ class PublishService():
         except AttributeError:
             raise ImproperlyConfigured('Publish module "%s" does not define a "%s" class' %
                                        (publish_module, publish_classname))
-        
+
         publish_instance = publish_class(self.experiment_id)
         return publish_instance
-    
+
     def get_publishers(self):
         """Return a list publish providers
-        
+
         """
         if not self._initialised:
             self._manual_init()
-        
+
         publicaton_list = [pp for pp in self._publish_providers]
         return publicaton_list
-    
+
     def get_template_paths(self):
         """Return a list of tuples containing publish plugin name
-        
+
         """
         if not self._initialised:
             self._manual_init()
@@ -63,10 +63,10 @@ class PublishService():
             # logger.debug("group provider: " + gp.name)
             path_list.append(pp.get_path())
         return path_list
-    
+
     def get_contexts(self, request):
         """Return a list of tuples containing publish plugin name
-        
+
         """
         if not self._initialised:
             self._manual_init()
@@ -77,20 +77,20 @@ class PublishService():
             if context:
                 contexts = dict(contexts, **context)
         return contexts
-    
+
     def execute_publishers(self, request):
         """Return a list of tuples containing publish plugin name
-        
+
         """
         if not self._initialised:
             self._manual_init()
-        
+
         pp_status_list = []
         for pp in self._publish_providers:
-            
+
             pp_status = False
             pp_result = "Successful"
-            
+
             try:
                 pp_response = pp.execute_publish(request)
             except Exception as inst:
@@ -98,10 +98,10 @@ class PublishService():
                 exp = Experiment.objects.get(id=self.experiment_id)
                 exp.public = False
                 exp.save()
-                
+
                 pp_response = {'status': False, 'message': inst}
-                
-            
+
+
             pp_status_list.append({'name': pp.name,
             'status': pp_response['status'],
             'message': pp_response['message']})
