@@ -1930,6 +1930,8 @@ def rif_cs(request):
         'rif_cs_profile/rif-cs.xml', c),
         mimetype='application/xml')
     else:
+        logger.debug('TEST_MONASH_ANDS_URL setting not found.' +
+        ' RIF-CS not shown')
         return return_response_error(request)
 
 
@@ -1958,7 +1960,8 @@ def publish_experiment(request, experiment_id):
         success = True
 
         context_dict = {}
-        context_dict['publish_result'] = ""
+        #fix this slightly dodgy logic
+        context_dict['publish_result'] = "submitted"
         if 'legal' in request.POST:
             experiment.public = True
             experiment.save()
@@ -1972,6 +1975,8 @@ def publish_experiment(request, experiment_id):
                     success = False
 
         else:
+            logger.debug('Legal agreement for exp: ' + experiment_id +
+            ' not accepted.')
             legal = False
 
         # set dictionary to legal status and publish success result
@@ -1988,6 +1993,7 @@ def publish_experiment(request, experiment_id):
         try:
             legalfile = open(legalpath, 'r')
         except IOError:
+            logger.error('legal.txt not found. Publication halted.')
             return return_response_error(request)
 
         legaltext = legalfile.read()

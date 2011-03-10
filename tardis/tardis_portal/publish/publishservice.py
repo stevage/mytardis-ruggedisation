@@ -7,6 +7,7 @@ from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from tardis.tardis_portal.models import Experiment
+from tardis.tardis_portal.logger import logger
 
 
 class PublishService():
@@ -114,8 +115,24 @@ class PublishService():
                 exp.public = False
                 exp.save()
 
+                logger.error('Publish Provider Exception: ' +
+                pp.name + ' on exp: ' + str(self.experiment_id) +
+                ' failed with message "' +
+                inst + '""')
+
                 pp_response = {'status': False, 'message': inst}
 
+            if pp_response['status']:
+                logger.info('Publish Provider: ' +
+                pp.name + ' executed on Exp: ' +
+                str(self.experiment_id) + ' with success: ' +
+                str(pp_response['status']) + ' and message: ' +
+                pp_response['message'])
+            else:
+                logger.error('Publish Provider: ' +
+                pp.name + ' executed on Exp: ' +
+                str(self.experiment_id) + ' FAILED with message: ' +
+                pp_response['message'])
 
             pp_status_list.append({'name': pp.name,
             'status': pp_response['status'],

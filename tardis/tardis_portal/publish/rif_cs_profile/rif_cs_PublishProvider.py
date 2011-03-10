@@ -3,7 +3,7 @@ RIF CS Profile Module
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@gmail.com>
 '''
-#from tardis.tardis_portal.logger import logger
+from tardis.tardis_portal.logger import logger
 from tardis.tardis_portal.publish.interfaces import PublishProvider
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     ParameterName, Schema, ExperimentParameterSet
@@ -90,7 +90,8 @@ class rif_cs_PublishProvider(PublishProvider):
                     continue
                 profile_list.append(f)
         except OSError:
-            pass
+            logger.error("Can't find profile directory " +
+            "or no profiles available")
 
         return profile_list
 
@@ -98,9 +99,16 @@ class rif_cs_PublishProvider(PublishProvider):
         """
         Save selected profile choice as experiment parameter
         """
-
-        schema = Schema.objects.get(
-            namespace__exact="http://monash.edu.au/rif-cs/profile/")
+        namespace = "http://monash.edu.au/rif-cs/profile/"
+        schema = None
+        try:
+            schema = Schema.objects.get(
+                namespace__exact=namespace)
+        except Schema.DoesNotExist:
+            logger.debug('Schema ' + namespace +
+            ' does not exist. Creating.')
+            schema = Schema(namespace=namespace)
+            schema.save()
 
         parametername = ParameterName.objects.get(
             schema__namespace__exact=schema.namespace,

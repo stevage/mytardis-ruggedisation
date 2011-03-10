@@ -3,7 +3,7 @@ Monash ANDS Publish Provider (Research Master Interaction)
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 '''
-#from tardis.tardis_portal.logger import logger
+from tardis.tardis_portal.logger import logger
 from tardis.tardis_portal.publish.interfaces import PublishProvider
 from django.conf import settings
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
@@ -41,6 +41,7 @@ class MonashANDSPublishProvider(PublishProvider):
         try:
             monash_id = urllib2.urlopen(requestmp).read()
         except urllib2.URLError:
+            logger.error("Can't contact research master web service")
             return {'status': False,
             'message': 'Error: Cannot contact Activity / Party Service.' +
             ' Please try again later.'}
@@ -58,6 +59,7 @@ class MonashANDSPublishProvider(PublishProvider):
                 try:
                     monash_id = urllib2.urlopen(requestmp).read()
                 except urllib2.URLError:
+                    logger.error("Can't contact research master web service")
                     return {'status': False,
                     'message': 'Error: Cannot contact Activity' +
                     ' / Party Service. Please try again later.'}
@@ -94,6 +96,7 @@ class MonashANDSPublishProvider(PublishProvider):
         try:
             monash_id = urllib2.urlopen(requestmp).read()
         except urllib2.URLError:
+            logger.error("Can't contact research master web service")
             return {'message':
             'Error: Failed to contact Research Master web service ' +
             'to retrieve Party / Activity information. Please contact ' +
@@ -107,7 +110,9 @@ class MonashANDSPublishProvider(PublishProvider):
         requestmp = urllib2.Request(activity_url)
         try:
             doc_string = urllib2.urlopen(requestmp).read()
+            logger.error("Can't contact research master web service")
         except urllib2.URLError:
+            logger.error("Can't contact research master web service")
             return {'message':
             'Error: Failed to contact Research Master web service ' +
             'to retrieve Party / Activity information. Please contact ' +
@@ -152,9 +157,16 @@ class MonashANDSPublishProvider(PublishProvider):
         """
         Save Research Master's returned Party ID as an experiment parameter
         """
-        schema = \
-            Schema.objects.get(
-            namespace__exact="http://localhost/pilot/party/1.0/")
+        namespace = "http://localhost/pilot/party/1.0/"
+        schema = None
+        try:
+            schema = Schema.objects.get(
+                namespace__exact=namespace)
+        except Schema.DoesNotExist:
+            logger.debug('Schema ' + namespace +
+            ' does not exist. Creating.')
+            schema = Schema(namespace=namespace)
+            schema.save()
 
         parametername = \
             ParameterName.objects.get(
@@ -182,10 +194,16 @@ class MonashANDSPublishProvider(PublishProvider):
         """
         Save Research Master's returned Activity ID as an experiment parameter
         """
-
-        schema = \
-            Schema.objects.get(
-            namespace__exact="http://localhost/pilot/activity/1.0/")
+        namespace = "http://localhost/pilot/activity/1.0/"
+        schema = None
+        try:
+            schema = Schema.objects.get(
+                namespace__exact=namespace)
+        except Schema.DoesNotExist:
+            logger.debug('Schema ' + namespace +
+            ' does not exist. Creating.')
+            schema = Schema(namespace=namespace)
+            schema.save()
 
         parametername = \
             ParameterName.objects.get(
