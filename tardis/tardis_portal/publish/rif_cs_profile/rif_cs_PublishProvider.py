@@ -1,15 +1,17 @@
 '''
-Local DB Authentication module.
+RIF CS Profile Module
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@gmail.com>
 '''
-# from tardis.tardis_portal.logger import logger
+#from tardis.tardis_portal.logger import logger
 from tardis.tardis_portal.publish.interfaces import PublishProvider
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     ParameterName, Schema, ExperimentParameterSet
 import os
 
+
 class rif_cs_PublishProvider(PublishProvider):
+
     def __init__(self, experiment_id):
         self.experiment_id = experiment_id
 
@@ -17,11 +19,11 @@ class rif_cs_PublishProvider(PublishProvider):
 
     def execute_publish(self, request):
         """
-        return the user dictionary in the format of::
+        Attach the user-selected RIF-CS profile name to the experiment
+        as a parameter
 
-            {"id": 123,
-            "display": "John Smith",
-            "email": "john@example.com"}
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
 
         """
         if request.POST['profile']:
@@ -30,32 +32,43 @@ class rif_cs_PublishProvider(PublishProvider):
             profile = request.POST['profile']
             self.save_rif_cs_profile(experiment, profile)
 
-            return {'status': True, 'message': 'Success'}
+            return {'status': True,
+            'message': 'Success'}
         else:
-            return {'status': False, 'message': 'Profile Selection Not Detected'}
-
+            return {'status': True,
+            'message': 'No profiles exist to choose from'}
 
     def get_context(self, request):
-
         """
+        Display a list of profiles on screen for selection
+
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
+
         """
 
         rif_cs_profiles = self.get_rif_cs_profile_list()
 
-        return {"rif_cs_profiles": rif_cs_profiles}
+        selected_profile = "default.xml"
 
+        if self.get_profile():
+            selected_profile = self.get_profile()
+
+        return {"rif_cs_profiles": rif_cs_profiles,
+                "selected_profile": selected_profile}
 
     def get_path(self):
         """
-        get path
+        Return the relative template file path to display on screen
+
+        :rtype: string
         """
         return "rif_cs_profile/form.html"
-
 
     def get_rif_cs_profile_list(self):
         """
         Return a list of the possible RIF-CS profiles that can
-        be applied.
+        be applied. Scans the profile directory.
 
         :rtype: list of strings
         """
@@ -70,17 +83,21 @@ class rif_cs_PublishProvider(PublishProvider):
 
         profile_list = list()
 
-        for f in os.listdir(profile_dir):
-            if not os.path.isfile(profile_dir + f) or \
-                   f.startswith('.') or not f.endswith('.xml'):
-                continue
-            profile_list.append(f)
+        try:
+            for f in os.listdir(profile_dir):
+                if not os.path.isfile(profile_dir + f) or \
+                       f.startswith('.') or not f.endswith('.xml'):
+                    continue
+                profile_list.append(f)
+        except OSError:
+            pass
 
         return profile_list
 
-
     def save_rif_cs_profile(self, experiment, profile):
-        # save party experiment parameter
+        """
+        Save selected profile choice as experiment parameter
+        """
 
         schema = Schema.objects.get(
             namespace__exact="http://monash.edu.au/rif-cs/profile/")
@@ -92,11 +109,14 @@ class rif_cs_PublishProvider(PublishProvider):
         parameterset = None
         try:
             parameterset = \
-                         ExperimentParameterSet.objects.get(schema=schema,
-                                                            experiment=experiment)
+                         ExperimentParameterSet.objects.get(\
+                                schema=schema,
+                                experiment=experiment)
+
         except ExperimentParameterSet.DoesNotExist, e:
-            parameterset = ExperimentParameterSet(schema=schema,
-                                                  experiment=experiment)
+            parameterset = ExperimentParameterSet(\
+                                schema=schema,
+                                experiment=experiment)
 
             parameterset.save()
 
@@ -116,10 +136,9 @@ class rif_cs_PublishProvider(PublishProvider):
             numerical_value=None)
         ep.save()
 
-
     def get_profile(self):
         """
-        get existing rif-cs profile for experiment, if any
+        Retrieve existing rif-cs profile for experiment, if any
         """
 
         ep = ExperimentParameter.objects.filter(name__name='profile',

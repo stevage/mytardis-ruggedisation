@@ -1,7 +1,7 @@
 '''
-Local DB Authentication module.
+Monash ANDS Publish Provider (Research Master Interaction)
 
-.. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
+.. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 '''
 #from tardis.tardis_portal.logger import logger
 from tardis.tardis_portal.publish.interfaces import PublishProvider
@@ -10,7 +10,9 @@ from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     ParameterName, Schema, ExperimentParameterSet
 import urllib2
 
+
 class MonashANDSPublishProvider(PublishProvider):
+
     def __init__(self, experiment_id):
         self.experiment_id = experiment_id
 
@@ -18,20 +20,30 @@ class MonashANDSPublishProvider(PublishProvider):
 
     def execute_publish(self, request):
         """
-        return the user dictionary in the format of::
+        Use the EIF038 web services to gather and store party/activity
+        ids for the linkages required by ANDS Research Data Australia.
 
-            {"id": 123,
-            "display": "John Smith",
-            "email": "john@example.com"}
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
 
         """
+        if self.has_parameters():
+            return {'status': True,
+                'message': 'Party and Activity IDs Already Set'}
+
         experiment = Experiment.objects.get(id=self.experiment_id)
 
         monash_id_url = settings.TEST_MONASH_ANDS_URL + \
         "pilot/GetMonashIDbyAuthcate/" + request.user.username
 
         requestmp = urllib2.Request(monash_id_url)
-        monash_id = urllib2.urlopen(requestmp).read()
+
+        try:
+            monash_id = urllib2.urlopen(requestmp).read()
+        except urllib2.URLError:
+            return {'status': False,
+            'message': 'Error: Cannot contact Activity / Party Service.' +
+            ' Please try again later.'}
 
         self.save_party_parameter(experiment, monash_id)
 
@@ -42,7 +54,13 @@ class MonashANDSPublishProvider(PublishProvider):
                 "pilot/GetMonashIDbyAuthcate/" + str(authcate.strip())
 
                 requestmp = urllib2.Request(monash_id_url)
-                monash_id = urllib2.urlopen(requestmp).read()
+
+                try:
+                    monash_id = urllib2.urlopen(requestmp).read()
+                except urllib2.URLError:
+                    return {'status': False,
+                    'message': 'Error: Cannot contact Activity' +
+                    ' / Party Service. Please try again later.'}
 
                 self.save_party_parameter(experiment, monash_id)
 
@@ -52,13 +70,19 @@ class MonashANDSPublishProvider(PublishProvider):
         return {'status': True, 'message': 'Success'}
 
     def get_context(self, request):
+        """
+        Use the logged in username to get a list of activity summaries from
+        Research Master and display them on screen for selection.
+
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
 
         """
-        """
-
         # already has entries
         if self.has_parameters():
-            return {}
+            return {'message':
+            'There are already party and activity ' +
+            'entries for this experiment.'}
 
         from xml.dom.minidom import parseString
 
@@ -66,7 +90,14 @@ class MonashANDSPublishProvider(PublishProvider):
         "pilot/GetMonashIDbyAuthcate/" + request.user.username
 
         requestmp = urllib2.Request(monash_id_url)
-        monash_id = urllib2.urlopen(requestmp).read()
+
+        try:
+            monash_id = urllib2.urlopen(requestmp).read()
+        except urllib2.URLError:
+            return {'message':
+            'Error: Failed to contact Research Master web service ' +
+            'to retrieve Party / Activity information. Please contact ' +
+            'a system administrator.'}
 
         activity_url = settings.TEST_MONASH_ANDS_URL + \
         "pilot/GetActivitySummarybyMonashID/" + monash_id + "/"
@@ -74,7 +105,13 @@ class MonashANDSPublishProvider(PublishProvider):
         print activity_url
 
         requestmp = urllib2.Request(activity_url)
-        doc_string = urllib2.urlopen(requestmp).read()
+        try:
+            doc_string = urllib2.urlopen(requestmp).read()
+        except urllib2.URLError:
+            return {'message':
+            'Error: Failed to contact Research Master web service ' +
+            'to retrieve Party / Activity information. Please contact ' +
+            'a system administrator.'}
 
         dom = parseString(doc_string)
         doc = dom.documentElement
@@ -85,27 +122,21 @@ class MonashANDSPublishProvider(PublishProvider):
 
             activity = {}
 
-            grant_id=node.getElementsByTagName('grant_id')[0].childNodes[0].nodeValue
-
+            grant_id=node.getElementsByTagName('grant_id')[0].\
+            childNodes[0].nodeValue
             activity['grant_id'] = grant_id
 
-            title=node.getElementsByTagName('title')[0].childNodes[0].nodeValue
+            title=node.getElementsByTagName('title')[0].\
+            childNodes[0].nodeValue
             activity['title'] = title
 
-            funding_body=node.getElementsByTagName('funding_body')[0].childNodes[0].nodeValue
+            funding_body=node.getElementsByTagName('funding_body')[0].\
+            childNodes[0].nodeValue
             activity['funding_body'] = funding_body
 
-            description=node.getElementsByTagName('description')[0].childNodes[0].nodeValue
+            description=node.getElementsByTagName('description')[0].\
+            childNodes[0].nodeValue
             activity['description'] = description
-
-            memberList = []
-            members=node.getElementsByTagName('members')[0].getElementsByTagName('member')
-
-            for m in members:
-                membertext = m.childNodes[0].nodeValue
-                memberList.append(membertext)
-
-            activity['members'] = memberList
 
             activities.append(activity)
 
@@ -113,13 +144,14 @@ class MonashANDSPublishProvider(PublishProvider):
 
     def get_path(self):
         """
-        get path
+        Return the relative template path for display
         """
         return "monash_ands/form.html"
 
     def save_party_parameter(self, experiment, monash_id):
-        # save party experiment parameter
-
+        """
+        Save Research Master's returned Party ID as an experiment parameter
+        """
         schema = \
             Schema.objects.get(
             namespace__exact="http://localhost/pilot/party/1.0/")
@@ -147,7 +179,9 @@ class MonashANDSPublishProvider(PublishProvider):
         ep.save()
 
     def save_activity_parameter(self, experiment, activity_id):
-        # save party experiment parameter
+        """
+        Save Research Master's returned Activity ID as an experiment parameter
+        """
 
         schema = \
             Schema.objects.get(
@@ -177,7 +211,7 @@ class MonashANDSPublishProvider(PublishProvider):
 
     def has_parameters(self):
         """
-        get existing rif-cs profile for experiment, if any
+        Retrieve existing rif-cs profile for experiment, if any
         """
 
         ep = ExperimentParameter.objects.filter(name__name='party_id',

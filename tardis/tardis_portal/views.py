@@ -1893,32 +1893,58 @@ def search_equipment(request):
 
 
 def rif_cs(request):
-    #this function is highly dependent on production requirements
+    """
+    Display rif_cs of collection / parties / acitivies
+    This function is highly dependent on production requirements
 
-    import datetime
+    :param request: a HTTP Request instance
+    :type request: :class:`django.http.HttpRequest`
 
-    experiments = Experiment.objects.filter(public=True)
+    """
 
-    activity_url = settings.TEST_MONASH_ANDS_URL + "pilot/GetActivitybyGrantID/"
-    requestmp = urllib2.Request(activity_url)
-    activity_rif_cs = urllib2.urlopen(requestmp).read()
+    #currently set up to work with EIF038 dummy data
+    if settings.TEST_MONASH_ANDS_URL:
+        import datetime
 
-    party_url = settings.TEST_MONASH_ANDS_URL + "pilot/GetPartybyMonashID/"
-    requestmp = urllib2.Request(party_url)
-    party_rif_cs = urllib2.urlopen(requestmp).read()
+        experiments = Experiment.objects.filter(public=True)
 
-    c = Context({
-        'experiments': experiments,
-        'now': datetime.datetime.now(),
-        'party_rif_cs': party_rif_cs,
-        'activity_rif_cs': activity_rif_cs,
-    })
-    return HttpResponse(render_response_index(request,\
-    'rif_cs_profile/rif-cs.xml', c),
-    mimetype='application/xml')
+        activity_url = settings.TEST_MONASH_ANDS_URL
+        + "pilot/GetActivitybyGrantID/"
+
+        requestmp = urllib2.Request(activity_url)
+        activity_rif_cs = urllib2.urlopen(requestmp).read()
+
+        party_url = settings.TEST_MONASH_ANDS_URL
+        + "pilot/GetPartybyMonashID/"
+
+        requestmp = urllib2.Request(party_url)
+        party_rif_cs = urllib2.urlopen(requestmp).read()
+
+        c = Context({
+            'experiments': experiments,
+            'now': datetime.datetime.now(),
+            'party_rif_cs': party_rif_cs,
+            'activity_rif_cs': activity_rif_cs,
+        })
+        return HttpResponse(render_response_index(request,\
+        'rif_cs_profile/rif-cs.xml', c),
+        mimetype='application/xml')
+    else:
+        return return_response_error(request)
 
 
 def publish_experiment(request, experiment_id):
+    """
+    Make the experiment open to public access.
+    Sets off a chain of PublishProvider modules for
+    extra publish functionality.
+
+    :param request: a HTTP Request instance
+    :type request: :class:`django.http.HttpRequest`
+    :param experiment_id: the ID of the experiment to be published
+    :type experiment_id: string
+
+    """
     import os
 
     experiment = Experiment.objects.get(id=experiment_id)
@@ -1926,26 +1952,12 @@ def publish_experiment(request, experiment_id):
 
     publishService = PublishService(experiment.id)
 
-    TARDIS_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__)))
-    legalpath = os.path.join(TARDIS_ROOT,
-                  "publish/legal.txt")
-    legalfile = open(legalpath, 'r')
-
-    legaltext = legalfile.read()
-    legalfile.close()
-
-    context_dict = \
-    {'username': username,
-    'publish_forms': publishService.get_template_paths(),
-    'experiment': experiment,
-    'legaltext': legaltext,
-    }
-
-    legal = True
-    success = True
-
     if request.method == 'POST':  # If the form has been submitted...
 
+        legal = True
+        success = True
+
+        context_dict = {}
         context_dict['publish_result'] = ""
         if 'legal' in request.POST:
             experiment.public = True
@@ -1962,11 +1974,34 @@ def publish_experiment(request, experiment_id):
         else:
             legal = False
 
-    context_dict['legal'] = legal
-    context_dict['success'] = success
+        # set dictionary to legal status and publish success result
+        context_dict['legal'] = legal
+        context_dict['success'] = success
+    else:
+        TARDIS_ROOT = os.path.abspath(\
+        os.path.join(os.path.dirname(__file__)))
 
-    context_dict = dict(context_dict, \
-    **publishService.get_contexts(request))
+        legalpath = os.path.join(TARDIS_ROOT,
+                      "publish/legal.txt")
+
+        # if legal file isn't found then we can't proceed
+        try:
+            legalfile = open(legalpath, 'r')
+        except IOError:
+            return return_response_error(request)
+
+        legaltext = legalfile.read()
+        legalfile.close()
+
+        context_dict = \
+        {'username': username,
+        'publish_forms': publishService.get_template_paths(),
+        'experiment': experiment,
+        'legaltext': legaltext,
+        }
+
+        context_dict = dict(context_dict, \
+        **publishService.get_contexts(request))
 
     c = Context(context_dict)
     return HttpResponse(render_response_index(request,

@@ -18,12 +18,6 @@
 			<strong>Title:</strong> {{ activity.title }}<br/>
 			<strong>Funding Body:</strong> {{ activity.funding_body }}<br/>
 			<strong>Description:</strong> {{ activity.description }}<br/>
-			<strong>Members:</strong><br/>
-				<div class="members">
-				{% for member in activity.members %}
-					{{ member }}<br/>
-				{% endfor %}
-				</div>
 			<div align="right"><strong>Include this activity</strong> <input type="checkbox" name="activity" value="{{activity.grant_id}}"></div>
 		</div>
 	{% endfor %}
@@ -32,7 +26,7 @@
 {% else %}
 
 <p>
-	There are already party and activity entries for this experiment.
+	{{message}}
 </p>
 
 {% endif %}

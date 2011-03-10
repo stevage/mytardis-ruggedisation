@@ -1,9 +1,16 @@
+'''
+Publish Service (for working with PublishProvider instances)
+
+.. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
+'''
 from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from tardis.tardis_portal.models import Experiment
 
+
 class PublishService():
+
     def __init__(self, experiment_id, settings=settings):
         self._publish_providers = []
         self._initialised = False
@@ -26,17 +33,20 @@ class PublishService():
         try:
             dot = path.rindex('.')
         except ValueError:
-            raise ImproperlyConfigured('%s isn\'t a middleware module' % path)
+            raise ImproperlyConfigured(\
+                '%s isn\'t a middleware module' % path)
         publish_module, publish_classname = path[:dot], path[dot + 1:]
         try:
             mod = import_module(publish_module)
         except ImportError, e:
-            raise ImproperlyConfigured('Error importing publish module %s: "%s"' %
+            raise ImproperlyConfigured(\
+                'Error importing publish module %s: "%s"' %
                                        (publish_module, e))
         try:
             publish_class = getattr(mod, publish_classname)
         except AttributeError:
-            raise ImproperlyConfigured('Publish module "%s" does not define a "%s" class' %
+            raise ImproperlyConfigured(\
+                'Publish module "%s" does not define a "%s" class' %
                                        (publish_module, publish_classname))
 
         publish_instance = publish_class(self.experiment_id)
@@ -53,7 +63,7 @@ class PublishService():
         return publicaton_list
 
     def get_template_paths(self):
-        """Return a list of tuples containing publish plugin name
+        """Returns a list of relative file paths to html templates
 
         """
         if not self._initialised:
@@ -65,8 +75,10 @@ class PublishService():
         return path_list
 
     def get_contexts(self, request):
-        """Return a list of tuples containing publish plugin name
+        """Gets context dictionaries for each PublishProvider
 
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
         """
         if not self._initialised:
             self._manual_init()
@@ -79,8 +91,11 @@ class PublishService():
         return contexts
 
     def execute_publishers(self, request):
-        """Return a list of tuples containing publish plugin name
+        """Executes each publish provider in a chain.
+        If any publish provider fails then the experiment is not made public
 
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
         """
         if not self._initialised:
             self._manual_init()
