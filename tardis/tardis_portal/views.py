@@ -1908,13 +1908,13 @@ def rif_cs(request):
 
         experiments = Experiment.objects.filter(public=True)
 
-        activity_url = settings.TEST_MONASH_ANDS_URL
+        activity_url = settings.TEST_MONASH_ANDS_URL\
         + "pilot/GetActivitybyGrantID/"
 
         requestmp = urllib2.Request(activity_url)
         activity_rif_cs = urllib2.urlopen(requestmp).read()
 
-        party_url = settings.TEST_MONASH_ANDS_URL
+        party_url = settings.TEST_MONASH_ANDS_URL\
         + "pilot/GetPartybyMonashID/"
 
         requestmp = urllib2.Request(party_url)

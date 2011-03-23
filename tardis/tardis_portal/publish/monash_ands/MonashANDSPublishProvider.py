@@ -27,6 +27,9 @@ class MonashANDSPublishProvider(PublishProvider):
         :type request: :class:`django.http.HttpRequest`
 
         """
+
+        username = str(request.user).partition('_')[2]
+
         if self.has_parameters():
             return {'status': True,
                 'message': 'Party and Activity IDs Already Set'}
@@ -34,7 +37,7 @@ class MonashANDSPublishProvider(PublishProvider):
         experiment = Experiment.objects.get(id=self.experiment_id)
 
         monash_id_url = settings.TEST_MONASH_ANDS_URL + \
-        "pilot/GetMonashIDbyAuthcate/" + request.user.username
+        "pilot/GetMonashIDbyAuthcate/" + username
 
         requestmp = urllib2.Request(monash_id_url)
 
@@ -51,20 +54,25 @@ class MonashANDSPublishProvider(PublishProvider):
         if 'parties' in request.POST:
             for authcate in request.POST['parties'].split(","):
 
-                monash_id_url = settings.TEST_MONASH_ANDS_URL + \
-                "pilot/GetMonashIDbyAuthcate/" + str(authcate.strip())
+                if str(authcate.strip()):
+                    monash_id_url = settings.TEST_MONASH_ANDS_URL + \
+                    "pilot/GetMonashIDbyAuthcate/" + str(authcate.strip())
 
-                requestmp = urllib2.Request(monash_id_url)
+                    print monash_id_url
 
-                try:
-                    monash_id = urllib2.urlopen(requestmp).read()
-                except urllib2.URLError:
-                    logger.error("Can't contact research master web service")
-                    return {'status': False,
-                    'message': 'Error: Cannot contact Activity' +
-                    ' / Party Service. Please try again later.'}
+                    requestmp = urllib2.Request(monash_id_url)
 
-                self.save_party_parameter(experiment, monash_id)
+                    try:
+                        monash_id = urllib2.urlopen(requestmp).read()
+                    except urllib2.URLError:
+                        logger.error("Can't contact research" +
+                            " master web service")
+
+                        return {'status': False,
+                        'message': 'Error: Cannot contact Activity' +
+                        ' / Party Service. Please try again later.'}
+
+                    self.save_party_parameter(experiment, monash_id)
 
         for activity_id in request.POST.getlist('activity'):
             self.save_activity_parameter(experiment, activity_id)

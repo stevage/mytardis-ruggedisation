@@ -118,9 +118,9 @@ class PublishService():
                 logger.error('Publish Provider Exception: ' +
                 pp.name + ' on exp: ' + str(self.experiment_id) +
                 ' failed with message "' +
-                inst + '""')
+                str(inst) + '""')
 
-                pp_response = {'status': False, 'message': inst}
+                pp_response = {'status': False, 'message': str(inst)}
 
             if pp_response['status']:
                 logger.info('Publish Provider: ' +
