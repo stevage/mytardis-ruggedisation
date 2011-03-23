@@ -7,22 +7,19 @@ ROOT_URLCONF = 'tardis.urls'
 DEBUG = True
 STATIC_DOC_ROOT = path.join(path.abspath(path.dirname(__file__)),
                             'tardis_portal/site_media')
-FILE_STORE_PATH = path.join(path.abspath(path.dirname(__file__)),
-                            '../var/store/')
 # LDAP configuration
 LDAP_ENABLE = False
 
 FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
-    '../var/store/'))
+                                         '../var/store/'))
 STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
-    "../var/staging/"))
+                                      "../var/staging/"))
 
 ADMIN_MEDIA_STATIC_DOC_ROOT = ''
 HANDLEURL = ''
 SITE_ID = '1'
 MEDIA_URL = '/site_media/'
 TEMPLATE_DIRS = ['.']
-#TEMPLATE_DIRS = ['.', 'tardis_portal/']
 
 # TODO: move vbl auth provider settings to mecat module
 AUTH_PROVIDERS = (('localdb', 'Local DB',
@@ -51,9 +48,11 @@ INSTALLED_APPS = (
         'django.contrib.admindocs',
         'django_extensions',
         'tardis.tardis_portal',
-        'registration',
         'tardis.tardis_portal.templatetags',
+        'tardis.apps.equipment',
+        'registration',
         'django_nose',
+        'south'
 )
 
 # TODO: move to mecat settings module
