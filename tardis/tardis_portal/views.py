@@ -657,7 +657,6 @@ def _registerExperimentDocument(filename, created_by, expid=None,
 
 
 # web service
-@transaction.commit_manually
 def register_experiment_ws_xmldata(request):
     import threading
 
@@ -692,7 +691,6 @@ def register_experiment_ws_xmldata(request):
                 created_by=user,
                 )
             e.save()
-            transaction.commit()
 
             eid = e.id
 
@@ -713,7 +711,7 @@ def register_experiment_ws_xmldata(request):
 
             class RegisterThread(threading.Thread):
 
-                @transaction.commit_manually
+                @transaction.commit_on_success
                 def run(self):
                     logger.info('=== processing experiment %s: START' % eid)
                     owners = request.POST.getlist('experiment_owner')
@@ -723,10 +721,9 @@ def register_experiment_ws_xmldata(request):
                                                     expid=eid,
                                                     owners=owners,
                                                     username=username)
-                        transaction.commit()
                         logger.info('=== processing experiment %s: DONE' % eid)
                     except:
-                        transaction.rollback()
+                        e.delete()
                         logger.exception('=== processing experiment %s: FAILED!' % eid)
             RegisterThread().start()
 
