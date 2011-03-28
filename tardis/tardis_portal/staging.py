@@ -44,13 +44,22 @@ from django.conf import settings
 from tardis.tardis_portal.logger import logger
 
 
-def staging_traverse(staging=settings.STAGING_PATH):
+def staging_traverse(user, staging=settings.STAGING_PATH):
     """Recurse through directories and form HTML list tree for jtree
 
     :param staging: the path to begin traversing
     :type staging: string
     :rtype: string
     """
+    from tardis.tardis_portal.models import UserAuthentication
+
+    user_source = settings.STAGING_USER_SOURCE
+    try:
+        user = UserAuthentication.objects.get(userProfile__user=user,
+                                              authenticationMethod=user_source)
+    except UserAuthentication.DoesNotExist:
+        return ""
+    staging = staging % user.username
 
     ul = '<ul><li id="phtml_1"><a>My Files</a><ul>'
     for f in listdir(staging):

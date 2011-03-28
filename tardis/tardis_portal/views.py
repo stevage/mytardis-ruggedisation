@@ -417,7 +417,7 @@ def create_experiment(request,
 
     c = Context({
         'subtitle': 'Create Experiment',
-        'directory_listing': staging_traverse(),
+        'directory_listing': staging_traverse(request.user),
         'user_id': request.user.id,
         })
 
@@ -506,7 +506,7 @@ def edit_experiment(request, experiment_id,
     else:
         form = ExperimentForm(instance=experiment, extra=0)
 
-    c['directory_listing'] = staging_traverse()
+    c['directory_listing'] = staging_traverse(request.user)
     c['form'] = form
 
     return HttpResponse(render_response_index(request,
