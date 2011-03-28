@@ -124,7 +124,7 @@ class TraverseTestCase(TestCase):
 
     def test_traversal(self):
         from tardis.tardis_portal.staging import staging_traverse
-        result = staging_traverse()
+        result = staging_traverse(None)
         self.assertTrue('dir1' in result)
         self.assertTrue('dir1/file1' in result)
         self.assertTrue('dir2' in result)
