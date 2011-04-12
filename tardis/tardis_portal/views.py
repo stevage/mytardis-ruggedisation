@@ -62,7 +62,6 @@ from tardis.tardis_portal.forms import ExperimentForm, \
     ChangeGroupPermissionsForm, ChangeUserPermissionsForm, \
     ImportParamsForm
 from tardis.tardis_portal.errors import UnsupportedSearchQueryTypeError
-from tardis.tardis_portal.logger import logger
 from tardis.tardis_portal.staging import add_datafile_to_dataset,\
     staging_traverse, write_uploaded_file_to_dataset
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \

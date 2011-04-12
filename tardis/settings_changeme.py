@@ -1,8 +1,8 @@
-import logging
 from os import path
 
 
 DEBUG = True
+
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (('bob', 'bob@bobmail.com'), )
@@ -78,12 +78,6 @@ TEMPLATE_DIRS = (
     'tardis_portal/templates/').replace('\\', '/'),
 )
 
-LDAP_ENABLE = False
-LDAP_URL = 'ldap://directory.example.com'
-BASE_DN = 'o=Organisation, c=X'
-LDAP_USER_RDN = 'uid'
-AUTH_PROFILE_MODULE = 'tardis_portal.UserProfile'
-
 # Temporarily disable transaction management until everyone agrees that
 # we should start handling transactions
 DISABLE_TRANSACTION_MANAGEMENT = False
@@ -143,6 +137,8 @@ AUTH_PROVIDERS = (
     ('localdb', 'Local DB', 'tardis.tardis_portal.auth.localdb_auth.DjangoAuthBackend'),
 )
 
+AUTH_PROFILE_MODULE = 'tardis_portal.UserProfile'
+
 ACCOUNT_ACTIVATION_DAYS = 3
 
 # Email Configuration
@@ -165,7 +161,7 @@ EMAIL_USE_TLS = True
 #    ]
 
 # logging levels are: DEBUG, INFO, WARN, ERROR, CRITICAL
-SYSTEM_LOG_LEVEL = 'DEBUG'
+SYSTEM_LOG_LEVEL = 'INFO'
 MODULE_LOG_LEVEL = 'INFO'
 
 SYSTEM_LOG_FILENAME = 'request.log'

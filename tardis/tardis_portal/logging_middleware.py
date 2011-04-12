@@ -126,7 +126,7 @@ class LoggingMiddleware(object):
         except:
             user = ''
         ip = request.META['REMOTE_ADDR']
-        method =  request.method
+        method = request.method
         status = 500
 
         extra = {'ip': ip, 'user': user, 'method': method, 'status': status}
