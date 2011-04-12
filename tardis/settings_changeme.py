@@ -92,7 +92,7 @@ STATIC_DOC_ROOT = path.join(path.dirname(__file__),
                                'tardis_portal/site_media').replace('\\', '/')
 
 ADMIN_MEDIA_STATIC_DOC_ROOT = path.join(path.dirname(__file__),
-                                           '../parts/django-admin.py/django/contrib/admin/media/').replace('\\', '/')
+                                           '../parts/django/django/contrib/admin/media/').replace('\\', '/')
 
 FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
                                                '../var/store/')).replace('\\', '/')
@@ -119,14 +119,17 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.admindocs',
     'tardis.tardis_portal',
-    'registration',
     'tardis.tardis_portal.templatetags',
+    'registration',
     'south'
     )
 
 USER_PROVIDERS = ('tardis.tardis_portal.auth.localdb_auth.DjangoUserProvider',
 )
+
 GROUP_PROVIDERS = ('tardis.tardis_portal.auth.localdb_auth.DjangoGroupProvider',
+                   'tardis.tardis_portal.auth.ip_auth.IPGroupProvider'
+
 )
 
 # AUTH_PROVIDERS entry format:

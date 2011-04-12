@@ -1,5 +1,5 @@
 """
- Command for backing up the database
+ Command for backup database
 """
 from os import makedirs
 from os.path import exists, join

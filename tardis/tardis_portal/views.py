@@ -1,4 +1,4 @@
-# -*- coding utf-8 -*-
+# -*- coding: utf-8 -*-
 #
 # Copyright (c) 2010-2011, Monash e-Research Centre
 #   (Monash University, Australia)
@@ -946,9 +946,8 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     # there's no need to do any filtering if we didn't find any
     # datafiles that the user has access to
     if not datafile_results:
-        logger.info("__getFilteredDatafiles: user ",
-                    "{0} doesn\'t".format(request.user),
-                    "access to any experiments")
+        logger.info("""__getFilteredDatafiles: user {0} doesn\'t have
+                    access to any experiments""".format(request.user))
         return datafile_results
 
     datafile_results = \

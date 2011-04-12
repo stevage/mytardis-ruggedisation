@@ -107,13 +107,13 @@ class AuthenticationTestCase(TestCase):
         self.client.logout()
 
     def test_djangoauth(self):
-        from django.core.handlers.wsgi import WSGIRequest
-        from django.contrib.auth.models import User
+        from django.test.client import RequestFactory
+        factory = RequestFactory()
+
         from tardis.tardis_portal.auth.localdb_auth import DjangoAuthBackend
         dj_auth = DjangoAuthBackend()
-        req = WSGIRequest({"REQUEST_METHOD": "POST"})
-        req._post = {'username': 'test',
-                     'password': 'test',
-                     'authMethod': 'localdb'}
-        user = dj_auth.authenticate(req)
+        request = factory.post('/login', {'username': 'test',
+                                          'password': 'test',
+                                          'authMethod': 'localdb'})
+        user = dj_auth.authenticate(request)
         self.assertTrue(isinstance(user, User))

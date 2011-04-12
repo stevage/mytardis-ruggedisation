@@ -58,7 +58,7 @@ LOGGING = {
             'formatter': 'module',
         },
         'systemlog': {
-            'level': 'DEBUG',
+            'level': settings.SYSTEM_LOG_LEVEL,
             'class':'logging.handlers.RotatingFileHandler',
             'formatter': 'system',
             'filename': settings.SYSTEM_LOG_FILENAME,
@@ -66,7 +66,7 @@ LOGGING = {
             'backupCount': 5,
         },
         'modulelog': {
-            'level': 'DEBUG',
+            'level': settings.MODULE_LOG_LEVEL,
             'class':'logging.handlers.RotatingFileHandler',
             'formatter': 'module',
             'filename': settings.MODULE_LOG_FILENAME,
@@ -80,13 +80,14 @@ LOGGING = {
             'propagate': False,
             'level': settings.SYSTEM_LOG_LEVEL,
         },
-        'tardis.tardis_portal': {
+        'tardis': {
             'handlers': ['modulelog'],
             'propagate': False,
             'level': settings.MODULE_LOG_LEVEL,
         },
     }
 }
+
 
 class LoggingMiddleware(object):
     def __init__(self):
@@ -125,9 +126,9 @@ class LoggingMiddleware(object):
         except:
             user = ''
         ip = request.META['REMOTE_ADDR']
-        method =  request.method,
+        method =  request.method
         status = 500
 
         extra = {'ip': ip, 'user': user, 'method': method, 'status': status}
-        self.logger.error('%s %s' % (request.path,exception), extra=extra)
+        self.logger.error('%s %s' % (request.path, exception), extra=extra)
         return None
