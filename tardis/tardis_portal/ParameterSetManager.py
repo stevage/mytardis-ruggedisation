@@ -31,7 +31,8 @@ class ParameterSetManager():
 
         if parameterset:
             self.parameterset = parameterset
-            self.schema = self.parameterset.schema.namespace
+            self.schema = self.parameterset.schema
+            self.namespace = self.schema.namespace
 
             if type(self.parameterset).__name__ == "DatafileParameterSet":
                 self.parameters = DatafileParameter.objects.filter(\
@@ -56,7 +57,7 @@ class ParameterSetManager():
 
         elif parentObject and schema:
 
-            self.schema = schema
+            self.namespace = schema
 
             if type(parentObject).__name__ == "Dataset_File":
                 self.parameterset = DatafileParameterSet(\
@@ -101,11 +102,12 @@ class ParameterSetManager():
     def get_schema(self):
         try:
             schema = Schema.objects.get(
-                namespace=self.schema.namespace)
+                namespace=self.namespace)
         except ObjectDoesNotExist:
             schema = Schema()
-            schema.namespace = self.schema
+            schema.namespace = self.namespace
             schema.save()
+            self.schema = schema
         return schema
 
     def get_param(self, parname, value=False):

@@ -2183,13 +2183,13 @@ def add_par(request, parentObject, otype):
     if request.method == 'POST':
 
         class DynamicForm(create_datafile_add_form(
-            schema, parentObject, request=request)):
+            schema.namespace, parentObject, request=request)):
             pass
 
         form = DynamicForm(request.POST)
 
         if form.is_valid():
-            save_datafile_add_form(schema, parentObject, request)
+            save_datafile_add_form(schema.namespace, parentObject, request)
 
             success = True
         else:
@@ -2198,7 +2198,7 @@ def add_par(request, parentObject, otype):
     else:
 
         class DynamicForm(create_datafile_add_form(
-            schema, parentObject)):
+            schema.namespace, parentObject)):
             pass
 
         form = DynamicForm()

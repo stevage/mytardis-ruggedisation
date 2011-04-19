@@ -908,7 +908,7 @@ def create_datafile_add_form(
             stripped_key = stripped_key.rpartition('__')[0]
 
             parameter_name = ParameterName.objects.get(
-                schema=schema,
+                schema__namespace=schema,
                 name=stripped_key)
 
             units = ""
@@ -933,7 +933,7 @@ def create_datafile_add_form(
         fields = SortedDict()
 
         parameternames = ParameterName.objects.filter(
-            schema__namespace=schema.namespace).order_by('name')
+            schema__namespace=schema).order_by('name')
 
         for dfp in parameternames:
 
@@ -966,7 +966,8 @@ def create_datafile_add_form(
 
 def save_datafile_add_form(schema, parentObject, request):
 
-    psm = ParameterSetManager(schema=schema, parentObject=parentObject)
+    psm = ParameterSetManager(schema=schema,
+        parentObject=parentObject)
 
     for key, value in sorted(request.POST.iteritems()):
         if value:
