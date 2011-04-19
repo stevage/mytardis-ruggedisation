@@ -101,7 +101,7 @@ class ParameterSetManager():
     def get_schema(self):
         try:
             schema = Schema.objects.get(
-                namespace=self.schema)
+                namespace=self.schema.namespace)
         except ObjectDoesNotExist:
             schema = Schema()
             schema.namespace = self.schema
@@ -184,7 +184,8 @@ class ParameterSetManager():
                             fullparname=None, example_value=None):
         try:
             paramName = ParameterName.objects.get(name=parname,
-                                                  schema=self.get_schema())
+                                                  schema__id=
+                                                  self.get_schema().id)
         except ObjectDoesNotExist:
             paramName = ParameterName()
             paramName.schema = self.get_schema()
