@@ -40,8 +40,8 @@
 	li.append(file2);
 	var file3 = $('<input type="hidden"/>').attr({'value': '', 'name': name3, 'id': id3, 'value':'staging'});
 	li.append(file3);
-	li.append($('<span class="file"></span>').text(filename));
-	var delete_file = $('<span class="remove_file">[x]</span>').click(function() {
+	li.append($('<span class="file"></span> ').text(filename));
+	var delete_file = $('<span class="remove_file"> [remove]</span>').click(function() {
     	    deleteDatafile(li, container_type + dataset_number + '-datafile');
 	});
 	li.append(delete_file);
@@ -274,7 +274,7 @@
             <p class="add_new_dataset">Add New Dataset</p>
             <p class="my_files">My Files</p>
             <div class="msg_body">
-              <p><strong>Select Files For New Dataset</strong></p>
+              <p><strong>Select Files To Be Added To A Dataset:</strong></p>
               <div id="demo1" class="demo">
                 {{directory_listing|safe}}
               </div>
@@ -297,7 +297,7 @@
                       </p>
                     </div>
                     <p><input class="add_files" type="button" value="Add selected files to dataset"/></p>
-                    <p><strong>Files</strong></p>
+                    <p><strong>Files added to Dataset</strong></p>
                     <div>
 
                       <ul class="dataset">
@@ -308,8 +308,8 @@
                             {{ file_form.DELETE.as_hidden }}
 			    {{ file_form.url.as_hidden }}
 			    {{ file_form.filename.as_hidden }}
-                          <span class="file">{{ file_form.filename }}</span>
-                          <span class="remove_file">[x]</span><br/>
+                          <span class="file">{{ file_form.filename }}</span> 
+                           <span class="remove_file">[remove]</span><br/>
                           </li>
                         {% endfor %}
                       </ul>

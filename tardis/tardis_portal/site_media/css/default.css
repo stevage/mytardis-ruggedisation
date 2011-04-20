@@ -481,6 +481,24 @@ table.experiment-table th {
 	a.filelink {
 		color: #9b3430;
 	}
+	
+	.file
+	{
+	    font-weight: bold;
+	}
+	
+	.datafile
+	{
+	    line-height: 1.5em;
+	}
+	
+	.dataset
+	{
+	    list-style-type: none;
+		list-style-image: none;
+		list-style-position: inside;
+		
+	}
 
 	#statusBox {
 		border-width: 2px;
@@ -656,4 +674,14 @@ ul.errorlist {
     border: 1px solid red;
     color: white;
     background: red url(/media/img/admin/icon_alert.gif) 5px .3em no-repeat;
+}
+
+#description
+{
+    height: 50px;
+}
+
+.fieldWrapper textarea
+{
+    height: 50px;
 }
