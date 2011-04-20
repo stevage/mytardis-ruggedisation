@@ -137,7 +137,8 @@ class Experiment(models.Model):
                           null=True, blank=True)
     approved = models.BooleanField()
     title = models.CharField(max_length=400)
-    institution_name = models.CharField(max_length=400)
+    institution_name = models.CharField(max_length=400,
+            default=settings.DEFAULT_INSTITUTION)
     description = models.TextField(blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)

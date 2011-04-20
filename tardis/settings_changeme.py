@@ -191,3 +191,5 @@ UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
 
 # Upload path that files are sent to
 UPLOADIFY_UPLOAD_PATH = '%s%s' % (MEDIA_URL, 'uploads/')
+
+DEFAULT_INSTITUTION = "Monash University"

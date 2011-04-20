@@ -483,6 +483,7 @@ def create_experiment(request,
         form = ExperimentForm(extra=1)
 
     c['form'] = form
+    c['default_institution'] = settings.DEFAULT_INSTITUTION
     return HttpResponse(render_response_index(request, template_name, c))
 
 
