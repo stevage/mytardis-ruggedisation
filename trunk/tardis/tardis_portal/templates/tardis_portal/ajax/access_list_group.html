@@ -1,0 +1,32 @@
+<div class="groups">
+{% for group in system_owned_groups %}
+  <div class="access_list_group">
+    <p>
+      <strong>{{ group.name }}</strong>
+    </p>
+  </div> <!-- access_list_group -->
+{% endfor %}
+{% for group in user_owned_groups %}
+  {% include "tardis_portal/ajax/add_group_result.html" %}
+{% endfor %}
+</div> <!-- groups -->
+<p>
+  <label>Add group: </label>
+  {% for field in addGroupPermissionsForm %}
+      {% if field.label == "Authentication Method" %}
+          {{ field.label }} {{ field }}
+      {% else %}
+          {% if field.label == "Group" %}
+              {{ field }}
+          {% else %}
+	          {% if field.label == "User" %}
+	              Group admin: {{ field }} <a class="form_submit" id="group" href="">Submit</a>
+	          {% else %}
+	              {{ field }} {{ field.label }}
+	          {% endif %}
+	      {% endif %}
+      {% endif %}
+      <br/>
+  {% endfor %}
+  <input type="hidden" name="experiment_id" class="experiment_id" value="{{experiment_id}}">
+</p>
