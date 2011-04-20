@@ -685,3 +685,7 @@ ul.errorlist {
 {
     height: 50px;
 }
+
+/*Styles for fuzz overlay & message box*/
+ #fuzz{ position:absolute; background: url('../images/gray_trans_back.png'); top:0; left:0; width:100%; z-index:100; 
+     display:none; text-align:left; }
