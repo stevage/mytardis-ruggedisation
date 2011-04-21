@@ -25,9 +25,14 @@ class OracleSafeManager(models.Manager):
     backend.
     """
     def get_query_set(self):
-        fields = [a.attname for a in
-                  self.model._meta.fields if a.db_type() == 'NCLOB']
-        return super(OracleSafeManager, self).get_query_set().defer(*fields)
+        from django.db import connection
+        if connection.settings_dict['ENGINE'] == 'django.db.backends.oracle':
+            fields = [a.attname for a in
+                      self.model._meta.fields if a.db_type(connection) == 'NCLOB']
+            return \
+                super(OracleSafeManager, self).get_query_set().defer(*fields)
+        else:
+            return super(OracleSafeManager, self).get_query_set()
 
 
 class ExperimentManager(OracleSafeManager):
