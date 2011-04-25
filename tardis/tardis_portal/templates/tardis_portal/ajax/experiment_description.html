@@ -145,7 +145,7 @@ $(document).ready(function() {
     {{ experiment.update_time|date:"jS F Y H:i" }}<br/>
   </p>
   <div class="download_entire_experiment">
-    {% for p in protocols %}
+    {% for p in protocol %}
       <p>
 	{% if p.0 %}
 	  <strong><a href="{{p.1}}">Download Entire Experiment ({{p.0|upper}})</a></strong><br/>
