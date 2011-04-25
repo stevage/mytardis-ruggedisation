@@ -198,9 +198,10 @@ class Experiment(models.Model):
         return ('tardis.tardis_portal.views.edit_experiment', (),
                 {'experiment_id': self.id})
 
-    def get_download_urls(self):
+    def get_download_urls(self, comptype="zip"):
         urls = {}
-        kwargs = {'experiment_id': self.id}
+        kwargs = {'experiment_id': self.id,
+                  'comptype': comptype}
         distinct = Dataset_File.objects.filter(dataset__experiment=self.id).values('protocol').distinct()
         for key_value in distinct:
             protocol = key_value['protocol']

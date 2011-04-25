@@ -53,25 +53,42 @@ def download_datafile(request, datafile_id):
 
 
 @experiment_access_required
-def download_experiment(request, experiment_id):
-
+def download_experiment(request, experiment_id, comptype):
+    """
+    takes string parameter "comptype" for compression method.
+    Currently implemented: "zip" and "tar"
+    """
     # Create the HttpResponse object with the appropriate headers.
     # TODO: handle no datafile, invalid filename, all http links
     # (tarfile count?)
     experiment = Experiment.objects.get(pk=experiment_id)
 
-    cmd = 'tar -C %s -c %s/' % (abspath(settings.FILE_STORE_PATH),
-                                str(experiment.id))
+    if comptype == "tar":
+        cmd = 'tar -C %s -c %s/' % (abspath(settings.FILE_STORE_PATH),
+                                    str(experiment.id))
+        # logger.info('TAR COMMAND: ' + cmd)
+        response = HttpResponse(FileWrapper(subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    shell=True).stdout),
+                                mimetype='application/x-tar')
 
-    #logger.info('TAR COMMAND: ' + cmd)
-    response = HttpResponse(FileWrapper(subprocess.Popen(cmd,
-                            stdout=subprocess.PIPE,
-                            shell=True).stdout),
-                            mimetype='application/x-tar')
+        response['Content-Disposition'] = 'attachment; filename="experiment' \
+            + str(experiment.id) + '-complete.tar"'
+    elif comptype == "zip":
+        cmd = 'cd %s; zip -r - %s' % (abspath(settings.FILE_STORE_PATH),
+                                    str(experiment.id))
+        # logger.info('TAR COMMAND: ' + cmd)
+        response = HttpResponse(FileWrapper(subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    shell=True).stdout),
+                                mimetype='application/zip')
 
-    response['Content-Disposition'] = 'attachment; filename="experiment' \
-        + str(experiment.id) + '-complete.tar"'
-
+        response['Content-Disposition'] = 'attachment; filename="experiment' \
+            + str(experiment.id) + '-complete.zip"'
+    else:
+        return return_response_not_found(request)
     # response['Content-Length'] = fileSize + 5120
     return response
 

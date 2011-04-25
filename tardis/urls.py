@@ -97,7 +97,8 @@ ajax_urls = patterns(
 download_urls = patterns(
     'tardis.tardis_portal.download',
     (r'^datafile/(?P<datafile_id>\d+)/$', 'download_datafile'),
-    (r'^experiment/(?P<experiment_id>\d+)/$', 'download_experiment'),
+    (r'^experiment/(?P<experiment_id>\d+)/(?P<comptype>[a-z]{3})/$',
+     'download_experiment'),
     (r'^datafiles/$', 'download_datafiles'),
     )
 
