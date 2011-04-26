@@ -83,9 +83,13 @@ def traverse(pathname, dirname=settings.STAGING_PATH):
     :type dirname: string
     :rtype: string
     """
-
-    li = '<li id="%s"><a>%s</a>' % (path.relpath(pathname, dirname),
+    if path.isdir(pathname):
+        li = '<li id="%s"><a>%s</a>' % (path.relpath(pathname, dirname),
                                     path.basename(pathname))
+    else:
+        li = '<li class="fileicon" id="%s"><a>%s</a>' % (path.relpath(pathname, dirname),
+                                    path.basename(pathname))
+
     if pathname.rpartition('/')[2].startswith('.'):
         return ''
     if path.isfile(pathname):
