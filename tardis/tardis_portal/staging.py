@@ -55,13 +55,17 @@ def staging_traverse(staging=settings.STAGING_PATH):
     """
 
     ul = '<ul><li id="phtml_1"><a>My Files</a><ul>'
-    for f in listdir(staging):
+    filelist = listdir(staging)
+    filelist.sort()
+    for f in filelist:
         ul = ul + traverse(path.join(staging, f), staging)
     return ul + '</ul></li></ul>'
 
 
 def traverse(pathname, dirname=settings.STAGING_PATH):
-    """Traverse a path and return a nested group of unordered list HTML tags::
+    """Traverse a path and return an alphabetically by filename
+    sorted nested group of
+    unordered (<ul>) list HTML tags::
 
        <ul>
          <li id="dir2/file2"><a>file2</a></li>
@@ -88,7 +92,9 @@ def traverse(pathname, dirname=settings.STAGING_PATH):
         return li + '</li>'
     if path.isdir(pathname):
         ul = '<ul>'
-        for f in listdir(pathname):
+        filelist = listdir(pathname)
+        filelist.sort()
+        for f in filelist:
             ul = ul + traverse(path.join(pathname, f), dirname)
         return li + ul + '</ul></li>'
     return ''
