@@ -38,7 +38,7 @@ staging.py
 
 import logging
 import shutil
-from os import path, makedirs, listdir
+from os import path, makedirs, listdir, rmdir
 
 from django.conf import settings
 
@@ -129,6 +129,7 @@ class StagingHook():
 
 def stage_file(datafile):
     """move files from the staging area to the dataset.
+    treat directories with care.
 
     :param datafile: a datafile to be staged
     :type datafile: :class:`tardis.tardis_portal.models.Dataset_File`
@@ -142,22 +143,35 @@ def stage_file(datafile):
 
     copyto = path.join(experiment_path, relpath)
 
-    if path.exists(copyto):
-        logger.error("can't stage %s destination exists" % copyto)
-        # TODO raise error
-        return
-
     logger.debug('staging file: %s to %s' % (copyfrom, copyto))
 
-    if not path.exists(path.dirname(copyto)):
-        makedirs(path.dirname(copyto))
+    if path.isdir(copyfrom):
+        if not path.exists(copyto):
+            makedirs(copyto)
+    else:
+        if path.exists(copyto):
+            logger.error("can't stage %s destination exists" % copyto)
+            # TODO raise error
+            return
 
-    shutil.move(copyfrom, copyto)
+        if not path.exists(path.dirname(copyto)):
+            makedirs(path.dirname(copyto))
+
+        shutil.move(copyfrom, copyto)
+
     datafile.url = "tardis://" + relpath
     datafile.protocol = "tardis"
     datafile.size = path.getsize(datafile.get_absolute_filepath())
-
     datafile.save()
+
+    # rmdir each dir from copyfrom[get_staging_path():] if empty
+    basedir = copyfrom[:-len(relpath)]
+    while len(relpath) > 0:
+        try:
+            rmdir(basedir + relpath)
+        except OSError:
+            pass
+        relpath = path.dirname(relpath)
 
 
 def get_staging_path():
