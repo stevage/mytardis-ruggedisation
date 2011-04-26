@@ -290,10 +290,10 @@ def view_experiment(request, experiment_id):
                 {'name': experiment.title,
                  'link': experiment.get_absolute_url()}]
 
-    if 'status' in request.GET:
-        c['status'] = request.GET['status']
-    if 'error' in request.GET:
-        c['error'] = request.GET['error']
+    if 'status' in request.POST:
+        c['status'] = request.POST['status']
+    if 'error' in request.POST:
+        c['error'] = request.POST['error']
 
     return HttpResponse(render_response_index(request,
                         'tardis_portal/view_experiment.html', c))
@@ -472,9 +472,8 @@ def create_experiment(request,
                                 aclOwnershipType=ExperimentACL.OWNER_OWNED)
             acl.save()
 
-            params = urlencode({'status': "Experiment Saved."})
-            return HttpResponseRedirect(
-                '?'.join([experiment.get_absolute_url(), params]))
+            request.POST = {'status': "Experiment created."}
+            return view_experiment(request, experiment_id=experiment.id)
 
         c['status'] = "Errors exist in form."
         c["error"] = 'true'
@@ -535,10 +534,8 @@ def edit_experiment(request, experiment_id,
                     df.url = path.join(settings.STAGING_PATH, df.url)
             full_experiment.save_m2m()
 
-            params = urlencode({'status': "Experiment Saved."})
-            return HttpResponseRedirect(
-                '?'.join([experiment.get_absolute_url(),
-                          params]))
+            request.POST = {'status': "Experiment Saved."}
+            return view_experiment(request, experiment_id=experiment.id)
 
         c['status'] = "Errors exist in form."
         c["error"] = 'true'

@@ -95,17 +95,35 @@
   <div id="page"> <!-- start page -->
     <div id="content-box">
       {% if status %}
-        <div id="status">
-          {% if error %}
-	    <div id="statusBoxError">
-	      {{status}}
-	    </div> <!-- statusBoxError -->
-	  {% else %}
-	    <div id="statusBox">
-	      {{status}}
-	    </div> <!-- statusBox -->
-	  {% endif %}
-	</div> <!-- status -->
+      <script type="text/javascript">
+	$(document).ready(function(){
+	    $("#status").jqm({modal: false, overlay: 1});
+	    $("#status").jqmShow();
+	});
+      </script>
+      <style type="text/css">
+	#status {
+	    height: auto;
+	}
+	#status .jqmAlertContent {
+	    font-weight: bold;
+	    font-size: large;
+	    color: aqua;
+	    height: auto;
+	}
+      </style>
+      <div class="jqmAlertWindow" id="status">
+
+	{% if error %}
+	<div class="jqmAlertContent">
+	  {{status}}
+	</div> <!-- statusBoxError -->
+	{% else %}
+	<div class="jqmAlertContent">
+	  {{status}}
+	</div> <!-- statusBox -->
+	{% endif %}
+      </div> <!-- status -->
       {% endif %}
 
       {% block content %}
