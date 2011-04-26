@@ -550,15 +550,17 @@ class ExperimentForm(forms.ModelForm):
             o_ae = ae.save(commit=commit)
             author_experiments.append(o_ae)
         for key, dataset in enumerate(self.datasets.forms):
-            # XXX for some random reason the link between the instance needs
-            # to be reinitialised
-            dataset.instance.experiment = experiment
-            o_dataset = dataset.save(commit)
-            datasets.append(o_dataset)
-            # save any datafiles if the data set has any
-            if self.dataset_files[key]:
-                o_df = self.dataset_files[key].save(commit)
-                dataset_files += o_df
+            if dataset not in self.datasets.deleted_forms:
+                # XXX for some random reason the link between
+                # the instance needs
+                # to be reinitialised
+                dataset.instance.experiment = experiment
+                o_dataset = dataset.save(commit)
+                datasets.append(o_dataset)
+                # save any datafiles if the data set has any
+                if self.dataset_files[key]:
+                    o_df = self.dataset_files[key].save(commit)
+                    dataset_files += o_df
 
         if hasattr(self.datasets, 'deleted_forms'):
             for ds in self.datasets.deleted_forms:
