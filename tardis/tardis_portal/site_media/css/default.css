@@ -688,3 +688,10 @@ ul.errorlist {
 /*Styles for fuzz overlay & message box*/
  #fuzz{ position:absolute; background: url('../images/gray_trans_back.png'); top:0; left:0; width:100%; z-index:100; 
      display:none; text-align:left; }
+     
+ .publishform h3
+ {
+     font-family: Tahoma, Arial, Helvetica, sans-serif;
+     font-weight: bold;
+     font-size: 12px;
+ }     
