@@ -193,3 +193,6 @@ UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
 UPLOADIFY_UPLOAD_PATH = '%s%s' % (MEDIA_URL, 'uploads/')
 
 DEFAULT_INSTITUTION = "Monash University"
+
+#Are the datasets ingested via METS xml (web services) to be immutable?
+IMMUTABLE_METS_DATASETS = True
