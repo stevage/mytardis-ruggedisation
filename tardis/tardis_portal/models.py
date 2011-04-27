@@ -297,6 +297,7 @@ class Dataset(models.Model):
 
     experiment = models.ForeignKey(Experiment)
     description = models.TextField(blank=True)
+    immutable = models.BooleanField(default=False)
 
     def getParameterSets(self, schemaType=None):
         """Return the dataset parametersets associated with this

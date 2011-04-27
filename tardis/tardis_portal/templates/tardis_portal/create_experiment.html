@@ -333,6 +333,7 @@
 		      {% endif %}
                       {{dataset_form.description}}
                       </p>
+   					  {{ dataset_form.immutable.as_hidden }}
                     </div>
                     <p><input class="add_files" type="button" value="Add selected files to dataset"/></p>
                     <p><strong>Files added to Dataset</strong></p>

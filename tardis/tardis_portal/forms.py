@@ -350,21 +350,29 @@ class FullExperimentModel(UserDict):
             ae.experiment = ae.experiment
             ae.save()
         for ds in self.data['datasets']:
-            ds.experiment = ds.experiment
-            ds.save()
+            print ds
+            print dir(ds)
+            if not ds.immutable:
+                print ds.description + " MUTABLE"
+                ds.experiment = ds.experiment
+                ds.save()
         for ds_f in self.data['dataset_files']:
-            ds_f.dataset = ds_f.dataset
-            ds_f.save()
+            if not ds.immutable:
+                ds_f.dataset = ds_f.dataset
+                ds_f.save()
 
         # XXX because saving the form can be now done without
         # commit=False this won't be called during the creation
         # of new experiments.
         if hasattr(self.data['datasets'], 'deleted_forms'):
             for dataset in self.data['datasets'].deleted_forms:
-                dataset.instance.delete()
+                if not dataset.instance.immutable:
+                    dataset.instance.delete()
+
         if hasattr(self.data['dataset_files'], 'deleted_forms'):
             for dataset in self.data['dataset_files'].deleted_forms:
-                dataset.instance.delete()
+                if not dataset.instance.immutable:
+                    dataset.instance.delete()
 
 
 class DataFileFormSet(BaseInlineFormSet):
@@ -378,7 +386,7 @@ class DataFileFormSet(BaseInlineFormSet):
         super(DataFileFormSet, self).__init__(**kwargs)
 
     def save_new(self, form, commit=True):
-        # this is a local file so correct the missing details
+        #this is a local file so correct the missing details
         datafile = super(DataFileFormSet, self).save_new(form, commit=False)
 
         filepath = form.cleaned_data['filename']
@@ -473,6 +481,14 @@ class ExperimentForm(forms.ModelForm):
                                         instance=instance,
                                         prefix="dataset")
         for i, df in enumerate(self.datasets.forms):
+            if 'immutable' in df.initial:
+                if df.initial['immutable']:
+                    df.fields['description'].widget.attrs['readonly'] = True
+                    df.fields['description'].editable = False
+                    df.fields['immutable'].editable = False
+                    df.fields['immutable'].widget.attrs['readonly'] = True
+
+
             self.dataset_files[i] = datafile_formset(data=data,
                                          instance=df.instance,
                                          prefix="dataset-%s-datafile" % i)
@@ -558,17 +574,24 @@ class ExperimentForm(forms.ModelForm):
                 o_dataset = dataset.save(commit)
                 datasets.append(o_dataset)
                 # save any datafiles if the data set has any
-                if self.dataset_files[key]:
+                mutable = True
+                if 'immutable' in dataset.initial:
+                    if dataset.initial['immutable']:
+                        mutable = False
+
+                if self.dataset_files[key] and mutable:
                     o_df = self.dataset_files[key].save(commit)
                     dataset_files += o_df
 
         if hasattr(self.datasets, 'deleted_forms'):
             for ds in self.datasets.deleted_forms:
-                ds.instance.delete()
+                if not ds.instance.immutable:
+                    ds.instance.delete()
 
         if hasattr(self.dataset_files, 'deleted_forms'):
             for df in self.dataset_files.deleted_forms:
-                df.instance.delete()
+                if not ds.instance.immutable:
+                    df.instance.delete()
 
         return FullExperimentModel({'experiment': experiment,
                                     'author_experiments': author_experiments,
