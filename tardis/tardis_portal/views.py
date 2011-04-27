@@ -83,6 +83,7 @@ from tardis.tardis_portal.shortcuts import render_response_index, \
     return_response_error_message, render_response_search
 from tardis.tardis_portal.MultiPartForm import MultiPartForm
 from tardis.tardis_portal.metsparser import parseMets
+from tardis.tardis_portal.publish.publishservice import PublishService
 
 
 logger = logging.getLogger(__name__)
@@ -348,6 +349,8 @@ def experiment_description(request, experiment_id):
 
     c['has_write_permissions'] = \
         authz.has_write_permissions(request, experiment_id)
+
+    c['is_owner'] = authz.has_experiment_ownership(request, experiment_id)
 
     c['protocol'] = []
     download_urls = experiment.get_download_urls()
@@ -857,10 +860,14 @@ def retrieve_datafile_list(request, dataset_id):
         dataset = paginator.page(paginator.num_pages)
 
     is_owner = False
+    has_write_permissions = False
 
     if request.user.is_authenticated():
         experiment_id = Experiment.objects.get(dataset__id=dataset_id).id
         is_owner = authz.has_experiment_ownership(request, experiment_id)
+
+        has_write_permissions = \
+            authz.has_write_permissions(request, experiment_id)
 
     c = Context({
         'dataset': dataset,
@@ -868,6 +875,7 @@ def retrieve_datafile_list(request, dataset_id):
         'dataset_id': dataset_id,
         'filename_search': filename_search,
         'is_owner': is_owner,
+        'has_write_permissions': has_write_permissions,
         })
     return HttpResponse(render_response_index(request,
                         'tardis_portal/ajax/datafile_list.html', c))

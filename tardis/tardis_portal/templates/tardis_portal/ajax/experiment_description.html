@@ -168,6 +168,13 @@ $(document).ready(function() {
         {% if not forloop.last %}
           <br/>
 	{% endif %}
+	</p>
+	<p align="right">
+	{% if is_owner %}
+	{% if not experiment.public %}
+		<strong><a href="publish/">Publish Experiment</a></strong><br/>
+	{% endif %}
+	{% endif %}
       {% endfor %}
   </p>
 {% endif %}
