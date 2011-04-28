@@ -147,6 +147,50 @@ div.jqmAlertContentLoading{
   height: 110px;
 }
 
+div.jqmAlertStatus { /* contains + positions the alert window */
+  display: none;
+  
+  position: fixed;
+  top: 40%;
+  width: 70%;
+}
+
+div.jqmAlertWindowStatus {
+  height:80px;
+  width: 400px;
+  margin: auto;
+  
+  max-width:650px;
+  padding: 0 10px 10px;
+  
+  background:#111;
+  border:1px dotted #FFF;
+}
+
+div.jqmAlertContentStatus{
+  border-top:px;
+  color:#FFF;
+  font:12pt arial;
+  margin:10px 0 0px 0;
+  padding: 4px;
+  border:1px dotted #111;
+  letter-spacing:0px;
+  background:#111 url(/site_media/images/jqmodal/darkgrid.png);
+  overflow: auto;
+  height: 60px;
+  text-align: center;
+}
+
+div.jqmAlertStatus .jqmClose {
+  width:20px;
+  height:20px;
+  display:block;
+  float:right;
+  clear:right;
+  background:transparent url(/site_media/images/jqmodal/close_icon_double.png) 0 0 no-repeat;
+}
+
+
 /*Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°Â°
   clearing a float without additional markup
    http://www.positioniseverything.net/easyclearing.html */

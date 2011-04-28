@@ -39,7 +39,7 @@
 	<title>MyTARDIS {% if subtitle %}- {{ subtitle }} {% endif %}</title>
 	<meta name="keywords" content="">
 	<meta name="description" content="">
-
+	{% include "tardis_portal/javascript_libraries.html" %}
 	{% block script %}
 	{% endblock script %}
 
@@ -56,6 +56,24 @@
 	pageTracker._trackPageview();
 	} catch(err) {}
         </script>
+
+	      <script type="text/javascript">
+
+		$(document).ready(function() {
+		    // $("#fuzz").css("height", $(document).height());
+		    $("#jqmAlertStatus").jqm({modal: false, overlay: 1});
+
+			// 			    $(window).bind("resize", function() {
+			// $("#fuzz").css("height", $(window).height());
+			// 			    });
+			
+			{% if status %}
+			$('#jqmAlertStatus').jqmShow();
+			{% endif %}
+			// $("#fuzz").fadeIn();
+		});		
+	      </script>
+
 </head>
 
 <body>
@@ -92,40 +110,25 @@
     </div> <!-- headerloginstatus -->
   </div> <!-- headerbg -->
 
-  <div id="page"> <!-- start page -->
+  <div id="page"> <!-- start page -->	
     <div id="content-box">
-      {% if status %}
-      <script type="text/javascript">
-	$(document).ready(function(){
-	    $("#status").jqm({modal: false, overlay: 1});
-	    $("#status").jqmShow();
-	});
-      </script>
-      <style type="text/css">
-	#status {
-	    height: auto;
-	}
-	#status .jqmAlertContent {
-	    font-weight: bold;
-	    font-size: large;
-	    color: aqua;
-	    height: auto;
-	}
-      </style>
-      <div class="jqmAlertWindow" id="status">
+	      {% if status %}
+		      <div class="jqmAlertStatus" id="jqmAlertStatus">
+				  <div class="jqmAlertWindowStatus">
 
-	{% if error %}
-	<div class="jqmAlertContent">
-	  {{status}}
-	</div> <!-- statusBoxError -->
-	{% else %}
-	<div class="jqmAlertContent">
-	  {{status}}
-	</div> <!-- statusBox -->
-	{% endif %}
-      </div> <!-- status -->
-      {% endif %}
-
+					{% if error %}
+					<div class="jqmAlertContentStatus" id="jqmAlertContentStatus"><a href="#" class="jqmClose"></a>
+					  <br/>{{status}}
+					
+					</div> <!-- statusBoxError -->
+					{% else %}
+					<div class="jqmAlertContentStatus" id="jqmAlertContentStatus"><a href="#" class="jqmClose"></a>
+					  <br/>{{status}}
+					</div> <!-- statusBox -->
+					{% endif %}
+				   </div> <!-- window -->
+			   </div> <!-- status -->
+		    {% endif %}	
       {% block content %}
       {% endblock content %}
 
