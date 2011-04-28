@@ -132,6 +132,12 @@ INSTALLED_APPS = (
     'south'
     )
 
+
+PUBLISH_PROVIDERS = (
+                    'tardis.tardis_portal.publish.rif_cs_profile.'
+                    + 'rif_cs_PublishProvider.rif_cs_PublishProvider',
+                    )
+
 USER_PROVIDERS = ('tardis.tardis_portal.auth.localdb_auth.DjangoUserProvider',
 )
 
