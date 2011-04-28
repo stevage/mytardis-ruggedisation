@@ -340,6 +340,9 @@ class Dataset(models.Model):
     def __unicode__(self):
         return self.description
 
+    def get_absolute_filepath(self):
+        return path.join(self.experiment.get_absolute_filepath(), str(self.id))
+
 
 class Dataset_File(models.Model):
     """Class to store meta-data about a physical file
@@ -418,8 +421,17 @@ class Dataset_File(models.Model):
         else:
             return ''
 
-    def get_absolute_filepath(self):
+    def get_relative_filepath(self):
+        if self.protocol == '' or self.protocol == 'tardis':
+            from os.path import abspath, join
+            return abspath(join(self.url.partition('://')[2]))
+        elif self.protocol == 'staging':
+            return self.url
+        # file should refer to an absolute location
+        elif self.protocol == 'file':
+            return self.url.partition('://')[2]
 
+    def get_absolute_filepath(self):
         # check for empty protocol field (historical reason) or
         # 'tardis' which indicates a location within the tardis file
         # store
@@ -433,6 +445,7 @@ class Dataset_File(models.Model):
             from os.path import abspath, join
             return abspath(join(FILE_STORE_PATH,
                                 str(self.dataset.experiment.id),
+                                str(self.dataset.id),
                                 self.url.partition('://')[2]))
         elif self.protocol == 'staging':
             return self.url

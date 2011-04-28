@@ -57,7 +57,7 @@ from registration.models import RegistrationProfile
 
 from tardis.tardis_portal import models
 from tardis.tardis_portal.fields import MultiValueCommaSeparatedField
-from tardis.tardis_portal.widgets import CommaSeparatedInput, Span
+from tardis.tardis_portal.widgets import CommaSeparatedInput, Span, TextInput
 from tardis.tardis_portal.models import UserProfile, UserAuthentication
 from tardis.tardis_portal.auth.localdb_auth \
     import auth_key as locabdb_auth_key
@@ -446,22 +446,35 @@ class ExperimentForm(forms.ModelForm):
                                              empty_permitted=False)
 
         def custom_field_cb(field):
+            #if field.name == 'filename':
+            #    return field.formfield(required=False)
             if field.name == 'url':
-                return field.formfield(required=False)
-            elif field.name == 'filename':
-                return field.formfield(widget=Span)
+                return field.formfield(widget=Span, required=False)
+            else:
+                return field.formfield()
+
+        def custom_dataset_field_cb(field):
+            if field.name == 'description':
+                return field.formfield(
+                    widget=TextInput(attrs={'size': '80'}))
             else:
                 return field.formfield()
 
         # initialise formsets
-        dataset_formset = inlineformset_factory(models.Experiment,
-                                                models.Dataset,
-                                                extra=extra, can_delete=True)
-        datafile_formset = inlineformset_factory(models.Dataset,
-                                         models.Dataset_File,
-                                         formset=DataFileFormSet,
-                                         formfield_callback=custom_field_cb,
-                                         extra=0, can_delete=True)
+        if instance == None or instance.dataset_set.count() == 0:
+            extra = 1
+        dataset_formset = inlineformset_factory(
+            models.Experiment,
+            models.Dataset,
+            formfield_callback=custom_dataset_field_cb,
+            extra=extra, can_delete=True)
+
+        datafile_formset = inlineformset_factory(
+            models.Dataset,
+            models.Dataset_File,
+            formset=DataFileFormSet,
+            formfield_callback=custom_field_cb,
+            extra=0, can_delete=True)
 
         # fix up experiment form
         post_authors = self._parse_authors(data)
@@ -491,7 +504,7 @@ class ExperimentForm(forms.ModelForm):
 
             self.dataset_files[i] = datafile_formset(data=data,
                                          instance=df.instance,
-                                         prefix="dataset-%s-datafile" % i)
+                                         prefix="ds-%s-datafile" % i)
 
     def _parse_authors(self, data=None):
         """

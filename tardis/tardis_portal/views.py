@@ -522,6 +522,7 @@ def edit_experiment(request, experiment_id,
 
     c = Context({'subtitle': 'Edit Experiment',
                  'user_id': request.user.id,
+                 'experiment_id': experiment_id,
               })
 
     if request.method == 'POST':

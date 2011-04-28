@@ -138,17 +138,14 @@ def stage_file(datafile):
     :param datafile: a datafile to be staged
     :type datafile: :class:`tardis.tardis_portal.models.Dataset_File`
     """
-
-    experiment_path = datafile.dataset.experiment.get_absolute_filepath()
+    dataset_path = datafile.dataset.get_absolute_filepath()
     copyfrom = datafile.url
 
     relpath = calculate_relative_path(datafile.protocol,
                                       datafile.url)
-
-    copyto = path.join(experiment_path, relpath)
+    copyto = path.join(dataset_path, relpath)
 
     logger.debug('staging file: %s to %s' % (copyfrom, copyto))
-
     if path.isdir(copyfrom):
         if not path.exists(copyto):
             makedirs(copyto)
