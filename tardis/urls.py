@@ -16,6 +16,8 @@ core_urls = patterns(
     (r'^partners/$', 'partners'),
     (r'^stats/$', 'stats'),
     (r'^import_params/$', 'import_params'),
+    (r'^rif-cs/$',
+     'rif_cs'),
 )
 
 experiment_urls = patterns(
