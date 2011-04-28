@@ -25,6 +25,6 @@
 	{% for experiment in experiments %}
 		{% include experiment.profile %}
 	{% endfor %}
-	{{ party_rif_cs|safe }}
-	{{ activity_rif_cs|safe }}
+	{# {{ party_rif_cs|safe }}
+	{{ activity_rif_cs|safe }} #}
 </registryObjects>

@@ -220,6 +220,30 @@ class Experiment(models.Model):
 
         return urls
 
+    def profile(self):
+        """Return the rif-cs profile template location
+            as determined by the profile ExperimentParameter
+
+        """
+
+        profile_template_location = "rif_cs_profile/profiles/"
+
+        try:
+            from tardis.tardis_portal.publish.rif_cs_profile.\
+            rif_cs_PublishProvider\
+            import rif_cs_PublishProvider
+
+            rif_cs_pp = rif_cs_PublishProvider(self.id)
+
+            profile = rif_cs_pp.get_profile()
+            if not profile:
+                return profile_template_location + "default.xml"
+
+            return profile_template_location + profile
+
+        except:
+            return profile_template_location + "default.xml"
+
 
 class ExperimentACL(models.Model):
     """The ExperimentACL table is the core of the `Tardis
