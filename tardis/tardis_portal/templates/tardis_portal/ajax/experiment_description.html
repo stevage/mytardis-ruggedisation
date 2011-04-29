@@ -170,6 +170,9 @@ $(document).ready(function() {
 	{% endif %}
 	</p>
 	<p align="right">
+	{% if experiment.public %}
+		<em>This experiment is public.</em>
+	{% endif %}
 	{% if is_owner %}
 	{% if not experiment.public %}
 		<strong><a href="publish/">Publish Experiment</a></strong><br/>
