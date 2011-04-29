@@ -997,19 +997,19 @@ def create_datafile_add_form(
             if parameter_name.units:
                 units = " (" + parameter_name.units + ")"
 
-                # if not valid, spit back as exact
-                if parameter_name.isNumeric():
-                    fields[key] = \
-                        forms.DecimalField(label=parameter_name.full_name + units,
-                                           required=False,
-                                           initial=value,
-                                           )
-                else:
-                    fields[key] = \
-                        forms.CharField(label=parameter_name.full_name + units,
-                                        max_length=255, required=False,
-                                        initial=value,
-                                        )
+            # if not valid, spit back as exact
+            if parameter_name.isNumeric():
+                fields[key] = \
+                    forms.DecimalField(label=parameter_name.full_name + units,
+                                       required=False,
+                                       initial=value,
+                                       )
+            else:
+                fields[key] = \
+                    forms.CharField(label=parameter_name.full_name + units,
+                                    max_length=255, required=False,
+                                    initial=value,
+                                    )
 
         return type('DynamicForm', (forms.BaseForm, ), {'base_fields': fields})
 
