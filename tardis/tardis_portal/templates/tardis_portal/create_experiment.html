@@ -183,6 +183,27 @@
     <div class="post">
       <h1 class="title"><a name="abouttardis">{{ subtitle }}</a></h1>
       <div class="entry">
+	      <div style="display:none;" class="fsTemplate">
+		<p class="msg_head">Dataset</p>
+		<div class="msg_body">
+		  <div class="fieldWrapper">
+		    <input type="hidden" name="dataset-0-experiment" value="{{experiment_id}}" id="id_dataset-0-experiment" />
+		    <input type="hidden" name="dataset-0-id" value id="id_dataset-0-id" />
+		    Description:
+		    <input name="dataset-0-description" value="" type="text" id="id_dataset-0-description" size="80" />
+		    <input type="hidden" name="dataset-0-immutable" value="False" id="id_dataset-0-immutable" />
+		  </div>
+		  <p><input class="add_files" type="button" value="Add selected files to dataset"/></p>
+		  <p><strong>Files added to Dataset</strong></p>
+		  <div>
+		    <ul class="datafiles">
+		      <input type="hidden" name="ds-2012-datafile-TOTAL_FORMS" value="0" id="id_ds-2012-datafile-TOTAL_FORMS" />
+		      <input type="hidden" name="ds-2012-datafile-INITIAL_FORMS" value="0" id="id_ds-2012-datafile-INITIAL_FORMS" />
+		      <input type="hidden" name="ds-2012-datafile-MAX_NUM_FORMS" id="id_ds-2012-datafile-MAX_NUM_FORMS" />
+		    </ul>
+		  </div>
+		</div>
+	      </div>
         <form id="create_experiment_form" action="" method="POST">
           {{ form.non_field_errors }}
           <div class="msg_list">
@@ -222,42 +243,57 @@
             </div>
 	    <script type="text/javascript">
 	      function findLastDS() {
-		  var indRegex = new RegExp(/dataset-(\d+)-experiment/m);
-		  var lastDSid = $(".dataset_container").last().find("input").first().attr("name");
-		  lastDSid = parseInt(indRegex.exec(lastDSid)[1]);
-		  return lastDSid;
+		  forms = $('.dataset_container').not('.formset-custom-template');
+		  return forms.length-1;
 	      }
 	      var dsPrefix = "dataset";
-	      function addDatasetCB(row) {
-		  row.find("li.datafile").remove();
+	      // converting DOM element to jquery
+	      function updateDSidCB(ndx, row) {
+		  updateDSid(ndx, $(row));
+	      }
+	      function updateDSid(ndx, row) {
 		  row.find('input,select,textarea,label').each(function() {
-		      var ndx = findLastDS();
 		      var prefix = "ds";
 		      var idRegex = new RegExp('(' + prefix + '-\\d+-)');
                       var replacement = prefix + '-' + ndx + '-';
-		      //console.log($(this));
-                      //if (row.attr("for")) row.attr("for", row.attr("for").replace(idRegex, replacement));
                       if ($(this).attr('id')) $(this).attr('id', $(this).attr('id').replace(idRegex, replacement));
                       if ($(this).attr('name')) $(this).attr('name', $(this).attr('name').replace(idRegex, replacement));
-
+		      var prefix = "dataset";
+		      var idRegex = new RegExp('(' + prefix + '-\\d+-)');
+                      var replacement = prefix + '-' + ndx + '-';
+                      if ($(this).attr('id')) $(this).attr('id', $(this).attr('id').replace(idRegex, replacement));
+                      if ($(this).attr('name')) $(this).attr('name', $(this).attr('name').replace(idRegex, replacement));
                   });
+	      }
+	      function addDatasetCB(row) {
+		  var ndx = findLastDS();
+		  console.log(ndx);
+		  updateDSid(ndx, row);
+		  row.find("li.datafile").remove();
 		  row.find('[name$=TOTAL_FORMS]').val("0");
 		  row.find('[name$=INITIAL_FORMS]').val("0");
+	      }
+	      function updateDSids() {
+		  $(".dataset_container").not('.formset-custom-template').each(updateDSidCB);
+	      }
+	      function removeDatasetCB(row) {
+		  updateDSids();
 	      }
 	      $(document).ready(function() {
 		  $('.dataset_container').formset({addText:"Add another Dataset",
 						   prefix: dsPrefix,
 						   added: addDatasetCB,
-						   deleteText: "Remove Dataset",
+						   removed: removeDatasetCB,
+						   formCssClass: "dataset_container",
+						   formTemplate: ".fsTemplate",
 						   });
-						
-		  $(document).find('.dataset_container.immutable').find('.delete-row').hide()
-		  $(document).find('.dataset_container.immutable').find('.remove_file').hide()
-		  $(document).find('.dataset_container.immutable').find('.add_files').hide()
-		
+
+		  $(document).find('.dataset_container.immutable').find('.delete-row').hide();
+		  $(document).find('.dataset_container.immutable').find('.remove_file').hide();
+		  $(document).find('.dataset_container.immutable').find('.add_files').hide();
 	      });
 	    </script>
-<!--            <p class="add_new_dataset">Add New Dataset</p> -->
+
 	    <div class="datasets">
 	      {% for dataset_form, file_forms in form.get_datasets %}
 		<div class="dataset_container {% if dataset_form.instance.immutable %}immutable{% endif %}"  id="{{ dataset_form.prefix }}-row">

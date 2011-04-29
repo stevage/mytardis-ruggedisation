@@ -534,6 +534,7 @@ def edit_experiment(request, experiment_id,
               })
 
     if request.method == 'POST':
+        print request.POST
         form = ExperimentForm(request.POST, request.FILES,
                               instance=experiment, extra=0)
         if form.is_valid():
