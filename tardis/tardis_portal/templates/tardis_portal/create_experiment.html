@@ -10,7 +10,7 @@
     function addDatafile(file_list, filename) {
 	var total_input = file_list.children('input:first');
 	var container_type = "ds-";
-	console.log(total_input);
+
 	// get the total number of childforms
 	var total = file_list.children('input:first').val();
 	var type = 'ds-0-datafile-0-filename';
@@ -239,7 +239,7 @@
                       //if (row.attr("for")) row.attr("for", row.attr("for").replace(idRegex, replacement));
                       if ($(this).attr('id')) $(this).attr('id', $(this).attr('id').replace(idRegex, replacement));
                       if ($(this).attr('name')) $(this).attr('name', $(this).attr('name').replace(idRegex, replacement));
-		      console.log($(this));
+
                   });
 		  row.find('[name$=TOTAL_FORMS]').val("0");
 		  row.find('[name$=INITIAL_FORMS]').val("0");

@@ -4,7 +4,7 @@
 	{% if has_write_permissions %}{% if not experiment.public %}{% if not immutable %}<p><a href="{% url tardis.tardis_portal.views.edit_dataset_par parameterset.id %}"
 	 class="jqModalDs{{parameterset.id}}">[Edit Metadata]</a></p>{% endif %}{% endif %}{% endif %}
 
-     <p><strong><em>Schema: {{parameterset.schema}}</em></strong></p>
+     <p><strong><em>{{parameterset.schema}}</em></strong></p>
 
      {% for parameter in parameterset.datasetparameter_set.all %}
          <li><strong>{{ parameter.name.full_name }}: </strong>
