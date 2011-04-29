@@ -52,6 +52,36 @@ def download_datafile(request, datafile_id):
         return return_response_error(request)
 
 
+def download_datafile_ws(request):
+    if request.GET.has_key('url') and len(request.GET['url']) > 0:
+        url = urllib.unquote(request.GET['url'])
+        raw_path = url.partition('//')[2]
+        experiment_id = request.GET['experiment_id']
+        datafile = Dataset_File.objects.filter(url__endswith=raw_path, dataset__experiment__id=experiment_id)[0]
+
+        if has_datafile_access(request=request,
+                               dataset_file_id=datafile.id):
+
+            file_path = datafile.get_absolute_filepath()
+
+            try:
+                wrapper = FileWrapper(file(file_path))
+                response = HttpResponse(wrapper,
+                                        mimetype=datafile.get_mimetype())
+                response['Content-Disposition'] = \
+                    'attachment; filename="%s"' % datafile.filename
+                return response
+
+            except IOError:
+                return return_response_not_found(request)
+
+        else:
+            return return_response_not_found(request)
+
+    else:
+        return return_response_error(request)
+
+
 @experiment_access_required
 def download_experiment(request, experiment_id, comptype):
     """
@@ -106,8 +136,7 @@ def download_datafiles(request):
     protocols = ['', 'file', 'tardis']
     known_protocols = len(protocols)
 
-    if 'datafile' or 'dataset' in request.POST:
-
+    if request.POST.has_key('datafile') or request.POST.has_key('dataset'):
         if (len(request.POST.getlist('datafile')) > 0 \
                 or len(request.POST.getlist('dataset'))) > 0:
 
@@ -136,29 +165,35 @@ def download_datafiles(request):
                     if not p in protocols:
                         protocols += [p]
                     absolute_filename = datafile.url.partition('//')[2]
-                    fileString += '%s/%s ' % (expid, absolute_filename)
+                    if(datafile.url.partition('//')[0] == 'tardis:'):
+                        fileString += '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+                    else:
+                        fileString += '%s/%s ' % (expid, absolute_filename)
                     fileSize += long(datafile.size)
-
         else:
             return return_response_not_found(request)
 
-    # TODO: check if we really still need this method
-    elif 'url' in request.POST:
-
+    elif request.POST.has_key('url'):
         if not len(request.POST.getlist('url')) == 0:
+            fileString = ""
+            fileSize = 0
             for url in request.POST.getlist('url'):
-                datafile = \
-                    Dataset_File.objects.get(url=urllib.unquote(url),
-                        dataset__experiment__id=request.POST['expid'])
+                url = urllib.unquote(url)
+                raw_path = url.partition('//')[2]
+                experiment_id = request.POST['expid']
+                datafile = Dataset_File.objects.filter(url__endswith=raw_path, dataset__experiment__id=experiment_id)[0]
                 if has_datafile_access(request=request,
                                        dataset_file_id=datafile.id):
                     p = datafile.protocol
                     if not p in protocols:
                         protocols += [p]
                     absolute_filename = datafile.url.partition('//')[2]
-                    fileString += '%s/%s ' % (expid, absolute_filename)
+                    if(datafile.url.partition('//')[0] == 'tardis:'):
+                        # expects tardis: formatted stuff to not include dataset id
+                        fileString += '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+                    else:
+                        fileString += '%s/%s ' % (expid, absolute_filename)
                     fileSize += long(datafile.size)
-
         else:
             return return_response_not_found(request)
     else:
