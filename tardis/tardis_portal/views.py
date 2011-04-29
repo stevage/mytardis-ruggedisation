@@ -416,7 +416,11 @@ def experiment_datasets(request, experiment_id):
 @authz.dataset_access_required
 def retrieve_dataset_metadata(request, dataset_id):
     dataset = Dataset.objects.get(pk=dataset_id)
+    has_write_permissions = \
+        authz.has_write_permissions(request, dataset.experiment.id)
+
     c = Context({'dataset': dataset, })
+    c['has_write_permissions'] = has_write_permissions
     return HttpResponse(render_response_index(request,
                         'tardis_portal/ajax/dataset_metadata.html', c))
 
@@ -424,7 +428,11 @@ def retrieve_dataset_metadata(request, dataset_id):
 @authz.experiment_access_required
 def retrieve_experiment_metadata(request, experiment_id):
     experiment = Experiment.objects.get(pk=experiment_id)
+    has_write_permissions = \
+        authz.has_write_permissions(request, experiment_id)
+
     c = Context({'experiment': experiment, })
+    c['has_write_permissions'] = has_write_permissions
     return HttpResponse(render_response_index(request,
                         'tardis_portal/ajax/experiment_metadata.html', c))
 
@@ -870,9 +878,12 @@ def retrieve_datafile_list(request, dataset_id):
         has_write_permissions = \
             authz.has_write_permissions(request, experiment_id)
 
+    immutable = Dataset.objects.get(id=dataset_id).immutable
+
     c = Context({
         'dataset': dataset,
         'paginator': paginator,
+        'immutable': immutable,
         'dataset_id': dataset_id,
         'filename_search': filename_search,
         'is_owner': is_owner,

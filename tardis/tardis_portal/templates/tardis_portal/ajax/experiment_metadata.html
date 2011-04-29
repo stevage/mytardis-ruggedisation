@@ -9,8 +9,8 @@
     {% for parameterset in experiment.experimentparameterset_set.all %}
           <p><strong><em>Schema: {{parameterset.schema}}</em></strong></p>
 
-		{% if has_write_permissions %}<p><a href="{% url tardis.tardis_portal.views.edit_experiment_par parameterset.id %}"
-		 class="jqModalExp{{parameterset.id}}">[Edit Metadata]</a></p>{% endif %}
+		{% if has_write_permissions %}{% if not experiment.public %}<p><a href="{% url tardis.tardis_portal.views.edit_experiment_par parameterset.id %}"
+		 class="jqModalExp{{parameterset.id}}">[Edit Metadata]</a></p>{% endif %}{% endif %}
 
       {% for parameter in parameterset.experimentparameter_set.all %}
             <li><strong>{{ parameter.name.full_name }}: </strong>
