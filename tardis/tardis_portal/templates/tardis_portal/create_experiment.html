@@ -250,13 +250,18 @@
 						   added: addDatasetCB,
 						   deleteText: "Remove Dataset",
 						   });
+						
+		  $(document).find('.dataset_container.immutable').find('.delete-row').hide()
+		  $(document).find('.dataset_container.immutable').find('.remove_file').hide()
+		  $(document).find('.dataset_container.immutable').find('.add_files').hide()
+		
 	      });
 	    </script>
 <!--            <p class="add_new_dataset">Add New Dataset</p> -->
 	    <div class="datasets">
 	      {% for dataset_form, file_forms in form.get_datasets %}
-		<div class="dataset_container"  id="{{ dataset_form.prefix }}-row">
-		  <p class="msg_head">Dataset</p>
+		<div class="dataset_container {% if dataset_form.instance.immutable %}immutable{% endif %}"  id="{{ dataset_form.prefix }}-row">
+		  <p class="msg_head">Dataset {% if dataset_form.instance.immutable %}(Immutable){% endif %}</p>
 		  <div class="msg_body">
 		    <div class="fieldWrapper">
 		      {{ dataset_form.description.errors }}
