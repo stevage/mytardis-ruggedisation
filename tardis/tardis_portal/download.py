@@ -132,6 +132,10 @@ def download_datafiles(request):
     fileString = ''
     fileSize = 0
 
+    comptype = "zip"
+    if request.POST.has_key('comptype'):
+        comptype = request.POST['comptype']
+
     # the following protocols can be handled by this module
     protocols = ['', 'file', 'tardis']
     known_protocols = len(protocols)
@@ -225,16 +229,31 @@ def download_datafiles(request):
         if not fileString:
             return return_response_error(request)
 
-        cmd = 'tar -C %s -c %s' % (settings.FILE_STORE_PATH,
-                                   fileString)
+        if comptype == "tar":
+            cmd = 'tar -C %s -c %s' % (settings.FILE_STORE_PATH,
+                                       fileString)
 
-        # logger.info(cmd)
-        response = \
-            HttpResponse(FileWrapper(subprocess.Popen(cmd,
-                                                      stdout=subprocess.PIPE,
-                                                      shell=True).stdout),
-                         mimetype='application/x-tar')
-        response['Content-Disposition'] = \
-                'attachment; filename="experiment%s.tar"' % expid
-        response['Content-Length'] = fileSize + 5120
-        return response
+            # logger.info(cmd)
+            response = \
+                HttpResponse(FileWrapper(subprocess.Popen(cmd,
+                                                          stdout=subprocess.PIPE,
+                                                          shell=True).stdout),
+                             mimetype='application/x-tar')
+            response['Content-Disposition'] = \
+                    'attachment; filename="experiment%s-selection.tar"' % expid
+            response['Content-Length'] = fileSize + 5120
+            return response
+        else:
+            cmd = 'cd %s; zip -r - %s' % (settings.FILE_STORE_PATH,
+                                       fileString)
+
+            # logger.info(cmd)
+            response = \
+                HttpResponse(FileWrapper(subprocess.Popen(cmd,
+                                                          stdout=subprocess.PIPE,
+                                                          shell=True).stdout),
+                             mimetype='application/zip')
+            response['Content-Disposition'] = \
+                    'attachment; filename="experiment%s-selection.zip"' % expid
+            response['Content-Length'] = fileSize + 5120
+            return response
