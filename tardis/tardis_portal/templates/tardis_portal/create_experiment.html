@@ -10,7 +10,7 @@
     function addDatafile(file_list, filename) {
 	var total_input = file_list.children('input:first');
 	var container_type = "ds-";
-
+	console.log(total_input);
 	// get the total number of childforms
 	var total = file_list.children('input:first').val();
 	var type = 'ds-0-datafile-0-filename';
@@ -43,9 +43,7 @@
 	var file3 = $('<input type="hidden"/>').attr({'value': '', 'name': name3, 'id': id3, 'value':'staging'});
 	li.append(file3);
 	li.append($('<span class="file"></span> ').text(filename));
-	var delete_file = $('<span class="remove_file"> [remove]</span>').click(function() {
-    	    deleteDatafile(li, container_type + dataset_number + '-datafile');
-	});
+	var delete_file = $('<span class="remove_file"> [remove]</span>')
 	li.append(delete_file);
 	file_list.append(li);
 
@@ -89,23 +87,26 @@
         if (el.name) el.name = el.name.replace(id_regex, replacement);
     }
 
-    function deleteDatafile(btn, prefix) {
-        var dataset = $(btn).parents('.datafiles');
-        var parent = $(btn).parents('.datafile');
+    function deleteDatafile(btn) {
+	var id_regex = new RegExp("id_ds-(\\d+)-datafile-(\\d+)-.*");
+	var df_input = $(btn).siblings('input:first');
+	var thismatch = id_regex.exec(df_input.attr('id'));
+	var ds_id = thismatch[1];
+	var df_id = thismatch[2];
 
-	var id_regex = new RegExp("id_ds-(\\d+)-" + prefix + "-(\\d+)-.*");
-	var total_input = parent.find('input:first');
+	var prefix = "ds-" + ds_id + "-" + "datafile";
 
-	var match = total_input.attr('id').match(id_regex);
-	var ds_id = match[1];
-	var df_id = match[2];
+        var dataset = $(btn).parents('ul.datafiles');
+        var parent = $(btn).parents('li.datafile');
+	var total_input = dataset.find('input:first');
 
-	if ($('#id_ds-' + ds_id + "-" + prefix + "-" + df_id + "-DELETE", parent).length > 0) {
-	    $('#id_ds-' + ds_id + "-" + prefix + "-" + df_id + "-DELETE", parent).attr('value', '1');
+	if ($('#id_' + prefix + "-" + df_id + "-DELETE", parent).length > 0) {
+	    $('#id_' + prefix + "-" + df_id + "-DELETE", parent).attr('value', '1');
 	    $(parent).css('text-decoration', 'line-through');
 	    $(parent).css('color', 'red');
 	    $(this).css('color', 'black');
 	} else {
+	    $(parent).remove();
             var forms = $('li', dataset);
             $('#id_' + prefix + '-TOTAL_FORMS', dataset).val(forms.length);
             for (var i=0, formCount=forms.length; i<formCount; i++) {
@@ -113,7 +114,6 @@
                     updateElementIndex(this, prefix, i);
 		});
             }
-	    $(parent).remove();
 	}
         return false;
     }
@@ -138,8 +138,7 @@
             });
 
             $(".remove_file").live('click', function() {
-		deleteDatafile(this, 'datafile')
-                //$(this).parent().remove()
+		deleteDatafile(this)
             });
 
         });
@@ -271,6 +270,7 @@
 		    <p><strong>Files added to Dataset</strong></p>
 		    <div>
 		      <ul class="datafiles">
+			{{ file_forms.management_form }}
 			{% for file_form in file_forms.forms %}
                           <li id="{{file_form.prefix}}-row" class="datafile">
 			    {{ file_form.id.as_hidden }}
@@ -281,7 +281,6 @@
 			    <span class="remove_file">[remove]</span><br/>
 			  </li>
                         {% endfor %}
-			{{ file_forms.management_form }}
 			</ul>
 		      </div>
 		    </div>
