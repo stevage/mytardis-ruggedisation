@@ -110,3 +110,5 @@ UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
 UPLOADIFY_UPLOAD_PATH = '%s%s' % (MEDIA_URL, 'uploads/')
 
 DEFAULT_INSTITUTION = "Monash University"
+
+IMMUTABLE_METS_DATASETS = True
