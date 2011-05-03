@@ -7,8 +7,9 @@ from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from tardis.tardis_portal.models import Experiment
-from tardis.tardis_portal.logger import logger
+import logging
 
+logger = logging.getLogger(__name__)
 
 class PublishService():
 

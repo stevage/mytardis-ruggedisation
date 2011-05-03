@@ -3,11 +3,13 @@ RIF CS Profile Module
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@gmail.com>
 '''
-from tardis.tardis_portal.logger import logger
 from tardis.tardis_portal.publish.interfaces import PublishProvider
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     ParameterName, Schema, ExperimentParameterSet
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class rif_cs_PublishProvider(PublishProvider):
