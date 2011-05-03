@@ -315,6 +315,7 @@
 			{{ file_forms.management_form }}
 			{% for file_form in file_forms.forms %}
                           <li id="{{file_form.prefix}}-row" class="datafile">
+			    {{ file_form.protocol.as_hidden }}
 			    {{ file_form.id.as_hidden }}
 			    {{ file_form.DELETE.as_hidden }}
 			    {{ file_form.url.as_hidden }}

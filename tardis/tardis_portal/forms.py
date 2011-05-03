@@ -350,10 +350,7 @@ class FullExperimentModel(UserDict):
             ae.experiment = ae.experiment
             ae.save()
         for ds in self.data['datasets']:
-            print ds
-            print dir(ds)
             if not ds.immutable:
-                print ds.description + " MUTABLE"
                 ds.experiment = ds.experiment
                 ds.save()
         for ds_f in self.data['dataset_files']:
@@ -500,7 +497,6 @@ class ExperimentForm(forms.ModelForm):
                     df.fields['description'].editable = False
                     df.fields['immutable'].editable = False
                     df.fields['immutable'].widget.attrs['readonly'] = True
-
 
             self.dataset_files[i] = datafile_formset(data=data,
                                          instance=df.instance,

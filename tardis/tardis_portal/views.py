@@ -534,16 +534,14 @@ def edit_experiment(request, experiment_id,
               })
 
     if request.method == 'POST':
-        print request.POST
         form = ExperimentForm(request.POST, request.FILES,
                               instance=experiment, extra=0)
         if form.is_valid():
             full_experiment = form.save(commit=False)
-
             experiment = full_experiment['experiment']
             experiment.created_by = request.user
             for df in full_experiment['dataset_files']:
-                if not df.url.startswith(path.sep):
+                if df.protocol == "staging":
                     df.url = path.join(settings.STAGING_PATH, df.url)
             full_experiment.save_m2m()
 
@@ -2327,7 +2325,6 @@ def publish_experiment(request, experiment_id):
             context_dict['publish_result'] = \
             publishService.execute_publishers(request)
 
-            print context_dict['publish_result']
             for result in context_dict['publish_result']:
                 if not result['status']:
                     success = False
