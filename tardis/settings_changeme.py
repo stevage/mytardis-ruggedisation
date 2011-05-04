@@ -103,6 +103,7 @@ FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
     '../var/store/')).replace('\\', '/')
 STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
     '../var/staging/')).replace('\\', '/')
+STAGING_PROTOCOL = 'ldap'
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -202,3 +203,15 @@ DEFAULT_INSTITUTION = "Monash University"
 
 #Are the datasets ingested via METS xml (web services) to be immutable?
 IMMUTABLE_METS_DATASETS = True
+
+def GET_FULL_STAGING_PATH(username):
+    # check if the user is authenticated using the deployment's staging protocol
+    try:
+        from tardis.tardis_portal.models import UserAuthentication
+        userAuth = UserAuthentication.objects.get(
+            userProfile__user__username=username,
+            authenticationMethod=STAGING_PROTOCOL)
+    except UserAuthentication.DoesNotExist:
+        return None
+
+    return STAGING_PATH + '/' + username
