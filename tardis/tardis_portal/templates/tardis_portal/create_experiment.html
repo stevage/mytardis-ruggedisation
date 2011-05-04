@@ -53,6 +53,7 @@
     }
 
     $(document).ready(function() {
+	{% if directory_listing %}
         $("#demo1").jstree({
 	    core : { /* core options go here */ },
 	    plugins : [ "themes", "html_data", "checkbox" ]
@@ -78,6 +79,7 @@
 	    });
 	    $("#demo1").jstree("uncheck_all");
 	});
+	{% endif %}
     });
 
     function updateElementIndex(el, prefix, ndx) {
@@ -233,14 +235,16 @@
                 {{ form.description }}
               </div>
             </div>
-            <p class="my_files">My Files</p>
-            <div class="msg_body">
-              <p><strong>Select Files To Be Added To A Dataset:</strong></p>
-              <div id="demo1" class="demo">
-                {{directory_listing|safe}}
-              </div>
-              <br/>
-            </div>
+	    {% if directory_listing %}
+              <p class="my_files">My Files</p>
+	      <div class="msg_body">
+		<p><strong>Select Files To Be Added To A Dataset:</strong></p>
+		<div id="demo1" class="demo">
+		  {{directory_listing|safe}}
+		</div>
+		<br/>
+	      </div>
+	    {% endif %}
 	    <script type="text/javascript">
 	      function findLastDS() {
 		  forms = $('.dataset_container').not('.formset-custom-template');
@@ -308,7 +312,9 @@
    	        {{ dataset_form.immutable.as_hidden }}
 
 		    </div>
-		    <p><input class="add_files" type="button" value="Add selected files to dataset"/></p>
+		    {% if directory_listing %}
+		      <p><input class="add_files" type="button" value="Add selected files to dataset"/></p>
+		    {% endif %}
 		    <p><strong>Files added to Dataset</strong></p>
 		    <div>
 		      <ul class="datafiles">
