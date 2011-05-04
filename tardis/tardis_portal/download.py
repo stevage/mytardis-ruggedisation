@@ -40,10 +40,12 @@ def download_datafile(request, datafile_id):
 
             try:
                 wrapper = FileWrapper(file(file_path))
+
                 response = HttpResponse(wrapper,
                                         mimetype=datafile.get_mimetype())
                 response['Content-Disposition'] = \
                     'attachment; filename="%s"' % datafile.filename
+
                 return response
 
             except IOError:
@@ -150,13 +152,15 @@ def download_datafiles(request):
             for dsid in datasets:
                 for datafile in Dataset_File.objects.filter(dataset=dsid):
                     if has_datafile_access(request=request,
-                                           dataset_file_id=datafile.id):
+                                            dataset_file_id=datafile.id):
                         p = datafile.protocol
                         if not p in protocols:
                             protocols += [p]
-
                         absolute_filename = datafile.url.partition('//')[2]
-                        fileString += '%s/%s ' % (expid, absolute_filename)
+                        if(datafile.url.partition('//')[0] == 'tardis:'):
+                            fileString += '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+                        else:
+                            fileString += '%s/%s ' % (expid, absolute_filename)
                         fileSize += long(datafile.size)
 
             for dfid in datafiles:

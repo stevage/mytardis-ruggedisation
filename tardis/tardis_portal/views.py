@@ -105,6 +105,7 @@ def logout(request):
 
 def index(request):
     status = ''
+
     c = Context({'status': status})
     return HttpResponse(render_response_index(request,
                         'tardis_portal/index.html', c))
@@ -453,7 +454,8 @@ def create_experiment(request,
 
     c = Context({
         'subtitle': 'Create Experiment',
-        'directory_listing': staging_traverse(),
+        'directory_listing': staging_traverse(settings.GET_FULL_STAGING_PATH(
+                            request.user.username)),
         'user_id': request.user.id,
         })
 
@@ -468,8 +470,9 @@ def create_experiment(request,
             experiment.created_by = request.user
             for df in full_experiment['dataset_files']:
                 if not df.url.startswith(path.sep):
-                    df.url = path.join(settings.STAGING_PATH,
-                                       df.url)
+                    df.url = path.join(settings.GET_FULL_STAGING_PATH(
+                                        request.user.username),
+                                        df.url)
             full_experiment.save_m2m()
 
             # add defaul ACL
@@ -542,7 +545,9 @@ def edit_experiment(request, experiment_id,
             experiment.created_by = request.user
             for df in full_experiment['dataset_files']:
                 if df.protocol == "staging":
-                    df.url = path.join(settings.STAGING_PATH, df.url)
+                    df.url = path.join(
+                    settings.GET_FULL_STAGING_PATH(request.user.username),
+                    df.url)
             full_experiment.save_m2m()
 
             request.POST = {'status': "Experiment Saved."}
@@ -553,7 +558,8 @@ def edit_experiment(request, experiment_id,
     else:
         form = ExperimentForm(instance=experiment, extra=0)
 
-    c['directory_listing'] = staging_traverse()
+    c['directory_listing'] = settings.GET_FULL_STAGING_PATH(
+                            request.user.username)
     c['form'] = form
 
     return HttpResponse(render_response_index(request,

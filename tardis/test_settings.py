@@ -24,6 +24,9 @@ FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
 STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
                                       "../var/staging/"))
 
+def GET_FULL_STAGING_PATH(username):
+    return STAGING_PATH + path.sep + username
+
 SITE_ID = '1'
 
 TEMPLATE_DIRS = ['.']
@@ -100,8 +103,8 @@ LDAP_GROUP_BASE = 'ou=Group, ' + LDAP_BASE
 SYSTEM_LOG_LEVEL = 'INFO'
 MODULE_LOG_LEVEL = 'INFO'
 
-SYSTEM_LOG_FILENAME = 'request.log'
-MODULE_LOG_FILENAME = 'tardis.log'
+SYSTEM_LOG_FILENAME = '/var/log/request.log'
+MODULE_LOG_FILENAME = '/var/log/tardis.log'
 
 SYSTEM_LOG_MAXBYTES = 0
 MODULE_LOG_MAXBYTES = 0

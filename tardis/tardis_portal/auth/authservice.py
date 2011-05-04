@@ -280,4 +280,14 @@ class AuthService():
         userAuth = UserAuthentication(userProfile=userProfile,
             username=username, authenticationMethod=plugin)
         userAuth.save()
+
+        if settings.STAGING_PROTOCOL == plugin:
+            # to be put in its own function
+            staging_path = settings.GET_FULL_STAGING_PATH(username)
+            import os
+            if not os.path.exists(staging_path):
+                os.makedirs(staging_path)
+                os.system('chmod g+w ' + staging_path)
+                os.system('chown ' + username + ' ' + staging_path)
+
         return user

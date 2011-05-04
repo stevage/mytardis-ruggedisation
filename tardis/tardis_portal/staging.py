@@ -193,18 +193,18 @@ def calculate_relative_path(protocol, filepath):
     """
     if protocol == "staging":
         staging = settings.STAGING_PATH
+        rpath = filepath[len(staging)+1:]
+        return rpath.partition("/")[2]
     elif protocol == "tardis":
-        staging = settings.FILE_STORE_PATH
+        staging = settings.STAGING_PATH
+        rpath = filepath[len(staging)-1:]
+        return rpath.lstrip(path.sep)
     else:
         logger.error("the staging path of the file %s is invalid!" % filepath)
         raise ValueError("Unknown protocol, there is no way to calculate a relative url for %s urls." % protocol)
 
-    if not filepath.startswith(staging):
-        raise ValueError("filepath %s is either already relative or invalid." % filepath)
-
-    rpath = filepath[len(staging):]
-    return rpath.lstrip(path.sep)
-
+    # if not filepath.startswith(staging):
+    #     raise ValueError("filepath %s is either already relative or invalid." % filepath)
 
 def duplicate_file_check_rename(copyto):
     """
@@ -278,7 +278,7 @@ def add_datafile_to_dataset(dataset, filepath, size):
                                 str(dataset.experiment.id))
 
     dataset_path = path.join(experiment_path, str(dataset.id))
-    urlpath = 'file:/' + filepath[len(experiment_path):]
+    urlpath = 'tardis:/' + filepath[len(dataset_path):]
     filename = urlpath.rpartition('/')[2]
 
     datafile = Dataset_File(dataset=dataset, filename=filename,
