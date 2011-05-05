@@ -21,6 +21,14 @@ def render_response_index(request, *args, **kwargs):
     kwargs['context_instance']['is_superuser'] = is_superuser
     kwargs['context_instance']['username'] = username
 
+    staging = settings.GET_FULL_STAGING_PATH(
+                                username)
+    if staging:
+        kwargs['context_instance']['has_staging_access'] = True
+    else:
+        kwargs['context_instance']['has_staging_access'] = False
+
+
     if request.mobile:
         template_path = args[0]
         split = template_path.partition('/')
@@ -58,6 +66,13 @@ def render_response_search(request, *args, **kwargs):
     kwargs['context_instance']['searchDatafileSelectionForm'] = \
         getNewSearchDatafileSelectionForm(request.GET.get('type', None))
     kwargs['context_instance']['links'] = links
+
+    staging = settings.GET_FULL_STAGING_PATH(
+                                username)
+    if staging:
+        kwargs['context_instance']['has_staging_access'] = True
+    else:
+        kwargs['context_instance']['has_staging_access'] = False
 
     if request.mobile:
         template_path = args[0]
