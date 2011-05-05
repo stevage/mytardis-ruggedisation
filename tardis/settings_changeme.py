@@ -104,6 +104,7 @@ FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
 STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
     '../var/staging/')).replace('\\', '/')
 STAGING_PROTOCOL = 'ldap'
+STAGING_MOUNT_PREFIX = 'smb://localhost/staging/'
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"

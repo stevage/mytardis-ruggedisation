@@ -708,3 +708,9 @@ ul.errorlist {
     background-color: white;
     text-align: right;
 }
+
+#mountpath {
+    background-color: #F0F3F6;
+    text-align: center;
+    padding: 7px;
+}

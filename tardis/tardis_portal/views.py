@@ -461,6 +461,7 @@ def create_experiment(request,
                                 request.user.username)
     if staging:
         c['directory_listing'] = staging_traverse(staging)
+        c['staging_mount_prefix'] = settings.STAGING_MOUNT_PREFIX
 
     if request.method == 'POST':
         form = ExperimentForm(request.POST, request.FILES)
@@ -543,6 +544,7 @@ def edit_experiment(request, experiment_id,
                                 request.user.username)
     if staging:
         c['directory_listing'] = staging_traverse(staging)
+        c['staging_mount_prefix'] = settings.STAGING_MOUNT_PREFIX
 
     if request.method == 'POST':
         form = ExperimentForm(request.POST, request.FILES,

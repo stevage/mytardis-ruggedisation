@@ -25,6 +25,7 @@ STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
                                       "../var/staging/"))
 
 STAGING_PROTOCOL = 'ldap'
+STAGING_MOUNT_PREFIX = 'smb://localhost/staging/'
 
 def GET_FULL_STAGING_PATH(username):
     # check if the user is authenticated using the deployment's staging protocol
