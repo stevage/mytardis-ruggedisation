@@ -38,7 +38,7 @@
 	li.append(file);
 	var file1 = $('<input type="hidden"/>').attr({'value': '', 'name': name1, 'id': id1});
 	li.append(file1);
-	var file2 = $('<input type="hidden"/>').attr({'value': '', 'name': name2, 'id': id2});
+	var file2 = $('<input type="hidden"/>').attr({'value': filename, 'name': name2, 'id': id2});
 	li.append(file2);
 	var file3 = $('<input type="hidden"/>').attr({'value': '', 'name': name3, 'id': id3, 'value':'staging'});
 	li.append(file3);
@@ -305,9 +305,9 @@
 		  $(document).find('.dataset_container.immutable').find('.delete-row').hide();
 		  $(document).find('.dataset_container.immutable').find('.remove_file').hide();
 		  $(document).find('.dataset_container.immutable').find('.add_files').hide();
-	
+
 	      });
-	
+
 	    </script>
 
 	    <div class="datasets">
