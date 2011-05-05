@@ -490,8 +490,10 @@ def create_experiment(request,
                                 aclOwnershipType=ExperimentACL.OWNER_OWNED)
             acl.save()
 
-            request.POST = {'status': "Experiment created."}
-            return view_experiment(request, experiment_id=experiment.id)
+            request.POST = {'status': "Experiment Created."}
+            return HttpResponseRedirect(reverse(
+                'tardis.tardis_portal.views.view_experiment',
+                args=[str(experiment.id)]) + "#created")
 
         c['status'] = "Errors exist in form."
         c["error"] = 'true'
@@ -561,7 +563,9 @@ def edit_experiment(request, experiment_id,
             full_experiment.save_m2m()
 
             request.POST = {'status': "Experiment Saved."}
-            return view_experiment(request, experiment_id=experiment.id)
+            return HttpResponseRedirect(reverse(
+                'tardis.tardis_portal.views.view_experiment',
+                args=[str(experiment.id)]) + "#saved")
 
         c['status'] = "Errors exist in form."
         c["error"] = 'true'
