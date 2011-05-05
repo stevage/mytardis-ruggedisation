@@ -454,10 +454,13 @@ def create_experiment(request,
 
     c = Context({
         'subtitle': 'Create Experiment',
-        'directory_listing': staging_traverse(settings.GET_FULL_STAGING_PATH(
-                            request.user.username)),
         'user_id': request.user.id,
         })
+
+    staging = settings.GET_FULL_STAGING_PATH(
+                                request.user.username)
+    if staging:
+        c['directory_listing'] = staging_traverse(staging)
 
     if request.method == 'POST':
         form = ExperimentForm(request.POST, request.FILES)
@@ -536,6 +539,11 @@ def edit_experiment(request, experiment_id,
                  'experiment_id': experiment_id,
               })
 
+    staging = settings.GET_FULL_STAGING_PATH(
+                                request.user.username)
+    if staging:
+        c['directory_listing'] = staging_traverse(staging)
+
     if request.method == 'POST':
         form = ExperimentForm(request.POST, request.FILES,
                               instance=experiment, extra=0)
@@ -558,8 +566,6 @@ def edit_experiment(request, experiment_id,
     else:
         form = ExperimentForm(instance=experiment, extra=0)
 
-    c['directory_listing'] = settings.GET_FULL_STAGING_PATH(
-                            request.user.username)
     c['form'] = form
 
     return HttpResponse(render_response_index(request,
