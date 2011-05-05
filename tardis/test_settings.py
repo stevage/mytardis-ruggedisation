@@ -24,19 +24,11 @@ FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
 STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
                                       "../var/staging/"))
 
-STAGING_PROTOCOL = 'ldap'
+STAGING_PROTOCOL = 'localdb'
 STAGING_MOUNT_PREFIX = 'smb://localhost/staging/'
 
 def GET_FULL_STAGING_PATH(username):
     # check if the user is authenticated using the deployment's staging protocol
-    try:
-        from tardis.tardis_portal.models import UserAuthentication
-        userAuth = UserAuthentication.objects.get(
-            userProfile__user__username=username,
-            authenticationMethod=STAGING_PROTOCOL)
-    except UserAuthentication.DoesNotExist:
-        return None
-
     return STAGING_PATH + '/' + username
 
 SITE_ID = '1'

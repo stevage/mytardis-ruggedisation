@@ -90,7 +90,7 @@ class StagingFiles(TestCase):
                                      1234)
         self.assertEqual(df.size, 1234)
         self.assertEqual(df.filename, 'file')
-        self.assertEqual(df.url, "file://%s/file" % dataset.id)
+        self.assertEqual(df.url, "tardis://file")
 
 
 class TraverseTestCase(TestCase):
