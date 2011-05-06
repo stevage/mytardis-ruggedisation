@@ -122,7 +122,8 @@ class TraverseTestCase(TestCase):
         self.dirs.reverse()
         for dir in self.dirs:
             os.rmdir(path.join(staging, dir))
-        os.rmdir(staging)
+        import shutil
+        shutil.rmtree(staging)
 
     def test_traversal(self):
         from tardis.tardis_portal.staging import staging_traverse
