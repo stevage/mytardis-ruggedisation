@@ -29,7 +29,7 @@ STAGING_MOUNT_PREFIX = 'smb://localhost/staging/'
 
 def GET_FULL_STAGING_PATH(username):
     # check if the user is authenticated using the deployment's staging protocol
-    return STAGING_PATH + '/' + username
+    return path.join(STAGING_PATH, "testuser")
 
 SITE_ID = '1'
 
@@ -107,8 +107,8 @@ LDAP_GROUP_BASE = 'ou=Group, ' + LDAP_BASE
 SYSTEM_LOG_LEVEL = 'INFO'
 MODULE_LOG_LEVEL = 'INFO'
 
-SYSTEM_LOG_FILENAME = '/var/log/request.log'
-MODULE_LOG_FILENAME = '/var/log/tardis.log'
+SYSTEM_LOG_FILENAME = 'request.log'
+MODULE_LOG_FILENAME = 'tardis.log'
 
 SYSTEM_LOG_MAXBYTES = 0
 MODULE_LOG_MAXBYTES = 0

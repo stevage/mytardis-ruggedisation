@@ -121,9 +121,8 @@ class TraverseTestCase(TestCase):
             os.remove(path.join(staging, *file))
         self.dirs.reverse()
         for dir in self.dirs:
-            os.rmdir(path.join(staging, dir))
-        import shutil
-        shutil.rmtree(staging)
+            import shutil
+            shutil.rmtree(path.join(staging, dir))
 
     def test_traversal(self):
         from tardis.tardis_portal.staging import staging_traverse
@@ -182,7 +181,10 @@ class TestStagingFiles(TestCase):
         email = ''
         self.user = User.objects.create_user(user, email, pwd)
 
-        os.makedirs(settings.GET_FULL_STAGING_PATH(self.user.username))
+        try:
+            os.makedirs(settings.GET_FULL_STAGING_PATH(self.user.username))
+        except OSError:
+            pass
         self.temp = mkdtemp(dir=settings.GET_FULL_STAGING_PATH(self.user.username))
 
         self.file = mktemp(dir=self.temp)

@@ -215,4 +215,5 @@ def GET_FULL_STAGING_PATH(username):
     except UserAuthentication.DoesNotExist:
         return None
 
-    return STAGING_PATH + '/' + username
+    from os import path
+    return path.join(STAGING_PATH, username)
