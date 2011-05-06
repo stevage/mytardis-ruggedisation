@@ -296,3 +296,17 @@ def add_datafile_to_dataset(dataset, filepath, size):
     datafile.save()
 
     return datafile
+
+
+def get_full_staging_path(username):
+    # check if the user is authenticated using the deployment's staging protocol
+    try:
+        from tardis.tardis_portal.models import UserAuthentication
+        userAuth = UserAuthentication.objects.get(
+            userProfile__user__username=username,
+            authenticationMethod=settings.STAGING_PROTOCOL)
+    except UserAuthentication.DoesNotExist:
+        return None
+
+    from os import path
+    return path.join(settings.STAGING_PATH, username)

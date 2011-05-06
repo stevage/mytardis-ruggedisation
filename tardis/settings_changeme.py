@@ -204,16 +204,3 @@ DEFAULT_INSTITUTION = "Monash University"
 
 #Are the datasets ingested via METS xml (web services) to be immutable?
 IMMUTABLE_METS_DATASETS = True
-
-def GET_FULL_STAGING_PATH(username):
-    # check if the user is authenticated using the deployment's staging protocol
-    try:
-        from tardis.tardis_portal.models import UserAuthentication
-        userAuth = UserAuthentication.objects.get(
-            userProfile__user__username=username,
-            authenticationMethod=STAGING_PROTOCOL)
-    except UserAuthentication.DoesNotExist:
-        return None
-
-    from os import path
-    return path.join(STAGING_PATH, username)

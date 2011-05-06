@@ -66,7 +66,8 @@ from tardis.tardis_portal.forms import ExperimentForm, \
 
 from tardis.tardis_portal.errors import UnsupportedSearchQueryTypeError
 from tardis.tardis_portal.staging import add_datafile_to_dataset,\
-    staging_traverse, write_uploaded_file_to_dataset
+    staging_traverse, write_uploaded_file_to_dataset,\
+    get_full_staging_path
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     DatafileParameter, DatasetParameter, ExperimentACL, Dataset_File, \
     DatafileParameterSet, ParameterName, GroupAdmin, Schema, \
@@ -351,7 +352,8 @@ def experiment_description(request, experiment_id):
     c['has_write_permissions'] = \
         authz.has_write_permissions(request, experiment_id)
 
-    c['is_owner'] = authz.has_experiment_ownership(request, experiment_id)
+    if request.user.is_authenticated():
+        c['is_owner'] = authz.has_experiment_ownership(request, experiment_id)
 
     c['protocol'] = []
     download_urls = experiment.get_download_urls()
@@ -457,7 +459,7 @@ def create_experiment(request,
         'user_id': request.user.id,
         })
 
-    staging = settings.GET_FULL_STAGING_PATH(
+    staging = get_full_staging_path(
                                 request.user.username)
     if staging:
         c['directory_listing'] = staging_traverse(staging)
@@ -474,7 +476,7 @@ def create_experiment(request,
             experiment.created_by = request.user
             for df in full_experiment['dataset_files']:
                 if not df.url.startswith(path.sep):
-                    df.url = path.join(settings.GET_FULL_STAGING_PATH(
+                    df.url = path.join(get_full_staging_path(
                                         request.user.username),
                                         df.url)
             full_experiment.save_m2m()
@@ -542,7 +544,7 @@ def edit_experiment(request, experiment_id,
                  'experiment_id': experiment_id,
               })
 
-    staging = settings.GET_FULL_STAGING_PATH(
+    staging = get_full_staging_path(
                                 request.user.username)
     if staging:
         c['directory_listing'] = staging_traverse(staging)
@@ -558,7 +560,7 @@ def edit_experiment(request, experiment_id,
             for df in full_experiment['dataset_files']:
                 if df.protocol == "staging":
                     df.url = path.join(
-                    settings.GET_FULL_STAGING_PATH(request.user.username),
+                    get_full_staging_path(request.user.username),
                     df.url)
             full_experiment.save_m2m()
 

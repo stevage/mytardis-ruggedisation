@@ -27,9 +27,7 @@ STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
 STAGING_PROTOCOL = 'localdb'
 STAGING_MOUNT_PREFIX = 'smb://localhost/staging/'
 
-def GET_FULL_STAGING_PATH(username):
-    # check if the user is authenticated using the deployment's staging protocol
-    return path.join(STAGING_PATH, "testuser")
+GET_FULL_STAGING_PATH_TEST = path.join(STAGING_PATH, "test_user")
 
 SITE_ID = '1'
 
