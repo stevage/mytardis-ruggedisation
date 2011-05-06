@@ -158,7 +158,7 @@ def stage_file(datafile):
         if not path.exists(path.dirname(copyto)):
             makedirs(path.dirname(copyto))
 
-        shutil.move(copyfrom, copyto)
+        shutil.copy(copyfrom, copyto)
 
     datafile.url = "tardis://" + relpath
     datafile.protocol = "tardis"
