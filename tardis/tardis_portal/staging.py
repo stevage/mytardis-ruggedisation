@@ -165,9 +165,11 @@ def stage_file(datafile):
     split_copyto = copyto.rpartition('/')
     filename = split_copyto[2]
     relpath = relpath.rpartition('/')[0]
+    if relpath:
+        relpath = relpath + path.sep
 
     datafile.filename = filename
-    datafile.url = "tardis://" + relpath + path.sep + filename
+    datafile.url = "tardis://" + relpath + filename
     datafile.protocol = "tardis"
     datafile.size = path.getsize(datafile.get_absolute_filepath())
     datafile.save()
