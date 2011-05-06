@@ -144,6 +144,7 @@ def stage_file(datafile):
     relpath = calculate_relative_path(datafile.protocol,
                                       datafile.url)
     copyto = path.join(dataset_path, relpath)
+    original_copyto = copyto
 
     logger.debug('staging file: %s to %s' % (copyfrom, copyto))
     if path.isdir(copyfrom):
@@ -151,21 +152,28 @@ def stage_file(datafile):
             makedirs(copyto)
     else:
         if path.exists(copyto):
-            logger.error("can't stage %s destination exists" % copyto)
+            logger.error("duplicate file: %s . Renaming." % copyto)
+            copyto = duplicate_file_check_rename(copyto)
             # TODO raise error
-            return
 
         if not path.exists(path.dirname(copyto)):
             makedirs(path.dirname(copyto))
 
         shutil.copy(copyfrom, copyto)
 
-    datafile.url = "tardis://" + relpath
+    # duplicate file handling
+    split_copyto = copyto.rpartition('/')
+    filename = split_copyto[2]
+    relpath = relpath.rpartition('/')[0]
+
+    datafile.filename = filename
+    datafile.url = "tardis://" + relpath + path.sep + filename
     datafile.protocol = "tardis"
     datafile.size = path.getsize(datafile.get_absolute_filepath())
     datafile.save()
 
     # rmdir each dir from copyfrom[get_staging_path():] if empty
+    # currently doesn't do anything since we're copying and not moving..
     basedir = copyfrom[:-len(relpath)]
     while len(relpath) > 0:
         try:
