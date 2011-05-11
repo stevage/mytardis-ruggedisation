@@ -30,34 +30,34 @@
 #
 """
 
-.. moduleauthor:: Russell Sim <russell.sim@gmail.com>
+.. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 """
 
 
 class PublishProvider:
     def __init__(self, experiment_id):
         raise NotImplemented()
-    
+
     def execute_publish(self, request):
         """
         return the user dictionary in the format of::
-            
+
             {"id": 123,
             "display": "John Smith",
             "email": "john@example.com"}
-        
+
         """
         raise NotImplemented()
-    
+
     def get_template_path(self, request):
         """
         return a list of user descriptions from the auth domain.
-        
+
         each user is in the format of::
-            
+
             {"id": 123,
             "display": "John Smith",
             "email": "john@example.com"}
-        
+
         """
         raise NotImplemented()

@@ -5,6 +5,7 @@ from django.template import RequestContext, Context
 from django.http import HttpResponseForbidden, HttpResponseNotFound, \
     HttpResponseServerError
 from tardis.tardis_portal.staging import get_full_staging_path
+from django.template.loader import render_to_string
 
 
 def render_response_index(request, *args, **kwargs):
@@ -98,3 +99,6 @@ def return_response_error(request):
     c = Context({'status': 'ERROR: Forbidden', 'error': True})
     return HttpResponseForbidden(render_response_index(request,
                                  'tardis_portal/blank_status.html', c))
+
+def render_to_file(template, filename, context):
+    open(filename, "w").write(render_to_string(template, context))

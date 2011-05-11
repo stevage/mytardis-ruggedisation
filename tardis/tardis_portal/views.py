@@ -2267,49 +2267,6 @@ def add_par(request, parentObject, otype):
                         'tardis_portal/ajax/parameteradd.html', c))
 
 
-def rif_cs(request):
-    """
-    Display rif_cs of collection / parties / acitivies
-    This function is highly dependent on production requirements
-
-    :param request: a HTTP Request instance
-    :type request: :class:`django.http.HttpRequest`
-
-    """
-
-    #currently set up to work with EIF038 dummy data
-    if settings.TEST_MONASH_ANDS_URL:
-        import datetime
-
-        experiments = Experiment.objects.filter(public=True)
-
-        activity_url = settings.TEST_MONASH_ANDS_URL\
-        + "pilot/GetActivitybyGrantID/"
-
-        requestmp = urllib2.Request(activity_url)
-        activity_rif_cs = urllib2.urlopen(requestmp).read()
-
-        party_url = settings.TEST_MONASH_ANDS_URL\
-        + "pilot/GetPartybyMonashID/"
-
-        requestmp = urllib2.Request(party_url)
-        party_rif_cs = urllib2.urlopen(requestmp).read()
-
-        c = Context({
-            'experiments': experiments,
-            'now': datetime.datetime.now(),
-            'party_rif_cs': party_rif_cs,
-            'activity_rif_cs': activity_rif_cs,
-        })
-        return HttpResponse(render_response_index(request,\
-        'rif_cs_profile/rif-cs.xml', c),
-        mimetype='application/xml')
-    else:
-        logger.debug('TEST_MONASH_ANDS_URL setting not found.' +
-        ' RIF-CS not shown')
-        return return_response_error(request)
-
-
 @authz.experiment_ownership_required
 def publish_experiment(request, experiment_id):
     """
