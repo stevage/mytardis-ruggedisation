@@ -1,6 +1,3 @@
-{% extends "tardis_portal/portal_template.html" %}
-
-{% block content %}
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		$('.remove_party').live('click', function(e) {
@@ -12,56 +9,80 @@
 		{
 			val = $('#add_ldap_party_box').val();
 			
-			// todo: get rid of (authcate) from ldap search
-			// todo: dupe authcate test
-			html = '<li><strong>' +
-				val +
-				'</strong><input type="hidden" name="ldap_party" value="' +
-				val +
-				'"/>' +
-				' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
-				'</li>'
+			if(val)
+			{
+				// todo: get rid of (authcate) from ldap search
+				// todo: dupe authcate test
+				html = '<li><strong>' +
+					val +
+					'</strong><input type="hidden" name="ldap_party" value="' +
+					val +
+					'"/>' +
+					' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
+					'</li>'
 
-			$(html).appendTo($('#ldap_party_list'));
+				$(html).appendTo($('#ldap_party_list'));
 			
-			$('#add_ldap_party_box').val('');			
+				$('#add_ldap_party_box').val('');			
+			}
 		}
+		
+		$('#add_ldap_party_box').live('keyup', function(e) {
+		e.preventDefault();
+		if(e.keyCode == 13) {
+		    add_ldap_party()
+		}
+		});		
 		
 		$('#add_ldap_party').click(add_ldap_party);
 		
 		function add_freeform_party() {
 			val = $('#add_freeform_party_box').val();
 			
-			html = '<li><strong>' +
-				val +
-				'</strong><input type="hidden" name="freeform_party" value="' +
-				val +
-				'"/>' +
-				' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
-				'</li>'
+			if(val)
+			{
+				html = '<li><strong>' +
+					val +
+					'</strong><input type="hidden" name="freeform_party" value="' +
+					val +
+					'"/>' +
+					' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
+					'</li>'
 
-			$(html).appendTo($('#freeform_party_list'));
+				$(html).appendTo($('#freeform_party_list'));
 			
-			$('#add_freeform_party_box').val('');
+				$('#add_freeform_party_box').val('');
+			}
 		}
 		
 		$('#add_freeform_party').click(add_freeform_party);	
 		
-		// 	    $('#add_freeform_party').live('keyup', function(e) {
-		// e.preventDefault();
-		// if(e.keyCode == 13) {
-		//     dataset_id = $(this).siblings('.dataset_id').val();
-		// 
-		//     $(this).parents('.datafile_list').load("/ajax/datafile_list/" + dataset_id + "/?filename=" + $(this).val(), function(){});
-		// }		
+		$('#add_freeform_party_box').live('keyup', function(e) {
+		e.preventDefault();
+		if(e.keyCode == 13) {
+		    add_freeform_party()
+		}
+		});
+		
+		$('#add_freeform_party').click(add_freeform_party);	
+			
+	    $("#ands_register").click(function() {
+			$.post("{% url tardis.apps.monash_ands.views.index experiment.id %}",
+			$("#ands_register_form").serialize(),
+			function(data) {
+			   $('#ands_register_container').html(data);
+			 });
+	    });			
+		
 	});
 		
 </script>
-
-<strong>Australian National Data Service Publish</strong>
+<div id="ands_register_container">
+<strong>Australian National Data Service Register</strong>
 
 <p>
 	{% if not message %}
+	<form action="." method="POST" id="ands_register_form">
 	<h3>Related Parties</h3>
 	<div class="white_box">
 		<div>
@@ -130,6 +151,8 @@
 		{% endfor %}
 		{% endif %}
 	</div>
+	<input id="ands_register" type="button" value="Register Experiment"/>
+	</form>
 	{% else %}
 	<div class="white_box">
 		<p>
@@ -138,4 +161,4 @@
 	</div>	
 	{% endif %}	
 </p>
-{% endblock %}
+</div>

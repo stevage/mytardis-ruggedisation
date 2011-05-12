@@ -227,7 +227,7 @@ class Experiment(models.Model):
 
         """
 
-        profile_template_location = "rif_cs_profile/profiles/"
+        profile_template_location = "tardis_portal/rifcs_profiles/"
 
         try:
             from tardis.tardis_portal.publish.rif_cs_profile.\
