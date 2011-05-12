@@ -1,7 +1,7 @@
 import logging
 from django.conf import settings
 import urllib2
-from tardis.tardis_portal.publish.monash_ands.\
+from tardis.tardis_portal.\
     PartyActivityInformationProvider import PartyActivityInformationProvider
 from xml.dom.minidom import parseString
 

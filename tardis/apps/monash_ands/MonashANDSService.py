@@ -4,27 +4,26 @@ Monash ANDS Publish Provider (Research Master Interaction)
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 '''
 from tardis.tardis_portal.logger import logger
-from tardis.tardis_portal.publish.interfaces import PublishProvider
 from django.conf import settings
 from django.template import Context
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     ParameterName, Schema, ExperimentParameterSet
 import urllib2
 import datetime
-from tardis.tardis_portal.publish.monash_ands.partyactivityinformationservice \
+from tardis.tardis_portal.partyactivityinformationservice \
     import PartyActivityInformationService
-from tardis.tardis_portal.publish.monash_ands.oaipmhservice \
+from tardis.tardis_portal.oaipmhservice \
     import OAIPMHService
 
 
-class MonashANDSPublishProvider(PublishProvider):
+class MonashANDSService():
 
     def __init__(self, experiment_id):
         self.experiment_id = experiment_id
 
     name = u'Monash ANDS Publish'
 
-    def execute_publish(self, request):
+    def register(self, request):
         """
         Use the EIF038 web services to gather and store party/activity
         ids for the linkages required by ANDS Research Data Australia.
@@ -169,12 +168,6 @@ class MonashANDSPublishProvider(PublishProvider):
                 "current_parties_freeform":
                     self.get_existing_freeform_party_keys(),
                 }
-
-    def get_path(self):
-        """
-        Return the relative template path for display
-        """
-        return "monash_ands/form.html"
 
     def save_party_parameter(self, experiment, party_param, freeform=False):
         """

@@ -1,9 +1,0 @@
-<registryObject group="Monash University">
-    <key>{{party_key}}</key>
-    <originatingSource type="authoritative">http://www.monash.edu.au</originatingSource>
-    <party type="person" dateModified="2010-07-02T14:33:40Z">
-        <name type="primary">
-            <namePart>{{party}}</namePart>
-        </name>
-    </party>
-</registryObject>

@@ -139,6 +139,9 @@ urlpatterns = patterns(
     (r'', include(core_urls)),
 
     # Equipment views
+    (r'^monash_ands/', include('tardis.apps.monash_ands.urls')),
+
+    # Equipment views
     (r'^equipment/', include('tardis.apps.equipment.urls')),
 
     # Experiment Views

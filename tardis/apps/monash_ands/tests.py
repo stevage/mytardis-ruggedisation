@@ -28,3 +28,33 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
+
+"""
+tests.py
+http://docs.djangoproject.com/en/dev/topics/testing/
+
+.. moduleauthor:: Ulrich Felzmann <ulrich.felzmann@versi.edu.au>
+.. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
+
+"""
+import unittest
+
+from django.test import TestCase
+from django.test.client import Client
+
+
+class MonashANDSTestCase(TestCase):
+
+    def setUp(self):
+        self.client = Client()
+
+    def fakeTest(self):
+        self.assertTrue(True)
+
+def suite():
+
+    monashandsSuite = \
+        unittest.TestLoader().loadTestsFromTestCase(MonashANDSTestCase)
+
+    allTests = unittest.TestSuite([monashandsSuite])
+    return allTests
