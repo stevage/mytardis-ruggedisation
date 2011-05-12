@@ -558,6 +558,33 @@ table.experiment-table th {
 		margin-top: 10px;
 		padding: 5px 15px 5px 15px;
 	}
+	
+	.activity_summary
+	{
+	    padding: 5px;
+	    border: 1px solid gray;
+	    margin-bottom: 20px;
+	}
+
+	.party_box
+	{
+	    padding: 10px;
+	    border: 1px solid gray;
+	    margin-bottom: 15px;	    
+	}
+	
+	.party_box li
+	{
+	    padding: 2px;
+	}
+		
+	.white_box
+	{
+		background-color: white;
+		margin-left: 10px;
+		margin-top: 10px;
+		padding: 5px 15px 5px 15px;	    
+	}
 
 	.msg_list {
 	margin: 10px;

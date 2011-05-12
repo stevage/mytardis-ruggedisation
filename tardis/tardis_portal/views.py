@@ -2296,7 +2296,8 @@ def publish_experiment(request, experiment_id):
         #fix this slightly dodgy logic
         context_dict['publish_result'] = "submitted"
         if 'legal' in request.POST:
-            experiment.public = True
+            #steve TEMP change
+            #experiment.public = True
             experiment.save()
 
             context_dict['publish_result'] = \

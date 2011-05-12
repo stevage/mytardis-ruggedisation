@@ -1,0 +1,137 @@
+<script type="text/javascript" charset="utf-8">
+	$(document).ready(function() {
+		$('.remove_party').live('click', function(e) {
+
+			$(this).parent().remove();
+		})
+		
+		function add_ldap_party()
+		{
+			val = $('#add_ldap_party_box').val();
+			
+			// todo: get rid of (authcate) from ldap search
+			// todo: dupe authcate test
+			html = '<li><strong>' +
+				val +
+				'</strong><input type="hidden" name="ldap_party" value="' +
+				val +
+				'"/>' +
+				' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
+				'</li>'
+
+			$(html).appendTo($('#ldap_party_list'));
+			
+			$('#add_ldap_party_box').val('');			
+		}
+		
+		$('#add_ldap_party').click(add_ldap_party);
+		
+		function add_freeform_party() {
+			val = $('#add_freeform_party_box').val();
+			
+			html = '<li><strong>' +
+				val +
+				'</strong><input type="hidden" name="freeform_party" value="' +
+				val +
+				'"/>' +
+				' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
+				'</li>'
+
+			$(html).appendTo($('#freeform_party_list'));
+			
+			$('#add_freeform_party_box').val('');
+		}
+		
+		$('#add_freeform_party').click(add_freeform_party);	
+		
+		// 	    $('#add_freeform_party').live('keyup', function(e) {
+		// e.preventDefault();
+		// if(e.keyCode == 13) {
+		//     dataset_id = $(this).siblings('.dataset_id').val();
+		// 
+		//     $(this).parents('.datafile_list').load("/ajax/datafile_list/" + dataset_id + "/?filename=" + $(this).val(), function(){});
+		// }		
+	});
+		
+</script>
+
+<strong>Australian National Data Service Publish</strong>
+
+<p>
+	{% if not message %}
+	<h3>Related Parties</h3>
+	<div class="white_box">
+		<div>
+		  <p>
+			<em>
+				Please choose related parties to this experiment..
+			</em>
+		  </p>
+		  <p>
+			<div class="party_box">
+				Current Monash Parties (TODO: resolve to name):<br/>
+				<ul>
+					{% for party in current_parties_ldap %}
+						<li><strong>{{party.string_value}}</strong><input name="ldap_existing_party" value="{{party.string_value}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
+					{% endfor %}
+				</ul>				
+				
+				New Monash Parties:<br/>
+				<ul id="ldap_party_list">
+
+				</ul>
+			  </p>
+		
+			<p>
+				<label>Add by Authcate: </label><input id="add_ldap_party_box" type="text" name="ldap_party_add" />
+				<a id="add_ldap_party">Submit</a>
+				</p>
+			</div>
+						
+		<div class="party_box">
+			Other Parties (type their names here):<br/>
+				<ul id="freeform_party_list">
+					{% for party in current_parties_freeform %}
+						<li><strong>{{party.string_value}}</strong><input name="freeform_party" value="{{party.string_value}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
+					{% endfor %}
+				</ul>
+				 </p>
+
+				<p>
+					<label>Add: </label><input id="add_freeform_party_box" type="text" name="freeform_party_add" />
+					<a id="add_freeform_party">Submit</a>
+				</p>
+			</div>					  
+		</div> <!-- access_list_user -->
+		
+	</div>
+</p>
+
+<p>
+	<h3>Related Activities</h3>
+	<div class="white_box">
+		{% if activity_summaries %}
+		<p><em>The following activities were retrieved for {{username}}... Please select activities related to this experiment..</em>
+		</p>
+		{% for activity_summary in activity_summaries %}
+			<div class="activity_summary">
+				<strong>Grant ID:</strong> {{ activity_summary.grant_id }}<br/>
+				<strong>Title:</strong> {{ activity_summary.title }}<br/>
+				<strong>Funding Body:</strong> {{ activity_summary.funding_body }}<br/>
+				<strong>Description:</strong> {{ activity_summary.description }}<br/>
+				<br/>
+				<div align="right"><strong>Include this activity</strong>
+					<input type="checkbox" name="activity" {% for a in current_activities %}{% ifequal activity_summary.grant_id a.string_value %} checked {% endifequal %}{% endfor %} value="{{activity_summary.grant_id}}">
+				</div>
+			</div>
+		{% endfor %}
+		{% endif %}
+	</div>
+	{% else %}
+	<div class="white_box">
+		<p>
+			{{message}}
+		</p>	
+	</div>	
+	{% endif %}	
+</p>
