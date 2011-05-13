@@ -29,14 +29,6 @@
 -->
 {% extends "tardis_portal/portal_template.html" %}
 		
-		{% block script %}
-		
-		<script type="text/javascript">
-		
-		</script>
-		
-		{% endblock %}
-		
 		{% block content %}
 			<div id="content">
 				<div class="post">
@@ -63,16 +55,6 @@
 								Please accept the legal agreement.
 							
 							{% endif %}
-									
-									<div class="publish_results" style="padding: 20px">
-									{% for result in publish_result %}
-										<div {% if not result.status %}style="color: red;"{% endif %}>
-											<strong>{{result.name}}</strong><br/>
-											{{result.message}}
-											<br/><br/>
-										</div>
-									{% endfor %}
-									</div>
 						
 						</p>
 						{% else %}
@@ -86,16 +68,8 @@
 							<p>
 								{{legaltext}}
 							<p>
-							{{default_test}}
 							<input type="checkbox" name="legal" value="Agree">I agree to the above terms and wish to make my data publicly available<br>
 							</p>
-							
-							{% for form in publish_forms %}
-								<div style="border-width: 1px; border-style: solid;
-								 padding: 10px; margin: 10px">
-									{% include form %}
-								</div>
-							{% endfor %}
 							
 							<br/>
 							<input id="button" type="submit" value="Publish Experiment"/>

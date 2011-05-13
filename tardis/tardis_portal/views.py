@@ -84,7 +84,6 @@ from tardis.tardis_portal.shortcuts import render_response_index, \
     return_response_error_message, render_response_search
 from tardis.tardis_portal.MultiPartForm import MultiPartForm
 from tardis.tardis_portal.metsparser import parseMets
-from tardis.tardis_portal.publish.publishservice import PublishService
 
 
 logger = logging.getLogger(__name__)
@@ -2298,9 +2297,7 @@ def publish_experiment(request, experiment_id):
     import os
 
     experiment = Experiment.objects.get(id=experiment_id)
-    username = str(request.user).partition('_')[2]
-
-    publishService = PublishService(experiment.id)
+    username = request.user.username
 
     if request.method == 'POST':  # If the form has been submitted...
 
@@ -2311,16 +2308,8 @@ def publish_experiment(request, experiment_id):
         #fix this slightly dodgy logic
         context_dict['publish_result'] = "submitted"
         if 'legal' in request.POST:
-            #steve TEMP change
-            #experiment.public = True
+            experiment.public = True
             experiment.save()
-
-            context_dict['publish_result'] = \
-            publishService.execute_publishers(request)
-
-            for result in context_dict['publish_result']:
-                if not result['status']:
-                    success = False
 
         else:
             logger.debug('Legal agreement for exp: ' + experiment_id +
@@ -2335,7 +2324,7 @@ def publish_experiment(request, experiment_id):
         os.path.join(os.path.dirname(__file__)))
 
         legalpath = os.path.join(TARDIS_ROOT,
-                      "publish/legal.txt")
+                      "legal.txt")
 
         # if legal file isn't found then we can't proceed
         try:
@@ -2349,13 +2338,9 @@ def publish_experiment(request, experiment_id):
 
         context_dict = \
         {'username': username,
-        'publish_forms': publishService.get_template_paths(),
         'experiment': experiment,
         'legaltext': legaltext,
         }
-
-        context_dict = dict(context_dict, \
-        **publishService.get_contexts(request))
 
     c = Context(context_dict)
     return HttpResponse(render_response_index(request,

@@ -78,11 +78,30 @@
 		
 </script>
 <div id="ands_register_container">
-<strong>Australian National Data Service Register</strong>
+<strong>ANDS Research Data Australia Registration</strong>
 
 <p>
 	{% if not message %}
 	<form action="." method="POST" id="ands_register_form">
+	<h3>Custom Description (Optional)</h3>
+	<div class="white_box">
+		<div>
+			<div class="party_box">
+			  <p>
+				<p>
+					Useful for situations in which you want to keep an experiment private and leave contact details instead of the current experiment description.
+				</p>
+				<textarea id="custom_description" name="custom_description">{{custom_description}}</textarea>
+				</p>
+				<p>Leave blank to use the current Experiment Description below:</p>
+			  <p><small>
+				{{experiment.description}}
+			  </small>
+			  </p>
+			  </p>
+			</div>
+		</div>
+	</div>		
 	<h3>Related Parties</h3>
 	<div class="white_box">
 		<div>
@@ -151,6 +170,25 @@
 		{% endfor %}
 		{% endif %}
 	</div>
+	<h3>Profile</h3>
+	<div class="white_box">
+		<div>
+			<div class="party_box">
+				<p>
+					Register under this RIF-CS profile (leave 'default' if unsure):
+					{% if rif_cs_profiles %}
+					<select name="profile">
+						{% for profile in rif_cs_profiles %}
+							<option value="{{profile}}" {% if profile == selected_profile %}selected{% endif %}>{{profile}}</option>
+						{% endfor %}
+					</select>
+					{% else %}
+						<p>Error: no valid profiles found.</p>
+					{% endif %}
+				</p>
+			</div>
+		</div>
+	</div>	
 	<input id="ands_register" type="button" value="Register Experiment"/>
 	</form>
 	{% else %}

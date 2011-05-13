@@ -741,3 +741,8 @@ ul.errorlist {
     text-align: center;
     padding: 7px;
 }
+
+#custom_description {
+    width: 80%;
+    height: 80px;
+}
