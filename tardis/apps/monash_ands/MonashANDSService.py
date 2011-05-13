@@ -243,7 +243,7 @@ class MonashANDSService():
                 "current_activities":
                     self.get_existing_activity_keys(),
                 "current_parties_ldap":
-                    self.get_existing_ldap_party_keys(),
+                    self.get_existing_ldap_party_info(),
                 "current_parties_freeform":
                     self.get_existing_freeform_party_keys(),
                 "custom_description":
@@ -359,6 +359,7 @@ class MonashANDSService():
             if  not e_param.string_value in\
                 request.POST.getlist('ldap_existing_party'):
 
+
                 e_param.delete()
 
         for e_param in self.get_existing_freeform_party_keys():
@@ -373,12 +374,37 @@ class MonashANDSService():
                 request.POST.getlist('activity'):
                 e_param.delete()
 
-    def get_existing_ldap_party_keys(self):
+    def get_existing_ldap_party_info(self):
+        pais = PartyActivityInformationService()
+        pai = pais.get_pai()
+
         eps = ExperimentParameter.objects.filter(name__name='party_id',
         parameterset__schema__namespace='http://localhost/pilot/party/1.0/',
         parameterset__experiment__id=self.experiment_id)
 
-        return eps
+        party_info = []
+
+        for ep in eps:
+            display_name = pai.get_display_name_for_party(ep.string_value)
+            info = {}
+            info['key'] = ep.string_value
+            info['value'] = display_name
+
+            party_info.append(info)
+
+        return party_info
+
+    def get_existing_ldap_party_keys(self):
+
+        eps = ExperimentParameter.objects.filter(name__name='party_id',
+        parameterset__schema__namespace='http://localhost/pilot/party/1.0/',
+        parameterset__experiment__id=self.experiment_id)
+
+        party_keys = []
+        for ep in eps:
+            party_keys.append(ep)
+
+        return party_keys
 
     def get_existing_freeform_party_keys(self):
         eps = ExperimentParameter.objects.filter(name__name='party_string',

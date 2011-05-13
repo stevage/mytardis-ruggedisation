@@ -19,6 +19,14 @@ class PartyActivityInformationProvider:
         """
         raise NotImplemented()
 
+    def get_display_name_for_party(self, unique_party_id):
+        """
+        return the user dictionary in the format of::
+
+
+        """
+        raise NotImplemented()
+
     def get_activity_summary_dict(self, username):
         """
         return the user dictionary in the format of::

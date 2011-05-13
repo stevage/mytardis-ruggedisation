@@ -38,6 +38,24 @@ class DummyPartyActivityInformationProvider(PartyActivityInformationProvider):
         party_rif_cs = urllib2.urlopen(requestmp).read()
         return party_rif_cs
 
+    def get_display_name_for_party(self, unique_party_id):
+        """
+        return the user dictionary in the format of::
+
+
+        """
+        party_rif_cs = self.get_party_rifcs(unique_party_id)
+
+        from lxml import etree
+        import StringIO
+
+        rif_tree = etree.parse(StringIO.StringIO(party_rif_cs))
+        title = rif_tree.xpath('//name/namePart[@type="title"]/text()')[0]
+        given = rif_tree.xpath('//name/namePart[@type="given"]/text()')[0]
+        family = rif_tree.xpath('//name/namePart[@type="family"]/text()')[0]
+
+        return title + " " + given + " " + family
+
     def get_activity_summary_dict(self, username):
         """
         return the user dictionary in the format of::

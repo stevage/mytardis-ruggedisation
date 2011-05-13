@@ -115,7 +115,7 @@
 				Current Monash Parties (TODO: resolve to name):<br/>
 				<ul>
 					{% for party in current_parties_ldap %}
-						<li><strong>{{party.string_value}}</strong><input name="ldap_existing_party" value="{{party.string_value}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
+						<li><strong>{{party.value}}</strong> (internal id: <strong>{{party.key}}</strong>)<input name="ldap_existing_party" value="{{party.key}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
 					{% endfor %}
 				</ul>				
 				
