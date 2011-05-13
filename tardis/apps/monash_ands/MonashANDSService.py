@@ -7,7 +7,7 @@ from tardis.tardis_portal.logger import logger
 from django.conf import settings
 from django.template import Context
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
-    ParameterName, Schema, ExperimentParameterSet
+    ExperimentParameterSet
 import urllib2
 import datetime
 from tardis.tardis_portal.partyactivityinformationservice \
@@ -60,8 +60,9 @@ class MonashANDSService():
                         'message': 'Error: Cannot contact Activity' +
                         ' / Party Service. Please try again later.'}
 
+                    self.save_party_parameter(experiment,
+                        monash_id)
                     party_list.append(monash_id)
-                    self.save_party_parameter(experiment, monash_id)
 
                     if settings.OAI_DOCS_PATH:
                         party_rif_cs = pai.get_party_rifcs("")
@@ -76,10 +77,19 @@ class MonashANDSService():
         if 'freeform_party' in request.POST:
             for party in request.POST.getlist('freeform_party'):
 
-                if str(party.strip()):
-
+                exists = False
+                for existing_party in \
+                    self.get_existing_freeform_party_keys():
+                    if existing_party.string_value == \
+                            party.strip():
+                        exists = True
+                        party_list.append(existing_party.id)
+                if exists:
+                    pass
+                else:
                     party_key = self.save_party_parameter(experiment,
-                        party, freeform=True)
+                        party.strip(), freeform=True)
+
                     party_list.append(party_key)
 
                     if settings.OAI_DOCS_PATH:
@@ -97,17 +107,21 @@ class MonashANDSService():
 
 
         for activity_id in request.POST.getlist('activity'):
-            self.save_activity_parameter(experiment, activity_id)
 
-            if settings.OAI_DOCS_PATH:
-                activity_rif_cs = pai.get_activity_rifcs("")
+            if activity_id in self.get_existing_activity_keys():
+                pass
+            else:
+                self.save_activity_parameter(experiment, activity_id)
 
-                OAIPMHService.write_xml_to_file(
-                    'rif',
-                    'activity',
-                    activity_id,
-                    activity_rif_cs
-                    )
+                if settings.OAI_DOCS_PATH:
+                    activity_rif_cs = pai.get_activity_rifcs("")
+
+                    OAIPMHService.write_xml_to_file(
+                        'rif',
+                        'activity',
+                        activity_id,
+                        activity_rif_cs
+                        )
 
         c = Context({
                     'now': datetime.datetime.now(),
@@ -122,16 +136,8 @@ class MonashANDSService():
 
             schema = 'http://localhost/pilot/collection/1.0/'
 
-            parameterset = ExperimentParameterSet.objects.filter(
-            schema__namespace=schema,
-            experiment__id=self.experiment_id)
-
-            psm = None
-            if not len(parameterset):
-                psm = ParameterSetManager(schema=schema,
-                        parentObject=experiment)
-            else:
-                psm = ParameterSetManager(parameterset=parameterset[0])
+            psm = \
+                self.get_or_create_parameterset(schema)
 
             psm.set_param("custom_description", custom_description,
                 "Custom Description For ANDS Research Data Australia")
@@ -191,24 +197,15 @@ class MonashANDSService():
 
         schema = 'http://localhost/pilot/collection/1.0/'
 
-        parameterset = ExperimentParameterSet.objects.filter(
-        schema__namespace=schema,
-        experiment__id=self.experiment_id)
+        psm = \
+            self.get_or_create_parameterset(schema)
 
-        psm = None
-        if not len(parameterset):
-            experiment = Experiment.objects.get(id=self.experiment_id)
-            psm = ParameterSetManager(schema=schema,
-                    parentObject=experiment)
-        else:
-            psm = ParameterSetManager(parameterset=parameterset[0])
-
-        custom_description = None
+        custom_description = ""
 
         try:
             custom_description = psm.get_param("custom_description",
                 True)
-        except ExperimentParameter:
+        except ExperimentParameter.DoesNotExist:
             pass
 
         monash_id = ""
@@ -261,51 +258,17 @@ class MonashANDSService():
         namespace = "http://localhost/pilot/party/1.0/"
 
         parameter_name = 'party_id'
+        parameter_fullname = 'Party ID'
         if freeform:
             parameter_name = 'party_string'
+            parameter_fullname = 'Party'
 
-        schema = None
-        try:
-            schema = Schema.objects.get(
-                namespace__exact=namespace)
-        except Schema.DoesNotExist:
-            logger.debug('Schema ' + namespace +
-            ' does not exist. Creating.')
-            schema = Schema(namespace=namespace)
-            schema.save()
+        psm = \
+            self.get_or_create_parameterset(namespace)
 
-        parametername = \
-            ParameterName.objects.get(
-            schema__namespace__exact=schema.namespace,
-            name=parameter_name)
+        eid = psm.new_param(parameter_name, party_param, parameter_fullname)
 
-        try:
-            parameterset = ExperimentParameterSet.objects.get(schema=schema, \
-            experiment=experiment)
-
-        except ExperimentParameterSet.DoesNotExist, e:
-            parameterset = \
-                ExperimentParameterSet(
-                schema=schema, experiment=experiment)
-
-            parameterset.save()
-
-        eps = ExperimentParameter.objects.filter(name__name=parameter_name,
-        parameterset__schema__namespace=namespace,
-        parameterset__experiment__id=self.experiment_id,
-        string_value=party_param)
-
-        if not len(eps):
-            ep = ExperimentParameter(
-                parameterset=parameterset,
-                name=parametername,
-                string_value=party_param,
-                numerical_value=None)
-            ep.save()
-        else:
-            ep = eps[0]
-
-        return ep.id
+        return eid
 
     def save_activity_parameter(self, experiment, activity_id):
         """
@@ -313,43 +276,13 @@ class MonashANDSService():
         """
         namespace = "http://localhost/pilot/activity/1.0/"
         schema = None
-        try:
-            schema = Schema.objects.get(
-                namespace__exact=namespace)
-        except Schema.DoesNotExist:
-            logger.debug('Schema ' + namespace +
-            ' does not exist. Creating.')
-            schema = Schema(namespace=namespace)
-            schema.save()
 
-        parametername = \
-            ParameterName.objects.get(
-            schema__namespace__exact=schema.namespace,
-            name="activity_id")
+        psm = \
+            self.get_or_create_parameterset(namespace)
 
-        try:
-            parameterset = ExperimentParameterSet.objects.get(schema=schema, \
-            experiment=experiment)
+        eid = psm.new_param("activity_id", activity_id, "Activity ID")
 
-        except ExperimentParameterSet.DoesNotExist, e:
-            parameterset = \
-                ExperimentParameterSet(
-                schema=schema, experiment=experiment)
-
-            parameterset.save()
-
-        ep = ExperimentParameter.objects.filter(name__name='activity_id',
-        parameterset__schema__namespace=namespace,
-        parameterset__experiment__id=self.experiment_id,
-        string_value=activity_id)
-
-        if not len(ep):
-            ep = ExperimentParameter(
-                parameterset=parameterset,
-                name=parametername,
-                string_value=activity_id,
-                numerical_value=None)
-            ep.save()
+        return eid
 
     def clear_existing_parameters(self, request):
         """
@@ -359,7 +292,6 @@ class MonashANDSService():
             if  not e_param.string_value in\
                 request.POST.getlist('ldap_existing_party'):
 
-
                 e_param.delete()
 
         for e_param in self.get_existing_freeform_party_keys():
@@ -368,11 +300,12 @@ class MonashANDSService():
 
                 e_param.delete()
 
+        namespace = "http://localhost/pilot/activity/1.0/"
 
-        for e_param in self.get_existing_activity_keys():
-            if  not e_param.string_value in\
-                request.POST.getlist('activity'):
-                e_param.delete()
+        psm = \
+            self.get_or_create_parameterset(namespace)
+
+        psm.delete_params('activity_id')
 
     def get_existing_ldap_party_info(self):
         pais = PartyActivityInformationService()
@@ -420,15 +353,6 @@ class MonashANDSService():
 
         return eps
 
-    def handle_ldap_parties(request):
-        pass
-
-    def handle_freeform_parties(request):
-        pass
-
-    def handle_activities(request):
-        pass
-
     def get_rif_cs_profile_list(self):
         """
         Return a list of the possible RIF-CS profiles that can
@@ -464,60 +388,37 @@ class MonashANDSService():
         Save selected profile choice as experiment parameter
         """
         namespace = "http://monash.edu.au/rif-cs/profile/"
-        schema = None
-        try:
-            schema = Schema.objects.get(
-                namespace__exact=namespace)
-        except Schema.DoesNotExist:
-            logger.debug('Schema ' + namespace +
-            ' does not exist. Creating.')
-            schema = Schema(namespace=namespace)
-            schema.save()
 
-        parametername = ParameterName.objects.get(
-            schema__namespace__exact=schema.namespace,
-            name="profile")
-
-        parameterset = None
-        try:
-            parameterset = \
-                         ExperimentParameterSet.objects.get(\
-                                schema=schema,
-                                experiment=experiment)
-
-        except ExperimentParameterSet.DoesNotExist, e:
-            parameterset = ExperimentParameterSet(\
-                                schema=schema,
-                                experiment=experiment)
-
-            parameterset.save()
-
-        # if a profile param already exists
-        if self.get_profile():
-            ep = ExperimentParameter.objects.filter(name=parametername,
-            parameterset=parameterset,
-            parameterset__experiment__id=self.experiment_id)
-
-            for p in ep:
-                p.delete()
-
-        ep = ExperimentParameter(
-            parameterset=parameterset,
-            name=parametername,
-            string_value=profile,
-            numerical_value=None)
-        ep.save()
+        psm = self.get_or_create_parameterset(namespace)
+        psm.delete_params("profile")
+        psm.set_param("profile", profile,
+            "ANDS RIFCS Profile")
 
     def get_profile(self):
         """
         Retrieve existing rif-cs profile for experiment, if any
         """
+        namespace = 'http://monash.edu.au/rif-cs/profile/'
 
-        ep = ExperimentParameter.objects.filter(name__name='profile',
-        parameterset__schema__namespace='http://monash.edu.au/rif-cs/profile/',
-        parameterset__experiment__id=self.experiment_id)
+        psm = self.get_or_create_parameterset(namespace)
 
-        if len(ep):
-            return ep[0].string_value
-        else:
+        try:
+            return psm.get_param('profile', value=True)
+        except ExperimentParameter.DoesNotExist:
             return None
+
+    def get_or_create_parameterset(self, schema):
+        parameterset = ExperimentParameterSet.objects.filter(
+        schema__namespace=schema,
+        experiment__id=self.experiment_id)
+
+        experiment = Experiment.objects.get(id=self.experiment_id)
+
+        psm = None
+        if not len(parameterset):
+            psm = ParameterSetManager(schema=schema,
+                    parentObject=experiment)
+        else:
+            psm = ParameterSetManager(parameterset=parameterset[0])
+
+        return psm
