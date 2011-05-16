@@ -41,7 +41,7 @@ Select: <a class="dataset_selector_all">[All]</a> / <a class="dataset_selector_n
 <li class="datafile">
 	<input type="checkbox" class="datafile_checkbox" name="datafile" value="{{datafile.id}}">
 	<a class="filelink" href="{{ datafile.get_download_url }}" target="_blank">{{ datafile.filename }}</a> {% if datafile.size %}({{ datafile.size|filesizeformat }}){% endif %}
-	Metadata: {% if has_write_permissions %}{% if not experiment.public %}{% if not immutable %}<a href="{% url tardis.tardis_portal.views.add_datafile_par datafile.id %}"
+	Metadata: {% if has_write_permissions %}{% if not datafile.dataset.experiment.public %}{% if not immutable %}<a href="{% url tardis.tardis_portal.views.add_datafile_par datafile.id %}"
 	 class="jqModalDfA{{datafile.id}}">[Add]</a>{% endif %}{% endif %}{% endif %}
 	<script type="text/javascript">
 	$('#jqmAlertDfA{{datafile.id}}').die();
@@ -60,7 +60,7 @@ Select: <a class="dataset_selector_all">[All]</a> / <a class="dataset_selector_n
 		  </div>
 
 		  <div class="jqmAlertContent" id="jqmAlertContentdatafileA{{datafile.id}}">
-		  <p>Please wait... <img src="inc/busy.gif" alt="loading" /></p>
+		  <p>Please wait... <img src="/site_media/images/busy.gif" alt="loading" /></p>
 		  </div>
 		</div>
 	</div>	
