@@ -73,8 +73,17 @@
 			   $('#ands_register_container').html(data);
 			 });
 	    });			
-		
-	});
+
+
+        $("#add_ldap_party_box").autocomplete('/monash_ands//ajax/ldap_list/', {
+          matchContains: true
+        });
+
+      $("#add_ldap_party_box").blur(function(event) {
+        $("#add_ldap_party_box").val($("#add_ldap_party_box").val());
+      });		
+
+});	
 		
 </script>
 <div id="ands_register_container">
@@ -86,7 +95,7 @@
 	<h3>Custom Description (Optional)</h3>
 	<div class="white_box">
 		<div>
-			<div class="party_box">
+			<div class="party_box" align="center">
 			  <p>
 				<p>
 					Useful for situations in which you want to keep an experiment private and leave contact details instead of the current experiment description.
@@ -112,37 +121,40 @@
 		  </p>
 		  <p>
 			<div class="party_box">
-				Current Monash Parties (TODO: resolve to name):<br/>
+				Current Monash Parties<br/>
 				<ul>
 					{% for party in current_parties_ldap %}
 						<li><strong>{{party.value}}</strong> (internal id: <strong>{{party.key}}</strong>)<input name="ldap_existing_party" value="{{party.key}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
 					{% endfor %}
 				</ul>				
 				
-				New Monash Parties:<br/>
+				New Monash Parties<br/>
 				<ul id="ldap_party_list">
 
 				</ul>
 			  </p>
 		
 			<p>
-				<label>Add by Authcate: </label><input id="add_ldap_party_box" type="text" name="ldap_party_add" />
-				<a id="add_ldap_party">Submit</a>
-				</p>
+				<label>Add user (enter their Monash University email address):</label>
+			</p>
+			<p>
+				<input type="text" maxlength="100" name="ldap_party_add" class="usersuggest ac_input" id="add_ldap_party_box" autocomplete="off">		
+				<a id="add_ldap_party">Submit</a>			
+			</p>
 			</div>
 						
 		<div class="party_box">
-			Other Parties (type their names here):<br/>
+			Other Parties<br/>
 				<ul id="freeform_party_list">
 					{% for party in current_parties_freeform %}
 						<li><strong>{{party.string_value}}</strong><input name="freeform_party" value="{{party.string_value}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
 					{% endfor %}
 				</ul>
-				 </p>
-
 				<p>
-					<label>Add: </label><input id="add_freeform_party_box" type="text" name="freeform_party_add" />
-					<a id="add_freeform_party">Submit</a>
+					<label>Add (type their names here): </label>
+				</p>
+				<p>
+					 <input id="add_freeform_party_box" type="text" name="freeform_party_add" /> <a id="add_freeform_party">Submit</a>
 				</p>
 			</div>					  
 		</div> <!-- access_list_user -->

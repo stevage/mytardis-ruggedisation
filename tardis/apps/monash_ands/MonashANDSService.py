@@ -16,6 +16,8 @@ from tardis.tardis_portal.oaipmhservice \
     import OAIPMHService
 from tardis.tardis_portal.ParameterSetManager import ParameterSetManager
 import os
+from tardis.apps.monash_ands.ldap_query import \
+    LDAPUserQuery
 
 
 class MonashANDSService():
@@ -45,13 +47,24 @@ class MonashANDSService():
         self.clear_existing_parameters(request)
 
         if 'ldap_party' in request.POST:
-            for authcate in request.POST.getlist('ldap_party'):
+            for email in request.POST.getlist('ldap_party'):
 
-                if str(authcate.strip()):
+                if str(email):
 
                     monash_id = ""
                     try:
-                        monash_id = pai.get_unique_party_id(str(authcate.strip()))
+                        # todo: fail silently if can't get authcate
+                        # / party info?
+                        l = LDAPUserQuery()
+
+                        authcate = []
+                        authcate.append([LDAPUserQuery.get_user_attr(u, 'uid')\
+                            for u in \
+                            l.get_authcate_exact(email)])
+
+                        print authcate
+
+                        monash_id = pai.get_unique_party_id(authcate[0][0])
                     except urllib2.URLError:
                         logger.error("Can't contact research" +
                             " master web service")
