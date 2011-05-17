@@ -46,6 +46,20 @@ class MonashANDSService():
 
         self.clear_existing_parameters(request)
 
+        if 'ldap_existing_party' in request.POST:
+            for email in request.POST.getlist('ldap_existing_party'):
+
+                # write new party info for existing party
+                if settings.OAI_DOCS_PATH:
+                    party_rif_cs = pai.get_party_rifcs("")
+
+                    OAIPMHService.write_xml_to_file(
+                        'rif',
+                        'party',
+                        email,
+                        party_rif_cs
+                        )
+
         if 'ldap_party' in request.POST:
             for email in request.POST.getlist('ldap_party'):
 
