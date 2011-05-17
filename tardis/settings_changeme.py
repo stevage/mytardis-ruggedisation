@@ -161,6 +161,8 @@ AUTH_PROVIDERS = (
 
 AUTH_PROFILE_MODULE = 'tardis_portal.UserProfile'
 
+DEFAULT_INSTITUTION = 'Monash University'
+
 ACCOUNT_ACTIVATION_DAYS = 3
 
 # Email Configuration
@@ -200,7 +202,7 @@ UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
 # Upload path that files are sent to
 UPLOADIFY_UPLOAD_PATH = '%s%s' % (MEDIA_URL, 'uploads/')
 
-DEFAULT_INSTITUTION = "Monash University"
+DEFAULT_INSTITUTION = 'Monash University'
 
 #Are the datasets ingested via METS xml (web services) to be immutable?
 IMMUTABLE_METS_DATASETS = True

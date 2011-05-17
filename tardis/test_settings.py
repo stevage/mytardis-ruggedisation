@@ -102,8 +102,8 @@ LDAP_BASE = 'dc=example, dc=com'
 LDAP_USER_BASE = 'ou=People, ' + LDAP_BASE
 LDAP_GROUP_BASE = 'ou=Group, ' + LDAP_BASE
 
-SYSTEM_LOG_LEVEL = 'INFO'
-MODULE_LOG_LEVEL = 'INFO'
+SYSTEM_LOG_LEVEL = 'ERROR'
+MODULE_LOG_LEVEL = 'ERROR'
 
 SYSTEM_LOG_FILENAME = 'request.log'
 MODULE_LOG_FILENAME = 'tardis.log'
@@ -114,6 +114,6 @@ MODULE_LOG_MAXBYTES = 0
 UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
 UPLOADIFY_UPLOAD_PATH = '%s%s' % (MEDIA_URL, 'uploads/')
 
-DEFAULT_INSTITUTION = "Monash University"
+DEFAULT_INSTITUTION = 'Monash University'
 
 IMMUTABLE_METS_DATASETS = True

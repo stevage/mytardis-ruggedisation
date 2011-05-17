@@ -3,13 +3,16 @@ Publish Service (for working with PublishProvider instances)
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 '''
+import logging
+
 from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from tardis.tardis_portal.models import Experiment
-import logging
+
 
 logger = logging.getLogger(__name__)
+
 
 class PublishService():
 
