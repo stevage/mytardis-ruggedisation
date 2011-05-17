@@ -64,21 +64,29 @@
 								<strong>Experiment Name:</strong> {{ experiment.title }}
 							</p>
 							
-							<strong>Legal Agreement:</strong>
+							<div class="white_box">
+							<h2>Legal Agreement:</h2>
 							<p>
 								{{legaltext}}
 							<p>
 							<input type="checkbox" name="legal" value="Agree">I agree to the above terms and wish to make my data publicly available<br>
 							</p>
+							</div>
 							
+							<p>
+						     <div class="white_box" id="cc_js_widget_container"> 
+								<h2>Licensing</h2>
+						       <script type="text/javascript" src="http://api.creativecommons.org/jswidget/tags/0.97/complete.js?locale=en_US&amp;want_a_license=no_license_by_default"></script> 
+						     </div>								
+							</p>
 							<br/>
 							<input id="button" type="submit" value="Publish Experiment"/>
 						
+							</div>
+
+							</form>						
 						{% endif %}
 			
-			</div>
-			
-			</form>
 		    		</div>
 		    	</div>
 			</div>

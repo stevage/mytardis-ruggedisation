@@ -81,7 +81,20 @@
 
       $("#add_ldap_party_box").blur(function(event) {
         $("#add_ldap_party_box").val($("#add_ldap_party_box").val());
-      });		
+      });	
+
+	$('#registrantNotIncluded').click(function() {
+		  if ($('#registrantNotIncluded').is(':checked'))
+		  {
+			$("#registrant").hide();
+			$("#registrantValue").attr("disabled", "disabled");
+		  }
+		  else
+		  {
+			 $("#registrant").show();
+			 $("#registrantValue").removeAttr("disabled");
+	      }	
+	});
 
 });	
 		
@@ -94,12 +107,13 @@
 	<form action="." method="POST" id="ands_register_form">
 	<h3>Custom Description (Optional)</h3>
 	<div class="white_box">
+	<p>
+		Useful for situations in which you want to keep an experiment private and leave contact details instead of the current experiment description.
+	</p>	
 		<div>
 			<div class="party_box" align="center">
 			  <p>
-				<p>
-					Useful for situations in which you want to keep an experiment private and leave contact details instead of the current experiment description.
-				</p>
+
 				<textarea id="custom_description" name="custom_description">{{custom_description}}</textarea>
 				</p>
 				<p>Leave blank to use the current Experiment Description below:</p>
@@ -130,8 +144,14 @@
 				
 				New Monash Parties<br/>
 				<ul id="ldap_party_list">
-
+					{% if not registered %}
+						<li id="registrant"><strong>{{usermail}}</strong><input id="registrantValue" type="hidden" value="{{usermail}}" name="ldap_party"></li>
+					{% endif %}
 				</ul>
+				<br/>
+				{% if not registered %}
+					<input type="checkbox" id="registrantNotIncluded"/>I do <strong>not</strong> wish to be included as a party in this experiment.
+				{% endif %}
 			  </p>
 		
 			<p>

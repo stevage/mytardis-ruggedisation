@@ -582,8 +582,8 @@ table.experiment-table th {
 	{
 		background-color: white;
 		margin-left: 10px;
-		margin-top: 10px;
-		padding: 5px 15px 5px 15px;	    
+
+		padding: 3px 15px 5px 15px;	    
 	}
 
 	.msg_list {
@@ -745,4 +745,21 @@ ul.errorlist {
 #custom_description {
     width: 80%;
     height: 80px;
+}
+
+#cc_js_license_example
+{
+    border: 1px solid black;
+    margin: 7px;
+    margin-top: 30px;
+    padding: 10px;
+    width: 80%;
+}
+
+.license_box
+{
+    padding: 5px;
+/*    border: 1px solid gray;*/
+    margin-bottom: 5px;
+    width: 40%;
 }

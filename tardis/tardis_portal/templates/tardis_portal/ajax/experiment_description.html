@@ -1,3 +1,4 @@
+{% load creativecommons %}
 {% block script %}
 <script type="text/javascript">
 $(document).ready(function() {
@@ -144,6 +145,12 @@ $(document).ready(function() {
     <strong>Experiment Last Updated:</strong>
     {{ experiment.update_time|date:"jS F Y H:i" }}<br/>
   </p>
+	{% if experiment.public %}
+	<p>
+	<strong>License: </strong>
+	<div class="license_box">{{experiment.id|show_cc_license|safe}}</div>
+	</p>
+	{% endif %}
   <div class="download_entire_experiment">
     {% for p in protocol %}
       <p>
@@ -154,6 +161,11 @@ $(document).ready(function() {
 	{% endif %}
       </p>
     {% endfor %}
+	{% if is_owner %}
+	{% if not experiment.public %}
+		<strong><a href="publish/">Publish Experiment</a></strong><br/>
+	{% endif %}
+	{% endif %}
   </div>
 
   <p align="right">
@@ -167,19 +179,15 @@ $(document).ready(function() {
         ({{ owner.username }})
         {% if not forloop.last %}
           <br/>
+		{% endif %}
+		{% endfor %}
 	{% endif %}
 	</p>
 	<p align="right">
 	{% if experiment.public %}
 		<em>This experiment is public.</em>
 	{% endif %}
-	{% if is_owner %}
-	{% if not experiment.public %}
-		<strong><a href="publish/">Publish Experiment</a></strong><br/>
-	{% endif %}
-	{% endif %}
-      {% endfor %}
+      
   </p>
-{% endif %}
 
 </div>

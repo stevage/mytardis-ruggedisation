@@ -2305,10 +2305,45 @@ def publish_experiment(request, experiment_id):
         success = True
 
         context_dict = {}
-        #fix this slightly dodgy logic
         context_dict['publish_result'] = "submitted"
         if 'legal' in request.POST:
-            experiment.public = True
+            # get cc license parameterset, if any
+            schema = "http://www.tardis.edu.au/schemas" +\
+            "/creative_commons/2011/05/17"
+
+            parameterset = ExperimentParameterSet.objects.filter(
+            schema__namespace=schema,
+            experiment__id=experiment_id)
+
+            from tardis.tardis_portal.ParameterSetManager import\
+                ParameterSetManager
+
+            psm = None
+            if not len(parameterset):
+                psm = ParameterSetManager(schema=schema,
+                        parentObject=experiment)
+            else:
+                psm = ParameterSetManager(parameterset=parameterset[0])
+
+            # if cc license then save params (todo: functionise!)
+            if request.POST['cc_js_want_cc_license'] ==\
+                'sure':
+                cc_js_result_img = request.POST['cc_js_result_img']
+                cc_js_result_name = request.POST['cc_js_result_name']
+                cc_js_result_uri = request.POST['cc_js_result_uri']
+
+                psm.set_param("license_image", cc_js_result_img,
+                    "License Image")
+                psm.set_param("license_name", cc_js_result_name,
+                    "License Name")
+                psm.set_param("license_uri", cc_js_result_uri,
+                    "License URI")
+            else:
+                psm.delete_params('license_image')
+                psm.delete_params('license_name')
+                psm.delete_params('license_uri')
+
+            experiment.public = True #temp TODO steve
             experiment.save()
 
         else:
@@ -2319,6 +2354,7 @@ def publish_experiment(request, experiment_id):
         # set dictionary to legal status and publish success result
         context_dict['legal'] = legal
         context_dict['success'] = success
+
     else:
         TARDIS_ROOT = os.path.abspath(\
         os.path.join(os.path.dirname(__file__)))

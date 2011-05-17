@@ -218,6 +218,7 @@ class MonashANDSService():
 
         """
         username = request.user.username
+        usermail = request.user.email
         pais = PartyActivityInformationService()
         pai = pais.get_pai()
         # already has entries
@@ -262,6 +263,10 @@ class MonashANDSService():
         if self.get_profile():
             selected_profile = self.get_profile()
 
+        registered = False
+        if self.has_registration_record():
+            registered = True
+
         return {"activity_summaries":
                     activity_summaries,
                 "current_activities":
@@ -276,6 +281,10 @@ class MonashANDSService():
                     rif_cs_profiles,
                 "selected_profile":
                     selected_profile,
+                "registered":
+                    registered,
+                "usermail":
+                    usermail,
                 }
 
     def save_party_parameter(self, experiment, party_param, freeform=False):
@@ -433,6 +442,21 @@ class MonashANDSService():
             return psm.get_param('profile', value=True)
         except ExperimentParameter.DoesNotExist:
             return None
+
+    def has_registration_record(self):
+        """
+        Retrieve existing rif-cs profile for experiment, if any
+        """
+        namespace = 'http://localhost/pilot/registration_record/1.0/'
+
+        parametersets = ExperimentParameterSet.objects.filter(
+            schema__namespace=namespace,
+            experiment__id=self.experiment_id)
+
+        if len(parametersets):
+            return True
+        else:
+            return False
 
     def get_or_create_parameterset(self, schema):
         parameterset = ExperimentParameterSet.objects.filter(
