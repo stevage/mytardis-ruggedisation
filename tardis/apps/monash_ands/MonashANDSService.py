@@ -109,7 +109,6 @@ class MonashANDSService():
                 return {'status': False,
                 'message': message}
 
-
             for monash_id in monash_id_list:
 
                 self.save_party_parameter(experiment,
@@ -125,38 +124,6 @@ class MonashANDSService():
                         monash_id,
                         party_rif_cs
                         )
-
-        if 'freeform_party' in request.POST:
-            for party in request.POST.getlist('freeform_party'):
-
-                exists = False
-                for existing_party in \
-                    self.get_existing_freeform_party_keys():
-                    if existing_party.string_value == \
-                            party.strip():
-                        exists = True
-                        party_list.append(existing_party.id)
-                if exists:
-                    pass
-                else:
-                    party_key = self.save_party_parameter(experiment,
-                        party.strip(), freeform=True)
-
-                    party_list.append(party_key)
-
-                    if settings.OAI_DOCS_PATH:
-                        c = Context({
-                                    'party_key': party_key,
-                                    'party': party.strip(),
-                                    })
-
-                        OAIPMHService.write_freeform_party_file(
-                            'rif',
-                            party_key,
-                            'monash_ands/party.xml',
-                            c,
-                            )
-
 
         for activity_id in request.POST.getlist('activity'):
 
@@ -298,8 +265,6 @@ class MonashANDSService():
                     self.get_existing_activity_keys(),
                 "current_parties_ldap":
                     self.get_existing_ldap_party_info(),
-                "current_parties_freeform":
-                    self.get_existing_freeform_party_keys(),
                 "custom_description":
                     custom_description,
                 "rif_cs_profiles":
@@ -312,7 +277,7 @@ class MonashANDSService():
                     usermail,
                 }
 
-    def save_party_parameter(self, experiment, party_param, freeform=False):
+    def save_party_parameter(self, experiment, party_param):
         """
         Save Research Master's returned Party ID as an experiment parameter
         """
@@ -320,9 +285,6 @@ class MonashANDSService():
 
         parameter_name = 'party_id'
         parameter_fullname = 'Party ID'
-        if freeform:
-            parameter_name = 'party_string'
-            parameter_fullname = 'Party'
 
         psm = \
             self.get_or_create_parameterset(namespace)
@@ -352,12 +314,6 @@ class MonashANDSService():
         for e_param in self.get_existing_ldap_party_keys():
             if  not e_param.string_value in\
                 request.POST.getlist('ldap_existing_party'):
-
-                e_param.delete()
-
-        for e_param in self.get_existing_freeform_party_keys():
-            if  not e_param.string_value in\
-                request.POST.getlist('freeform_party'):
 
                 e_param.delete()
 
@@ -399,13 +355,6 @@ class MonashANDSService():
             party_keys.append(ep)
 
         return party_keys
-
-    def get_existing_freeform_party_keys(self):
-        eps = ExperimentParameter.objects.filter(name__name='party_string',
-        parameterset__schema__namespace='http://localhost/pilot/party/1.0/',
-        parameterset__experiment__id=self.experiment_id)
-
-        return eps
 
     def get_existing_activity_keys(self):
         eps = ExperimentParameter.objects.filter(name__name='activity_id',

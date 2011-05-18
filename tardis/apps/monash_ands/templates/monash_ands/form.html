@@ -35,36 +35,6 @@
 		});		
 		
 		$('#add_ldap_party').click(add_ldap_party);
-		
-		function add_freeform_party() {
-			val = $('#add_freeform_party_box').val();
-			
-			if(val)
-			{
-				html = '<li><strong>' +
-					val +
-					'</strong><input type="hidden" name="freeform_party" value="' +
-					val +
-					'"/>' +
-					' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
-					'</li>'
-
-				$(html).appendTo($('#freeform_party_list'));
-			
-				$('#add_freeform_party_box').val('');
-			}
-		}
-		
-		$('#add_freeform_party').click(add_freeform_party);	
-		
-		$('#add_freeform_party_box').live('keyup', function(e) {
-		e.preventDefault();
-		if(e.keyCode == 13) {
-		    add_freeform_party()
-		}
-		});
-		
-		$('#add_freeform_party').click(add_freeform_party);	
 			
 	    $("#ands_register").click(function() {
 			if($('.party_list_member').size() > 0)
@@ -171,23 +141,7 @@
 				<input type="text" maxlength="100" name="ldap_party_add" class="usersuggest ac_input" id="add_ldap_party_box" autocomplete="off">		
 				<a id="add_ldap_party">Submit</a>			
 			</p>
-			</div>
-						
-		<div class="party_box">
-			Other Parties<br/>
-				<ul id="freeform_party_list">
-					{% for party in current_parties_freeform %}
-						<li><strong>{{party.string_value}}</strong><input name="freeform_party" value="{{party.string_value}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
-					{% endfor %}
-				</ul>
-				<p>
-					<label>Add (type their names here): </label>
-				</p>
-				<p>
-					 <input id="add_freeform_party_box" type="text" name="freeform_party_add" /> <a id="add_freeform_party">Submit</a>
-				</p>
-			</div>					  
-		</div> <!-- access_list_user -->
+			</div>				
 		
 	</div>
 </p>

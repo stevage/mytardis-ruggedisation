@@ -21,19 +21,6 @@ class OAIPMHService:
 
         return filename
 
-    @staticmethod
-    def write_freeform_party_file(metadataprefix,
-        uniqueid,
-        templatepath,
-        context):
-
-        filename = settings.OAI_DOCS_PATH + path.sep + "rif" + \
-            path.sep + "party-" + str(uniqueid) + ".xml"
-
-        render_to_file(templatepath,
-            filename, context)
-
-        return filename
 
     @staticmethod
     def write_xml_to_file(metadataprefix,
