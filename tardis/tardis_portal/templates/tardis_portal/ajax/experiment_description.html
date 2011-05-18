@@ -145,12 +145,10 @@ $(document).ready(function() {
     <strong>Experiment Last Updated:</strong>
     {{ experiment.update_time|date:"jS F Y H:i" }}<br/>
   </p>
-	{% if experiment.public %}
 	<p>
 	<strong>License: </strong>
 	<div class="license_box">{{experiment.id|show_cc_license|safe}}</div>
 	</p>
-	{% endif %}
   <div class="download_entire_experiment">
     {% for p in protocol %}
       <p>
@@ -162,6 +160,9 @@ $(document).ready(function() {
       </p>
     {% endfor %}
 	{% if is_owner %}
+	<p>
+		<a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License</a>
+	</p>
 	{% if not experiment.public %}
 		<strong><a href="publish/">Publish Experiment</a></strong><br/>
 	{% endif %}

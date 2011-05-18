@@ -29,14 +29,14 @@
 		</relatedObject>
 		 {% for party_key in party_keys %}
 		   <relatedObject>
-				<key>{{party_key}}</key>
-				<relation type="isPartOf"/>
+				<key>{{party_key.party_param}}</key>
+				<relation type="{{party_key.relation_param}}"/>
 			</relatedObject>
 		{% endfor %}
 		{% for activity_key in activity_keys %}
 		   <relatedObject>
 				<key>{{activity_key}}</key>
-				<relation type="isPartOf"/>
+				<relation type="isOutputOf"/>
 			</relatedObject>
 		{% endfor %}
 		<subject type="anzsrc-for" xml:lang="en">0601</subject>

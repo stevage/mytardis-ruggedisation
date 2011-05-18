@@ -1,6 +1,7 @@
 from django.template import Library
-from tardis_portal.models import ExperimentParameterSet,\
-    ExperimentParameter
+from tardis_portal.models import \
+    ExperimentParameter, Experiment
+from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 
 register = Library()
 
@@ -8,54 +9,45 @@ def show_cc_license(value):
     """todo: document
 
     """
+    experiment = Experiment.objects.get(id=value)
+    cch = CreativeCommonsHandler(experiment_id=experiment.id)
 
-    # get cc license parameterset, if any
-    schema = "http://www.tardis.edu.au/schemas" +\
-    "/creative_commons/2011/05/17"
 
-    parameterset = ExperimentParameterSet.objects.filter(
-    schema__namespace=schema,
-    experiment__id=value)
-
-    from tardis.tardis_portal.ParameterSetManager import\
-        ParameterSetManager
-
-    psm = None
-    if not len(parameterset):
+    if not cch.has_cc_license():
         return "No license."
     else:
-        psm = ParameterSetManager(parameterset=parameterset[0])
+        psm = cch.get_or_create_cc_parameterset()
 
-    image = ""
-    try:
-        image = psm.get_param('license_image', True)
-    except ExperimentParameter.DoesNotExist:
-        pass
+        image = ""
+        try:
+            image = psm.get_param('license_image', True)
+        except ExperimentParameter.DoesNotExist:
+            pass
 
-    name = ""
-    try:
-        name = psm.get_param('license_name', True)
-    except ExperimentParameter.DoesNotExist:
-        pass
+        name = ""
+        try:
+            name = psm.get_param('license_name', True)
+        except ExperimentParameter.DoesNotExist:
+            pass
 
-    uri = ""
-    try:
-        uri = psm.get_param('license_uri', True)
-    except ExperimentParameter.DoesNotExist:
-        pass
+        uri = ""
+        try:
+            uri = psm.get_param('license_uri', True)
+        except ExperimentParameter.DoesNotExist:
+            pass
 
-    if name == "":
-        html = "No License."
-    else:
-        html = '<a href="' + uri + '"'\
-        'rel="license" class="cc_js_a"><img width="88" height="31"'\
-        ' border="0" class="cc_js_cc-button"'\
-        'src="' + image + '"'\
-        'alt="Creative Commons License"></a><br/>'\
-        'This work is licensed under a <a rel="license"'\
-        'href="' + uri + '">'\
-        '' + name + '</a>.'
+        if name == "":
+            html = "No License."
+        else:
+            html = '<a href="' + uri + '"'\
+            'rel="license" class="cc_js_a"><img width="88" height="31"'\
+            ' border="0" class="cc_js_cc-button"'\
+            'src="' + image + '"'\
+            'alt="Creative Commons License"></a><br/>'\
+            'This work is licensed under a <a rel="license"'\
+            'href="' + uri + '">'\
+            '' + name + '</a>.'
 
-    return html
+        return html
 
 register.filter('show_cc_license', show_cc_license)

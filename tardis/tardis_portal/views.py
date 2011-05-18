@@ -84,6 +84,7 @@ from tardis.tardis_portal.shortcuts import render_response_index, \
     return_response_error_message, render_response_search
 from tardis.tardis_portal.MultiPartForm import MultiPartForm
 from tardis.tardis_portal.metsparser import parseMets
+from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 
 
 logger = logging.getLogger(__name__)
@@ -2307,41 +2308,6 @@ def publish_experiment(request, experiment_id):
         context_dict = {}
         context_dict['publish_result'] = "submitted"
         if 'legal' in request.POST:
-            # get cc license parameterset, if any
-            schema = "http://www.tardis.edu.au/schemas" +\
-            "/creative_commons/2011/05/17"
-
-            parameterset = ExperimentParameterSet.objects.filter(
-            schema__namespace=schema,
-            experiment__id=experiment_id)
-
-            from tardis.tardis_portal.ParameterSetManager import\
-                ParameterSetManager
-
-            psm = None
-            if not len(parameterset):
-                psm = ParameterSetManager(schema=schema,
-                        parentObject=experiment)
-            else:
-                psm = ParameterSetManager(parameterset=parameterset[0])
-
-            # if cc license then save params (todo: functionise!)
-            if request.POST['cc_js_want_cc_license'] ==\
-                'sure':
-                cc_js_result_img = request.POST['cc_js_result_img']
-                cc_js_result_name = request.POST['cc_js_result_name']
-                cc_js_result_uri = request.POST['cc_js_result_uri']
-
-                psm.set_param("license_image", cc_js_result_img,
-                    "License Image")
-                psm.set_param("license_name", cc_js_result_name,
-                    "License Name")
-                psm.set_param("license_uri", cc_js_result_uri,
-                    "License URI")
-            else:
-                psm.delete_params('license_image')
-                psm.delete_params('license_name')
-                psm.delete_params('license_uri')
 
             experiment.public = True
             experiment.save()
@@ -2372,12 +2338,29 @@ def publish_experiment(request, experiment_id):
         legaltext = legalfile.read()
         legalfile.close()
 
+        cch = CreativeCommonsHandler(experiment_id=experiment_id)
+
         context_dict = \
         {'username': username,
         'experiment': experiment,
         'legaltext': legaltext,
+        'has_cc_license': cch.has_cc_license(),
         }
 
     c = Context(context_dict)
     return HttpResponse(render_response_index(request,
                         'tardis_portal/publish_experiment.html', c))
+
+@authz.experiment_ownership_required
+def choose_license(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    context_dict = {'submit': False,
+        'experiment': experiment}
+    if request.method == 'POST':
+        cch = CreativeCommonsHandler(experiment_id=experiment_id)
+        cch.save_license(request)
+        context_dict['submit'] = True
+
+    c = Context(context_dict)
+    return HttpResponse(render_response_index(request,
+                        'tardis_portal/choose_license.html', c))

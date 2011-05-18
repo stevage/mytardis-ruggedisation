@@ -1,3 +1,4 @@
+{% load creativecommons %}
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		$('.remove_party').live('click', function(e) {
@@ -13,13 +14,19 @@
 			{
 				// todo: get rid of (authcate) from ldap search
 				// todo: dupe authcate test
-				html = '<li class="party_list_member"><strong>' +
+				html = '<li class="party_list_member">' + 
+					'<select name="new-' + val + '-relation">' +
+					'<option value="isManagedBy">Is Managed By</option>' +
+					'<option value="isOwnedBy">Is Owned By</option>' +
+					'<option selected value="isEnrichedBy">Is Enriched By</option>' +
+					'</select>' +				    
+					' <strong>' +
 					val +
 					'</strong><input type="hidden" name="ldap_party" value="' +
 					val +
-					'"/>' +
+					'"/>' +		
 					' <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a>' +
-					'</li>'
+					'</li>';
 
 				$(html).appendTo($('#ldap_party_list'));
 			
@@ -30,8 +37,9 @@
 		$('#add_ldap_party_box').live('keyup', function(e) {
 		e.preventDefault();
 		if(e.keyCode == 13) {
-		    add_ldap_party()
+		    add_ldap_party();
 		}
+
 		});		
 		
 		$('#add_ldap_party').click(add_ldap_party);
@@ -85,6 +93,22 @@
 <p>
 	{% if not message %}
 	<form action="." method="POST" id="ands_register_form">
+	<h3>Licensing</h3>
+	<div class="white_box">
+		{% if not has_cc_license %}
+			No license is currently set for this experiment. If that's acceptable then continue. Otherwise, first go to the <a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License page to set it.</a>
+		{% else %}
+		<p>
+			Current experiment license is:
+		</p>
+		<p>
+			<div class="license_box">{{experiment.id|show_cc_license|safe}}</div>
+		</p>
+		<p>
+			If you'd like to change this, then go to the <a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License page before registering with ANDS.</a>
+		</p>
+		{% endif %}
+	</div>
 	<h3>Custom Description (Optional)</h3>
 	<div class="white_box">
 	<p>
@@ -118,14 +142,33 @@
 				Current Monash Parties<br/>
 				<ul>
 					{% for party in current_parties_ldap %}
-						<li class="party_list_member"><strong>{{party.value}}</strong> (internal id: <strong>{{party.key}}</strong>)<input name="ldap_existing_party" value="{{party.key}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
+						<li class="party_list_member">
+							<select name="exists-{{party.party_id}}-relation">
+								<option {% if party.relation == "isManagedBy" %}selected{% endif %} value="isManagedBy">Is Managed By</option>
+								<option {% if party.relation == "isOwnedBy" %}selected{% endif %} value="isOwnedBy">Is Owned By</option>
+								<option {% if party.relation == "isEnrichedBy" %}selected{% endif %} value="isEnrichedBy">Is Enriched By</option>
+							</select>							
+							<strong>{{party.party_fullname}}</strong> (internal id: <strong>{{party.party_id}}</strong>)						
+							<input name="ldap_existing_party" value="{{party.party_id}}" type="hidden">
+							<a class="remove_party">
+								<img src="/site_media/images/icon_deletelink.gif">
+							</a>
+						</li>
 					{% endfor %}
 				</ul>				
 				
 				New Monash Parties<br/>
 				<ul id="ldap_party_list">
 					{% if not registered %}
-						<li id="registrant" class="party_list_member"><strong>{{usermail}}</strong><input id="registrantValue" type="hidden" value="{{usermail}}" name="ldap_party"></li>
+						<li id="registrant" class="party_list_member">
+							<select name="new-{{usermail}}-relation">
+								<option value="isManagedBy">Is Managed By</option>
+								<option selected value="isOwnedBy">Is Owned By</option>
+								<option value="isEnrichedBy">Is Enriched By</option>
+							</select>							
+							<strong>{{usermail}}</strong>							
+							<input id="registrantValue" type="hidden" value="{{usermail}}" name="ldap_party">
+						</li>
 					{% endif %}
 				</ul>
 				<br/>
@@ -142,7 +185,7 @@
 				<a id="add_ldap_party">Submit</a>			
 			</p>
 			</div>				
-		
+		</div>
 	</div>
 </p>
 
@@ -185,6 +228,7 @@
 			</div>
 		</div>
 	</div>	
+	
 	<input id="ands_register" type="button" value="Register Experiment"/>
 	</form>
 	{% else %}

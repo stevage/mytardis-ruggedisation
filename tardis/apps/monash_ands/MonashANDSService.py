@@ -40,7 +40,7 @@ class MonashANDSService():
         pais = PartyActivityInformationService()
         pai = pais.get_pai()
 
-        party_list = request.POST.getlist('ldap_existing_party')
+        monash_id_list = []
 
         experiment = Experiment.objects.get(id=self.experiment_id)
 
@@ -54,6 +54,11 @@ class MonashANDSService():
 
         if 'ldap_existing_party' in request.POST:
             for email in request.POST.getlist('ldap_existing_party'):
+                relation_name = 'exists-' + email + '-relation'
+                if relation_name in request.POST:
+                    monash_id_list.append(\
+                        {'party_param': email,
+                        'relation_param': request.POST[relation_name]})
 
                 # write new party info for existing party
                 if settings.OAI_DOCS_PATH:
@@ -69,7 +74,7 @@ class MonashANDSService():
         if 'ldap_party' in request.POST:
             message = ""
             fail = False
-            monash_id_list = []
+
             for email in request.POST.getlist('ldap_party'):
                 if str(email):
 
@@ -84,8 +89,11 @@ class MonashANDSService():
                             l.get_authcate_exact(email)])
 
                         monash_id = pai.get_unique_party_id(authcate[0][0])
-
-                        monash_id_list.append(monash_id)
+                        relation_name = 'new-' + email + '-relation'
+                        if relation_name in request.POST:
+                            monash_id_list.append(\
+                                {'party_param': monash_id,
+                                'relation_param': request.POST[relation_name]})
 
                     except urllib2.URLError:
                         fail = True
@@ -104,26 +112,33 @@ class MonashANDSService():
                         + "<br/>"
 
                         message = message + "<br/>" + error
+                    except KeyError:
+                        logger.error("Couldn't find authcate for " +
+                            email)
+                        fail = True
+                        error = "Can't get authcate for email address: " + email\
+                        + "<br/>"
+
+                        message = message + "<br/>" + error
 
             if fail:
                 return {'status': False,
                 'message': message}
 
-            for monash_id in monash_id_list:
+        for monash_id in monash_id_list:
 
-                self.save_party_parameter(experiment,
-                    monash_id)
-                party_list.append(monash_id)
+            self.save_party_parameter(experiment,
+                monash_id['party_param'], monash_id['relation_param'])
 
-                if settings.OAI_DOCS_PATH:
-                    party_rif_cs = pai.get_party_rifcs("")
+            if settings.OAI_DOCS_PATH:
+                party_rif_cs = pai.get_party_rifcs("")
 
-                    OAIPMHService.write_xml_to_file(
-                        'rif',
-                        'party',
-                        monash_id,
-                        party_rif_cs
-                        )
+                OAIPMHService.write_xml_to_file(
+                    'rif',
+                    'party',
+                    monash_id['party_param'],
+                    party_rif_cs
+                    )
 
         for activity_id in request.POST.getlist('activity'):
 
@@ -145,7 +160,7 @@ class MonashANDSService():
         c = Context({
                     'now': datetime.datetime.now(),
                     'experiment': experiment,
-                    'party_keys': party_list,
+                    'party_keys': monash_id_list,
                     'activity_keys': request.POST.getlist('activity'),
                     })
 
@@ -153,13 +168,14 @@ class MonashANDSService():
         if 'custom_description' in request.POST:
             custom_description = request.POST['custom_description']
 
-            schema = 'http://localhost/pilot/collection/1.0/'
+            if custom_description:
+                schema = 'http://localhost/pilot/collection/1.0/'
 
-            psm = \
-                self.get_or_create_parameterset(schema)
+                psm = \
+                    self.get_or_create_parameterset(schema)
 
-            psm.set_param("custom_description", custom_description,
-                "Custom Description For ANDS Research Data Australia")
+                psm.set_param("custom_description", custom_description,
+                    "Custom Description For ANDS Research Data Australia")
 
         c['custom_description'] = custom_description
 
@@ -277,7 +293,7 @@ class MonashANDSService():
                     usermail,
                 }
 
-    def save_party_parameter(self, experiment, party_param):
+    def save_party_parameter(self, experiment, party_param, relation_param):
         """
         Save Research Master's returned Party ID as an experiment parameter
         """
@@ -286,10 +302,15 @@ class MonashANDSService():
         parameter_name = 'party_id'
         parameter_fullname = 'Party ID'
 
-        psm = \
-            self.get_or_create_parameterset(namespace)
+        relation_name = 'relationToCollection'
+        relation_fullname = 'Relation to Collection'
 
-        eid = psm.new_param(parameter_name, party_param, parameter_fullname)
+        psm = \
+            self.get_or_create_unique_parameterset(namespace,\
+                parameter_name, party_param)
+
+        eid = psm.set_param(parameter_name, party_param, parameter_fullname)
+        psm.set_param(relation_name, relation_param, relation_fullname)
 
         return eid
 
@@ -335,10 +356,12 @@ class MonashANDSService():
         party_info = []
 
         for ep in eps:
+            psm = ParameterSetManager(parameterset=ep.parameterset)
             display_name = pai.get_display_name_for_party(ep.string_value)
             info = {}
-            info['key'] = ep.string_value
-            info['value'] = display_name
+            info['party_id'] = ep.string_value
+            info['party_fullname'] = display_name
+            info['relation'] = psm.get_param('relationToCollection', True)
 
             party_info.append(info)
 
@@ -445,5 +468,34 @@ class MonashANDSService():
                     parentObject=experiment)
         else:
             psm = ParameterSetManager(parameterset=parameterset[0])
+
+        return psm
+
+    def get_or_create_unique_parameterset(self, schema, parametername, value):
+        parameterset = ExperimentParameterSet.objects.filter(
+        schema__namespace=schema,
+        experiment__id=self.experiment_id)
+
+        experiment = Experiment.objects.get(id=self.experiment_id)
+
+        psm = None
+
+        if not len(parameterset):
+            psm = ParameterSetManager(schema=schema,
+                    parentObject=experiment)
+            return psm
+        else:
+            for ps in parameterset:
+                psm = ParameterSetManager(parameterset=ps)
+                try:
+                    ps_value = psm.get_param("party_id",
+                        True)
+                    if value == ps_value:
+                        return psm
+                except ExperimentParameter.DoesNotExist:
+                    pass # keep going
+
+        psm = ParameterSetManager(schema=schema,
+                parentObject=experiment)
 
         return psm
