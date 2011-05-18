@@ -13,7 +13,7 @@
 			{
 				// todo: get rid of (authcate) from ldap search
 				// todo: dupe authcate test
-				html = '<li><strong>' +
+				html = '<li class="party_list_member"><strong>' +
 					val +
 					'</strong><input type="hidden" name="ldap_party" value="' +
 					val +
@@ -67,11 +67,18 @@
 		$('#add_freeform_party').click(add_freeform_party);	
 			
 	    $("#ands_register").click(function() {
-			$.post("{% url tardis.apps.monash_ands.views.index experiment.id %}",
-			$("#ands_register_form").serialize(),
-			function(data) {
-			   $('#ands_register_container').html(data);
-			 });
+			if($('.party_list_member').size() > 0)
+			{
+				$.post("{% url tardis.apps.monash_ands.views.index experiment.id %}",
+				$("#ands_register_form").serialize(),
+				function(data) {
+				   $('#ands_register_container').html(data);
+				 });				
+			}
+			else
+			{
+				alert('Must have at least one Monash Party member nominated!')
+			}
 	    });			
 
 
@@ -87,13 +94,16 @@
 		  if ($('#registrantNotIncluded').is(':checked'))
 		  {
 			$("#registrant").hide();
+			$("#registrant").removeClass("party_list_member")
 			$("#registrantValue").attr("disabled", "disabled");
 		  }
 		  else
 		  {
 			 $("#registrant").show();
+			 $("#registrant").addClass("party_list_member")
 			 $("#registrantValue").removeAttr("disabled");
-	      }	
+	      }
+	
 	});
 
 });	
@@ -130,7 +140,7 @@
 		<div>
 		  <p>
 			<em>
-				Please choose related parties to this experiment..
+				Please choose related parties to this experiment (must have at least one Monash University party)..
 			</em>
 		  </p>
 		  <p>
@@ -138,14 +148,14 @@
 				Current Monash Parties<br/>
 				<ul>
 					{% for party in current_parties_ldap %}
-						<li><strong>{{party.value}}</strong> (internal id: <strong>{{party.key}}</strong>)<input name="ldap_existing_party" value="{{party.key}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
+						<li class="party_list_member"><strong>{{party.value}}</strong> (internal id: <strong>{{party.key}}</strong>)<input name="ldap_existing_party" value="{{party.key}}" type="hidden"> <a class="remove_party"><img src="/site_media/images/icon_deletelink.gif"></a></li>
 					{% endfor %}
 				</ul>				
 				
 				New Monash Parties<br/>
 				<ul id="ldap_party_list">
 					{% if not registered %}
-						<li id="registrant"><strong>{{usermail}}</strong><input id="registrantValue" type="hidden" value="{{usermail}}" name="ldap_party"></li>
+						<li id="registrant" class="party_list_member"><strong>{{usermail}}</strong><input id="registrantValue" type="hidden" value="{{usermail}}" name="ldap_party"></li>
 					{% endif %}
 				</ul>
 				<br/>
@@ -225,9 +235,13 @@
 	</form>
 	{% else %}
 	<div class="white_box">
-		<p>
-			{{message}}
-		</p>	
+		{% if status %}
+			<h3>ANDS Registration Successful</strong></h3>
+		{% else %}
+			<h3><span style="color: red;">ANDS Registration Failed</span></h3>
+			
+			{{message|safe}}
+		{% endif %}	
 	</div>	
 	{% endif %}	
 </p>

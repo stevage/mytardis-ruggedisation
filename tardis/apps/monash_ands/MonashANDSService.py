@@ -46,6 +46,12 @@ class MonashANDSService():
 
         self.clear_existing_parameters(request)
 
+        if not('ldap_existing_party' in request.POST or\
+            'ldap_party' in request.POST):
+            return {'status': False,
+            'message': 'Error: Must have at least' +
+            ' one Monash party nominated'}
+
         if 'ldap_existing_party' in request.POST:
             for email in request.POST.getlist('ldap_existing_party'):
 
@@ -61,14 +67,15 @@ class MonashANDSService():
                         )
 
         if 'ldap_party' in request.POST:
+            message = ""
+            fail = False
+            monash_id_list = []
             for email in request.POST.getlist('ldap_party'):
-
                 if str(email):
 
                     monash_id = ""
                     try:
-                        # todo: fail silently if can't get authcate
-                        # / party info?
+
                         l = LDAPUserQuery()
 
                         authcate = []
@@ -76,30 +83,48 @@ class MonashANDSService():
                             for u in \
                             l.get_authcate_exact(email)])
 
-                        print authcate
-
                         monash_id = pai.get_unique_party_id(authcate[0][0])
+
+                        monash_id_list.append(monash_id)
+
                     except urllib2.URLError:
+                        fail = True
                         logger.error("Can't contact research" +
                             " master web service")
 
-                        return {'status': False,
-                        'message': 'Error: Cannot contact Activity' +
-                        ' / Party Service. Please try again later.'}
+                        message = message + \
+                        'Error: Cannot contact Activity' + \
+                        ' / Party Service. Please try again later.' \
+                        + "<br/>"
+                    except IndexError:
+                        logger.error("Can't contact ldap for " +
+                            email)
+                        fail = True
+                        error = "Can't get authcate for email address: " + email\
+                        + "<br/>"
 
-                    self.save_party_parameter(experiment,
-                        monash_id)
-                    party_list.append(monash_id)
+                        message = message + "<br/>" + error
 
-                    if settings.OAI_DOCS_PATH:
-                        party_rif_cs = pai.get_party_rifcs("")
+            if fail:
+                return {'status': False,
+                'message': message}
 
-                        OAIPMHService.write_xml_to_file(
-                            'rif',
-                            'party',
-                            monash_id,
-                            party_rif_cs
-                            )
+
+            for monash_id in monash_id_list:
+
+                self.save_party_parameter(experiment,
+                    monash_id)
+                party_list.append(monash_id)
+
+                if settings.OAI_DOCS_PATH:
+                    party_rif_cs = pai.get_party_rifcs("")
+
+                    OAIPMHService.write_xml_to_file(
+                        'rif',
+                        'party',
+                        monash_id,
+                        party_rif_cs
+                        )
 
         if 'freeform_party' in request.POST:
             for party in request.POST.getlist('freeform_party'):

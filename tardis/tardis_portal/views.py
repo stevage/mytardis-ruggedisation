@@ -2343,7 +2343,7 @@ def publish_experiment(request, experiment_id):
                 psm.delete_params('license_name')
                 psm.delete_params('license_uri')
 
-            experiment.public = True #temp TODO steve
+            experiment.public = True
             experiment.save()
 
         else:
