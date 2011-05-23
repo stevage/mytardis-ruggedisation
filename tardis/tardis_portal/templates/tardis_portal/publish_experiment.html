@@ -30,6 +30,21 @@
 {% extends "tardis_portal/portal_template.html" %}
 {% load creativecommons %}		
 		{% block content %}
+		<script type="text/javascript" charset="utf-8">
+			$(document).ready(function() {
+				$('#ands_register_checkbox').click(function() {
+					  if ($('#ands_register_checkbox').is(':checked'))
+					  {
+						$("#default_publish").show();
+					  }
+					  else
+					  {
+						 $("#default_publish").hide();
+				      }
+
+				});	
+			});		
+		</script>		
 			<div id="content">
 				<div class="post">
 					<h1 class="title"><a name="abouttardis">Publish Experiment</a></h1>
@@ -45,8 +60,16 @@
 									<a href="../">Go back to your experiment.</a>
 								{% else %}
 									<h3><span style="color: red;">Experiment Publication Failed</span></h3>
-									See messages below for more information. <a href=".">Try to publish again</a>
-								
+									<p>See messages below for more information:</p>
+									
+									<p>
+										{% for message in messages %}
+											{{message}}<br/>
+										{% endfor %}
+									</p>
+									
+									<p><a href=".">Try to publish again</a></p>
+									
 								{% endif %}
 							
 							{% else %}
@@ -64,6 +87,22 @@
 								<strong>Experiment Name:</strong> {{ experiment.title }}
 							</p>
 							
+							{% if not has_ands_registered %}
+							<div class="white_box">
+								<h2>ANDS Research Data Australia Registration</h2>
+								<p><img src="/site_media/images/ands-logo-hi-res.jpg"></p>
+								
+								<p>You have not yet registered this experiment with ANDS Research Data Australia. Doing so has many benefits including a persistent handles, and a 33% increase in your attractiveness to the opposite gender*. This is obviously temporary text. Relax!</p>
+								
+								<p><a href="../">Click here to go back to your Experiment. From there click 'ANDS Register'.</a></p>
+								
+								<input id="ands_register_checkbox" type="checkbox" name="ands_register" value="do_not_ands_register">I do <strong>not</strong> wish to register my data first with Research Data Australia.<br/>
+								
+							</div>	
+							<br/>					
+							{% endif %}
+							
+							<div id="default_publish" {% if not has_ands_registered %}style="display: none"{% endif%}>
 							<div class="white_box">
 								<h2>Licensing</h2>
 								{% if not has_cc_license %}
@@ -89,9 +128,10 @@
 							<input type="checkbox" name="legal" value="Agree">I agree to the above terms and wish to make my data publicly available<br>
 							</p>
 							</div>					
-							
+							<br/>
 							<input id="button" type="submit" value="Publish Experiment"/>
 						
+							</div>
 							</div>
 
 							</form>						

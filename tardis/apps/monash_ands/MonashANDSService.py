@@ -12,8 +12,8 @@ import urllib2
 import datetime
 from tardis.tardis_portal.partyactivityinformationservice \
     import PartyActivityInformationService
-from tardis.tardis_portal.oaipmhservice \
-    import OAIPMHService
+from tardis.tardis_portal.xmlwriter \
+    import XMLWriter
 from tardis.tardis_portal.ParameterSetManager import ParameterSetManager
 import os
 from tardis.apps.monash_ands.ldap_query import \
@@ -64,7 +64,7 @@ class MonashANDSService():
                 if settings.OAI_DOCS_PATH:
                     party_rif_cs = pai.get_party_rifcs("")
 
-                    OAIPMHService.write_xml_to_file(
+                    XMLWriter.write_xml_to_file(
                         'rif',
                         'party',
                         email,
@@ -133,7 +133,7 @@ class MonashANDSService():
             if settings.OAI_DOCS_PATH:
                 party_rif_cs = pai.get_party_rifcs("")
 
-                OAIPMHService.write_xml_to_file(
+                XMLWriter.write_xml_to_file(
                     'rif',
                     'party',
                     monash_id['party_param'],
@@ -150,7 +150,7 @@ class MonashANDSService():
                 if settings.OAI_DOCS_PATH:
                     activity_rif_cs = pai.get_activity_rifcs("")
 
-                    OAIPMHService.write_xml_to_file(
+                    XMLWriter.write_xml_to_file(
                         'rif',
                         'activity',
                         activity_id,
@@ -186,8 +186,9 @@ class MonashANDSService():
         profile_template = "monash_ands/profiles/" + selected_profile
 
         if settings.OAI_DOCS_PATH:
-            OAIPMHService.write_collection_file(
+            XMLWriter.write_template_to_file(
                 'rif',
+                'collection',
                 experiment.id,
                 profile_template,
                 c,

@@ -2304,24 +2304,64 @@ def publish_experiment(request, experiment_id):
 
         legal = True
         success = True
+        messages = []
 
         context_dict = {}
         context_dict['publish_result'] = "submitted"
-        if 'legal' in request.POST:
 
-            experiment.public = True
-            experiment.save()
+        passed_ands = False
 
-        else:
+        opt_out_ands = False
+        if 'ands_register' in request.POST:
+            opt_out_ands = True
+
+        has_ands_registered = True
+        if 'monash_ands' in settings.TARDIS_APPS:
+            from tardis.apps.monash_ands.MonashANDSService\
+                import MonashANDSService
+
+            monashandsService = MonashANDSService(experiment_id)
+
+            has_ands_registered = monashandsService.has_registration_record()
+
+        print "1"
+        print has_ands_registered
+        print "2"
+        print opt_out_ands
+        passed_ands = has_ands_registered or opt_out_ands
+
+        if passed_ands == False:
+            success = False
+            messages.append('You must opt out of ANDS registration, or'+\
+                ' register with ANDS')
+
+        if  not 'legal' in request.POST:
             logger.debug('Legal agreement for exp: ' + experiment_id +
             ' not accepted.')
             legal = False
 
+        if legal and success:
+            experiment.public = True
+            experiment.save()
+
         # set dictionary to legal status and publish success result
         context_dict['legal'] = legal
         context_dict['success'] = success
+        context_dict['messages'] = messages
 
     else:
+
+        has_ands_registered = True
+
+        if 'monash_ands' in settings.TARDIS_APPS:
+            from tardis.apps.monash_ands.MonashANDSService\
+                import MonashANDSService
+
+            monashandsService = MonashANDSService(experiment_id)
+
+            if not monashandsService.has_registration_record():
+                has_ands_registered = False
+
         TARDIS_ROOT = os.path.abspath(\
         os.path.join(os.path.dirname(__file__)))
 
@@ -2345,6 +2385,7 @@ def publish_experiment(request, experiment_id):
         'experiment': experiment,
         'legaltext': legaltext,
         'has_cc_license': cch.has_cc_license(),
+        'has_ands_registered': has_ands_registered,
         }
 
     c = Context(context_dict)

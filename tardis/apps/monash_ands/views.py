@@ -10,6 +10,7 @@ from tardis.apps.monash_ands.ldap_query import \
     LDAPUserQuery
 from django.contrib.auth.decorators import login_required
 from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
+from tardis.tardis_portal.auth import decorators as authz
 
 def index(request, experiment_id):
     url = 'monash_ands/form.html'
@@ -18,6 +19,10 @@ def index(request, experiment_id):
     if not request.POST:
         monashandsService = MonashANDSService(experiment_id)
         c = monashandsService.get_context(request)
+        if request.user.is_authenticated():
+            c['is_owner'] = authz.has_experiment_ownership(request,
+                experiment_id)
+
         c['experiment'] = e
 
         cch = CreativeCommonsHandler(experiment_id=experiment_id)
@@ -27,6 +32,10 @@ def index(request, experiment_id):
     else:
         monashandsService = MonashANDSService(experiment_id)
         c = monashandsService.register(request)
+        if request.user.is_authenticated():
+            c['is_owner'] = authz.has_experiment_ownership(request,
+                experiment_id)
+
         c['experiment'] = e
 
         return HttpResponse(render_response_index(request, url, c))

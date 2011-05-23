@@ -5,16 +5,17 @@ from tardis.tardis_portal.shortcuts import render_to_file
 
 logger = logging.getLogger(__name__)
 
-class OAIPMHService:
+class XMLWriter:
 
     @staticmethod
-    def write_collection_file(metadataprefix,
+    def write_template_to_file(metadataprefix,
+        objectprefix,
         uniqueid,
         templatepath,
         context):
 
         filename = settings.OAI_DOCS_PATH + path.sep + "rif" + \
-            path.sep + "collection-" + str(uniqueid) + ".xml"
+            path.sep + str(objectprefix) + "-" + str(uniqueid) + ".xml"
 
         render_to_file(templatepath,
             filename, context)

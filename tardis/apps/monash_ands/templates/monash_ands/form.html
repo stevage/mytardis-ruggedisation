@@ -89,6 +89,7 @@
 </script>
 <div id="ands_register_container">
 <strong>ANDS Research Data Australia Registration</strong>
+{% if is_owner %}
 <p><img src="/site_media/images/ands-logo-hi-res.jpg"></p>
 <p>
 	{% if not message %}
@@ -243,4 +244,9 @@
 	</div>	
 	{% endif %}	
 </p>
+{% else %}
+<p>
+	You must be an experiment owner to register with ANDS.
+</p>
+{% endif %}
 </div>
