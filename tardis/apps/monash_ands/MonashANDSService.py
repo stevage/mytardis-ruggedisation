@@ -62,13 +62,13 @@ class MonashANDSService():
 
                 # write new party info for existing party
                 if settings.OAI_DOCS_PATH:
-                    party_rif_cs = pai.get_party_rifcs("")
+                    party_rif_cs = pai.get_party_rifcs(email)
 
                     XMLWriter.write_xml_to_file(
                         'rif',
                         'party',
                         email,
-                        party_rif_cs
+                        party_rif_cs.plain()
                         )
 
         if 'ldap_party' in request.POST:
@@ -131,13 +131,13 @@ class MonashANDSService():
                 monash_id['party_param'], monash_id['relation_param'])
 
             if settings.OAI_DOCS_PATH:
-                party_rif_cs = pai.get_party_rifcs("")
+                party_rif_cs = pai.get_party_rifcs(monash_id['party_param'])
 
                 XMLWriter.write_xml_to_file(
                     'rif',
                     'party',
                     monash_id['party_param'],
-                    party_rif_cs
+                    party_rif_cs.plain()
                     )
 
         for activity_id in request.POST.getlist('activity'):
@@ -148,13 +148,13 @@ class MonashANDSService():
                 self.save_activity_parameter(experiment, activity_id)
 
                 if settings.OAI_DOCS_PATH:
-                    activity_rif_cs = pai.get_activity_rifcs("")
+                    activity_rif_cs = pai.get_activity_rifcs(activity_id)
 
                     XMLWriter.write_xml_to_file(
                         'rif',
                         'activity',
                         activity_id,
-                        activity_rif_cs
+                        activity_rif_cs.plain()
                         )
 
         c = Context({
@@ -257,7 +257,7 @@ class MonashANDSService():
 
         activity_summaries = {}
         try:
-            activity_summaries = pai.get_activity_summary_dict("username")
+            activity_summaries = pai.get_activity_summary_dict(monash_id)
         except urllib2.URLError:
             logger.error("Can't contact research master web service")
             return {'message':

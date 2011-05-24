@@ -198,13 +198,13 @@
 		</p>
 		{% for activity_summary in activity_summaries %}
 			<div class="activity_summary">
-				<strong>Grant ID:</strong> {{ activity_summary.grant_id }}<br/>
-				<strong>Title:</strong> {{ activity_summary.title }}<br/>
-				<strong>Funding Body:</strong> {{ activity_summary.funding_body }}<br/>
-				<strong>Description:</strong> {{ activity_summary.description }}<br/>
+				<strong>Grant ID:</strong> {{ activity_summary.projectId }}<br/>
+				<strong>Title:</strong> {{ activity_summary.projectTitle }}<br/>
+				<strong>Funding Body:</strong> {{ activity_summary.grantorCode }}<br/>
+				<strong>Date Applied:</strong> {{ activity_summary.projectDateApplied }}<br/>
 				<br/>
 				<div align="right"><strong>Include this activity</strong>
-					<input type="checkbox" name="activity" {% for a in current_activities %}{% ifequal activity_summary.grant_id a.string_value %} checked {% endifequal %}{% endfor %} value="{{activity_summary.grant_id}}">
+					<input type="checkbox" name="activity" {% for a in current_activities %}{% ifequal activity_summary.projectId a.string_value %} checked {% endifequal %}{% endfor %} value="{{activity_summary.projectId}}">
 				</div>
 			</div>
 		{% endfor %}
