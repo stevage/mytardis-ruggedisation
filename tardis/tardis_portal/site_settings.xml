@@ -33,6 +33,7 @@
 		<url>{{baseurl}}/experiment/register/</url>
 		<username>synchrotron</username>
 		<password>tardis</password>
+		<fileProtocol>tardis</fileProtocol>
 	</register>
 	<transfer>
 		<type>gridftp</type>
