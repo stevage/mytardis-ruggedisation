@@ -18,6 +18,7 @@ from tardis.tardis_portal.ParameterSetManager import ParameterSetManager
 import os
 from tardis.apps.monash_ands.ldap_query import \
     LDAPUserQuery
+import suds
 
 
 class MonashANDSService():
@@ -68,7 +69,7 @@ class MonashANDSService():
                         'rif',
                         'party',
                         email,
-                        party_rif_cs.plain()
+                        party_rif_cs.str()
                         )
 
         if 'ldap_party' in request.POST:
@@ -137,7 +138,7 @@ class MonashANDSService():
                     'rif',
                     'party',
                     monash_id['party_param'],
-                    party_rif_cs.plain()
+                    party_rif_cs.str()
                     )
 
         for activity_id in request.POST.getlist('activity'):
@@ -154,7 +155,7 @@ class MonashANDSService():
                         'rif',
                         'activity',
                         activity_id,
-                        activity_rif_cs.plain()
+                        activity_rif_cs.str()
                         )
 
         c = Context({
@@ -254,6 +255,10 @@ class MonashANDSService():
             'Error: Failed to contact Research Master web service ' +
             'to retrieve Party / Activity information. Please contact ' +
             'a system administrator.'}
+        except suds.WebFault:
+            logger.error("Can't get valid authcate " + username)
+            return {'message':
+            'Can\'t get a valid authcate name for ' + username}
 
         activity_summaries = {}
         try:

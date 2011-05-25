@@ -14,8 +14,10 @@ class XMLWriter:
         templatepath,
         context):
 
+        uniqueid = str(uniqueid).replace('MON:', '')
+
         filename = settings.OAI_DOCS_PATH + path.sep + "rif" + \
-            path.sep + str(objectprefix) + "-" + str(uniqueid) + ".xml"
+            path.sep + str(objectprefix) + "-" + uniqueid + ".xml"
 
         render_to_file(templatepath,
             filename, context)
@@ -32,13 +34,14 @@ class XMLWriter:
         return the user dictionary in the format of::
 
         """
+        uniqueid = str(uniqueid).replace('MON:', '')
 
         filename = settings.OAI_DOCS_PATH + path.sep + "rif" + \
             path.sep + str(objectprefix) + "-" + \
-            str(uniqueid) + ".xml"
+            uniqueid + ".xml"
 
         f = open(filename, "w")
 
-        f.write(xmlstring)
+        f.write(xmlstring.encode('UTF-8'))
         f.close()
         return filename

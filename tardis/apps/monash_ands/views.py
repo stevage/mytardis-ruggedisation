@@ -5,16 +5,32 @@ from django.http import HttpResponse
 
 from tardis.tardis_portal.shortcuts import render_response_index
 from MonashANDSService import MonashANDSService
-from tardis.tardis_portal.models import Experiment
+from tardis.tardis_portal.models import Experiment, UserAuthentication
 from tardis.apps.monash_ands.ldap_query import \
     LDAPUserQuery
 from django.contrib.auth.decorators import login_required
 from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 from tardis.tardis_portal.auth import decorators as authz
+from django.conf import settings
+
 
 def index(request, experiment_id):
     url = 'monash_ands/form.html'
     e = Experiment.objects.get(id=experiment_id)
+
+    import sys
+    allowed_protocol = sys.modules['%s.%s.settings' %
+                (settings.TARDIS_APP_ROOT, 'monash_ands')].ALLOWED_PROTOCOL
+
+    ua = UserAuthentication.objects.get(username=request.user.username)
+    if not ua.authenticationMethod == allowed_protocol:
+        from django.template import Context
+        c = Context()
+        c['is_owner'] = authz.has_experiment_ownership(request,
+            experiment_id)
+        c['disallowed_protocol'] = True
+
+        return HttpResponse(render_response_index(request, url, c))
 
     if not request.POST:
         monashandsService = MonashANDSService(experiment_id)

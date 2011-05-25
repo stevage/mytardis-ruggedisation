@@ -19,8 +19,12 @@ class EIF038PartyActivityInformationProvider(PartyActivityInformationProvider):
     def __init__(self):
 
         # Basic info
-        url = "http://mobs-qa.its.monash.edu.au:7778/"\
-            "esb/wsil/AI/ResearchMaster/AIRMANDSService_RS?wsdl"
+        # url = "http://mobs-qa.its.monash.edu.au:7778/"\
+        #     "esb/wsil/AI/ResearchMaster/AIRMANDSService_RS?wsdl"
+
+        url = "http://mobs-dev.its.monash.edu.au:7778/esb/wsil"\
+            "/AI/ResearchMaster/AIRMANDSService_RS?wsdl"
+
         self._client = Client(url)
 
     def get_unique_party_id(self, username):

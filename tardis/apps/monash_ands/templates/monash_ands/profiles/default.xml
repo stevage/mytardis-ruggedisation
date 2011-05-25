@@ -1,43 +1,43 @@
-{% load xmldate %}<registryObject group="Monash University">
-	<key>MYTARDIS-CHANGEME-{{experiment.id}}</key>
-	<originatingSource>http://www.monash.edu.au</originatingSource>
-	<collection type="dataset" dateAccessioned="{{experiment.update_time|toxmldatetime}}" dateModified="{{experiment.update_time|toxmldatetime}}">
-		<identifier type="local">experiment/view/{{experiment.id}}</identifier>
-		<identifier type="handle">hdl:{{experiment.handle}}</identifier>
-		<name type="primary">
-			<namePart>
-			{{experiment.title}}
-			</namePart>
-		</name>
-		<location>
-			<address>
-				<electronic type="url">
-					<value>{{experiment.id}}</value>
-				</electronic>
-				<physical>
-					<addressPart type="text">{{experiment.institution_name}}</addressPart>
-				</physical>
-			</address>
-		</location>
-		<relatedObject>
-			<key>{{experiment.id}}</key>
-			<relation type="isOwnedBy">
-				<description>Is owned by</description>
-				<url>http://www.monash.edu.au</url>
-			</relation>
-		</relatedObject>
+{% load xmldate %}<rif:registryObjects xmlns:rif="http://ands.org.au/standards/rif-cs/registryObjects">
+   <rif:registryObject group="Monash University">
+	<rif:key>MYTARDIS-CHANGEME-{{experiment.id}}</rif:key>
+	<rif:originatingSource>http://www.monash.edu.au</rif:originatingSource>
+	<rif:collection type="dataset" dateAccessioned="{{experiment.update_time|toxmldatetime}}" dateModified="{{experiment.update_time|toxmldatetime}}">
+		<rif:identifier type="local">experiment/view/{{experiment.id}}</rif:identifier>
+		<rif:identifier type="handle">hdl:{{experiment.handle}}</rif:identifier>
+		<rif:name type="primary">
+			<rif:namePart>{{experiment.title}}</rif:namePart>
+		</rif:name>
+		<rif:location>
+			<rif:address>
+				<rif:electronic type="url">
+					<rif:value>{{experiment.id}}</rif:value>
+				</rif:electronic>
+				<rif:physical>
+					<rif:addressPart type="text">{{experiment.institution_name}}</rif:addressPart>
+				</rif:physical>
+			</rif:address>
+		</rif:location>
+		<rif:relatedObject>
+			<rif:key>{{experiment.id}}</rif:key>
+			<rif:relation type="isOwnedBy">
+				<rif:description>Is owned by</rif:description>
+				<rif:url>http://www.monash.edu.au</rif:url>
+			</rif:relation>
+		</rif:relatedObject>
 		 {% for party_key in party_keys %}
-		   <relatedObject>
-				<key>{{party_key.party_param}}</key>
-				<relation type="{{party_key.relation_param}}"/>
-			</relatedObject>
+		   <rif:relatedObject>
+				<rif:key>{{party_key.party_param}}</rif:key>
+				<rif:relation type="{{party_key.relation_param}}"/>
+			</rif:relatedObject>
 		{% endfor %}
 		{% for activity_key in activity_keys %}
-		   <relatedObject>
-				<key>{{activity_key}}</key>
-				<relation type="isOutputOf"/>
-			</relatedObject>
+		   <rif:relatedObject>
+				<rif:key>{{activity_key}}</rif:key>
+				<rif:relation type="isOutputOf"/>
+			</rif:relatedObject>
 		{% endfor %}
-    <description type="about">{% if custom_description %}{{custom_description}}{% else %}{{experiment.description}}{% endif %}</description>
-  </collection>
-</registryObject>
+      <rif:description type="about">{% if custom_description %}{{custom_description}}{% else %}{{experiment.description}}{% endif %}</rif:description>
+    </rif:collection>
+  </rif:registryObject>
+</rif:registryObjects>

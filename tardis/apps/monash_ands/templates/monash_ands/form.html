@@ -1,4 +1,5 @@
 {% load creativecommons %}
+{% if not disallowed_protocol %}
 <script type="text/javascript" charset="utf-8">
 	$(document).ready(function() {
 		$('.remove_party').live('click', function(e) {
@@ -47,15 +48,17 @@
 	    $("#ands_register").click(function() {
 			if($('.party_list_member').size() > 0)
 			{
+				$('#jqmAlertLoading').jqmShow();
 				$.post("{% url tardis.apps.monash_ands.views.index experiment.id %}",
 				$("#ands_register_form").serialize(),
 				function(data) {
+				   $('#jqmAlertLoading').jqmHide();
 				   $('#ands_register_container').html(data);
-				 });				
+				 });			
 			}
 			else
 			{
-				alert('Must have at least one Monash Party member nominated!')
+				alert('Must have at least one Monash Party member nominated!');
 			}
 	    });			
 
@@ -83,15 +86,35 @@
 	      }
 	
 	});
+	
+    $('#jqmAlertLoading').jqm({
+	ajax: '',
+	target: '',
+	overlay: 0,
+    });	
 
 });	
 		
 </script>
+{% endif %}
+<div class="jqmAlertLoading" id="jqmAlertLoading">
+  <div class="jqmAlertWindowLoading">
+    <div class="jqmAlertTitle clearfix">
+      <h1>Please Wait...</h1>
+    </div>
+    <div align="center" class="jqmAlertContentLoading" id="jqmAlertContentLoading">
+      <img src="/site_media/images/ajax-loader-big.gif">
+      </div>
+    </div>
+  </div>
 <div id="ands_register_container">
 <strong>ANDS Research Data Australia Registration</strong>
 {% if is_owner %}
 <p><img src="/site_media/images/ands-logo-hi-res.jpg"></p>
 <p>
+	{% if disallowed_protocol %}
+		<p>Sorry, ANDS registration is only available to those logged in through Monash Authcate.</p>
+	{% else %}
 	{% if not message %}
 	<form action="." method="POST" id="ands_register_form">
 	<h3>Licensing</h3>
@@ -208,6 +231,10 @@
 				</div>
 			</div>
 		{% endfor %}
+		{% else %}
+			<p>
+				No activities found for {{username}}.
+			</p>
 		{% endif %}
 	</div>
 	<h3>Profile</h3>
@@ -242,6 +269,7 @@
 			{{message|safe}}
 		{% endif %}	
 	</div>	
+	{% endif %}
 	{% endif %}	
 </p>
 {% else %}
@@ -249,4 +277,5 @@
 	You must be an experiment owner to register with ANDS.
 </p>
 {% endif %}
+
 </div>
