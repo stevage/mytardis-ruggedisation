@@ -69,7 +69,7 @@ class MonashANDSService():
                         'rif',
                         'party',
                         email,
-                        party_rif_cs.str()
+                        party_rif_cs
                         )
 
         if 'ldap_party' in request.POST:
@@ -138,7 +138,7 @@ class MonashANDSService():
                     'rif',
                     'party',
                     monash_id['party_param'],
-                    party_rif_cs.str()
+                    party_rif_cs
                     )
 
         for activity_id in request.POST.getlist('activity'):
@@ -155,7 +155,7 @@ class MonashANDSService():
                         'rif',
                         'activity',
                         activity_id,
-                        activity_rif_cs.str()
+                        activity_rif_cs
                         )
 
         c = Context({
@@ -186,6 +186,35 @@ class MonashANDSService():
 
         profile_template = "monash_ands/profiles/" + selected_profile
 
+        import sys
+        mas_settings = sys.modules['%s.%s.settings' %
+                    (settings.TARDIS_APP_ROOT, 'monash_ands')]
+
+        if mas_settings.HANDLE_ENABLE:
+            if not experiment.handle:
+
+                from HandleService import HandleService
+                from django.contrib.sites.models import Site
+
+                hdlsrv = HandleService()
+
+                response = hdlsrv.mint(
+                    mas_settings.AUTHTYPE, mas_settings.IDENTIFIER,
+                    mas_settings.AUTHDOMAIN, mas_settings.APPID,
+                    mas_settings.MINTURL, "http://" +\
+                        Site.objects.get_current().domain +\
+                        "/experiment/view/" + str(experiment.id))
+
+                from xml.dom import minidom
+                xmldoc = minidom.parseString(response)
+
+                handle = xmldoc.firstChild.childNodes[1].attributes["handle"].value
+
+                if handle:
+                    experiment.handle = handle
+                    experiment.save()
+
+
         if settings.OAI_DOCS_PATH:
             XMLWriter.write_template_to_file(
                 'rif',
@@ -196,7 +225,6 @@ class MonashANDSService():
                 )
 
         if request.POST['profile']:
-            experiment = Experiment.objects.get(id=self.experiment_id)
 
             profile = request.POST['profile']
             self.save_rif_cs_profile(experiment, profile)

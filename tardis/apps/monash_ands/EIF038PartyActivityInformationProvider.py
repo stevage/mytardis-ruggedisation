@@ -49,7 +49,7 @@ class EIF038PartyActivityInformationProvider(PartyActivityInformationProvider):
         regObj = xmldata.childAtPath('Envelope/Body/registryObjects')
         regObj.applyns((self._namespace, self._uri))
         regObj.walk(visitor)
-        return regObj
+        return regObj.str()
 
     def get_display_name_for_party(self, unique_party_id):
         """
@@ -98,7 +98,7 @@ class EIF038PartyActivityInformationProvider(PartyActivityInformationProvider):
         regObj = xmldata.childAtPath('Envelope/Body/registryObjects')
         regObj.applyns((self._namespace, self._uri))
         regObj.walk(visitor)
-        return regObj
+        return regObj.str()
 
 def visitor(obj):
     obj.setPrefix('rif')

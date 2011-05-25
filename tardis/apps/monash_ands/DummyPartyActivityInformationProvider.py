@@ -80,19 +80,19 @@ class DummyPartyActivityInformationProvider(PartyActivityInformationProvider):
 
             grant_id=node.getElementsByTagName('grant_id')[0].\
             childNodes[0].nodeValue
-            activity['grant_id'] = grant_id
+            activity['projectId'] = grant_id
 
             title=node.getElementsByTagName('title')[0].\
             childNodes[0].nodeValue
-            activity['title'] = title
+            activity['projectTitle'] = title
 
             funding_body=node.getElementsByTagName('funding_body')[0].\
             childNodes[0].nodeValue
-            activity['funding_body'] = funding_body
+            activity['grantorCode'] = funding_body
 
             description=node.getElementsByTagName('description')[0].\
             childNodes[0].nodeValue
-            activity['description'] = description
+            activity['projectDateApplied'] = description
 
             activities.append(activity)
 

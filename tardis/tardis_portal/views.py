@@ -2324,10 +2324,6 @@ def publish_experiment(request, experiment_id):
 
             has_ands_registered = monashandsService.has_registration_record()
 
-        print "1"
-        print has_ands_registered
-        print "2"
-        print opt_out_ands
         passed_ands = has_ands_registered or opt_out_ands
 
         if passed_ands == False:
