@@ -79,14 +79,27 @@ def download_datafile_ws(request):
 
             try:
                 wrapper = FileWrapper(file(file_path))
+
                 response = HttpResponse(wrapper,
                                         mimetype=datafile.get_mimetype())
                 response['Content-Disposition'] = \
                     'attachment; filename="%s"' % datafile.filename
+
                 return response
 
             except IOError:
-                return return_response_not_found(request)
+                try:
+                    file_path = datafile.get_absolute_filepath_old()
+                    wrapper = FileWrapper(file(file_path))
+
+                    response = HttpResponse(wrapper,
+                                            mimetype=datafile.get_mimetype())
+                    response['Content-Disposition'] = \
+                        'attachment; filename="%s"' % datafile.filename
+
+                    return response
+                except IOError:
+                    return return_response_not_found(request)
 
         else:
             return return_response_not_found(request)
@@ -200,7 +213,8 @@ def download_datafiles(request):
                 url = urllib.unquote(url)
                 raw_path = url.partition('//')[2]
                 experiment_id = request.POST['expid']
-                datafile = Dataset_File.objects.filter(url__endswith=raw_path, dataset__experiment__id=experiment_id)[0]
+                datafile = Dataset_File.objects.filter(url__endswith=raw_path,
+                    dataset__experiment__id=experiment_id)[0]
                 if has_datafile_access(request=request,
                                        dataset_file_id=datafile.id):
                     p = datafile.protocol
@@ -209,9 +223,20 @@ def download_datafiles(request):
                     absolute_filename = datafile.url.partition('//')[2]
                     if(datafile.url.partition('//')[0] == 'tardis:'):
                         # expects tardis: formatted stuff to not include dataset id
-                        fileString += '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+
+                        #temp fix for old data
+                        filepath = '%s/%s/%s ' % (expid, str(datafile.dataset.id),
+                            absolute_filename)
+
+                        import os
+                        if not os.path.exists(settings.FILE_STORE_PATH +\
+                            "/" + filepath):
+
+                            filePath = '%s/%s/%s ' % (expid, absolute_filename)
+                            fileString += filePath
                     else:
                         fileString += '%s/%s ' % (expid, absolute_filename)
+
                     fileSize += long(datafile.size)
         else:
             return return_response_not_found(request)
