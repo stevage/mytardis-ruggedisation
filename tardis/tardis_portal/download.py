@@ -182,7 +182,14 @@ def download_datafiles(request):
                             protocols += [p]
                         absolute_filename = datafile.url.partition('//')[2]
                         if(datafile.url.partition('//')[0] == 'tardis:'):
-                            fileString += '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+                            filePath = \
+                            '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+                            import os
+                            if not os.path.exists(settings.FILE_STORE_PATH +\
+                                "/" + filePath):
+
+                                filePath = '%s/%s ' % (expid, absolute_filename)
+                            fileString += filePath
                         else:
                             fileString += '%s/%s ' % (expid, absolute_filename)
                         fileSize += long(datafile.size)
@@ -198,9 +205,22 @@ def download_datafiles(request):
                         protocols += [p]
                     absolute_filename = datafile.url.partition('//')[2]
                     if(datafile.url.partition('//')[0] == 'tardis:'):
-                        fileString += '%s/%s/%s ' % (expid, str(datafile.dataset.id), absolute_filename)
+                        #temp fix for old data
+                        filepath = '%s/%s/%s ' % (expid, str(datafile.dataset.id),
+                            absolute_filename)
+
+                        print filepath + "######"
+                        import os
+                        if not os.path.exists(settings.FILE_STORE_PATH +\
+                            "/" + filepath):
+
+                            filePath = '%s/%s ' % (expid, absolute_filename)
+
+                        fileString += filePath
+                        print fileString
                     else:
                         fileString += '%s/%s ' % (expid, absolute_filename)
+                    
                     fileSize += long(datafile.size)
         else:
             return return_response_not_found(request)
@@ -227,13 +247,16 @@ def download_datafiles(request):
                         #temp fix for old data
                         filepath = '%s/%s/%s ' % (expid, str(datafile.dataset.id),
                             absolute_filename)
-
+			
+                        print filepath + "######"
                         import os
                         if not os.path.exists(settings.FILE_STORE_PATH +\
                             "/" + filepath):
 
-                            filePath = '%s/%s/%s ' % (expid, absolute_filename)
-                            fileString += filePath
+                            filePath = '%s/%s ' % (expid, absolute_filename)
+                        
+                        fileString += filePath
+                        print fileString
                     else:
                         fileString += '%s/%s ' % (expid, absolute_filename)
 
