@@ -239,7 +239,15 @@ class AuthService():
             self._manual_init()
 
         plugin = user_dict['pluginname']
-        username = user_dict['id']
+
+        username = ""
+        if "email" in user_dict:
+            email = user_dict['email']
+            username =\
+                self._authentication_backends[plugin].getUsernameByEmail(email)
+        else:
+            username = user_dict['id']
+
         try:
             user = UserAuthentication.objects.get(username=username,
                             authenticationMethod=plugin).userProfile.user
