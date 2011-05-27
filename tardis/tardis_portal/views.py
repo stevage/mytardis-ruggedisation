@@ -768,7 +768,7 @@ def register_experiment_ws_xmldata(request):
                             'originid': str(originid),
                             'eid': str(eid),
                             'site_settings_url':
-                                request.build_absolute_uri('site-settings.xml/'),
+                                request.build_absolute_uri('/site-settings.xml/'),
                             })
                     urlopen(file_transfer_url, data)
                     logger.info('=== file-transfer request submitted to %s'
