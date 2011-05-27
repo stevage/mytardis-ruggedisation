@@ -1,5 +1,5 @@
 from django.template import Library
-from tardis_portal.models import \
+from tardis.tardis_portal.models import \
     ExperimentParameter, Experiment
 from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 

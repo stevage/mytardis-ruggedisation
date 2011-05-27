@@ -49,7 +49,18 @@ def download_datafile(request, datafile_id):
                 return response
 
             except IOError:
-                return return_response_not_found(request)
+                try:
+                    file_path = datafile.get_absolute_filepath_old()
+                    wrapper = FileWrapper(file(file_path))
+
+                    response = HttpResponse(wrapper,
+                                            mimetype=datafile.get_mimetype())
+                    response['Content-Disposition'] = \
+                        'attachment; filename="%s"' % datafile.filename
+
+                    return response
+                except IOError:
+                    return return_response_not_found(request)
     else:
         return return_response_error(request)
 

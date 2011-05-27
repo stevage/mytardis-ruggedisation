@@ -457,6 +457,24 @@ class Dataset_File(models.Model):
         else:
             return ''
 
+    def get_absolute_filepath_old(self): #temp quickfix!
+        # check for empty protocol field (historical reason) or
+        # 'tardis' which indicates a location within the tardis file
+        # store
+        if self.protocol == '' or self.protocol == 'tardis':
+            from django.conf import settings
+            try:
+                FILE_STORE_PATH = settings.FILE_STORE_PATH
+            except AttributeError:
+                return ''
+
+            from os.path import abspath, join
+            return abspath(join(FILE_STORE_PATH,
+                                str(self.dataset.experiment.id),
+                                self.url.partition('://')[2]))
+        else:
+            return ''
+
     def _set_size(self):
 
         from os.path import getsize
@@ -760,7 +778,7 @@ def _getParameter(parameter):
         return mark_safe(value)
 
     elif parameter.name.isFilename():
-        if parameter.name.units.startswith('image') and	parameter.string_value:
+        if parameter.name.units.startswith('image') and parameter.string_value:
             parset = type(parameter.parameterset).__name__
             viewname = ''
             if parset == 'DatafileParameterSet':
@@ -773,8 +791,8 @@ def _getParameter(parameter):
                 value = "<img src='%s' />" % reverse(viewname=viewname,
                                                      args=[parameter.id])
                 return mark_safe(value)
-	else:
-	    return parameter.string_value
+        else:
+            return parameter.string_value
 
     elif parameter.name.isDateTime():
         value = str(parameter.datetime_value)
@@ -876,10 +894,10 @@ def pre_save_parameter(sender, **kwargs):
             if not exists(dirname):
                 mkdir(dirname)
             f = open(filepath, 'w')
-	    try:
-		f.write(b64decode(b64))
-	    except TypeError:
-		f.write(b64)
+            try:
+                f.write(b64decode(b64))
+            except TypeError:
+                f.write(b64)
             f.close()
             parameter.string_value = filename
 
