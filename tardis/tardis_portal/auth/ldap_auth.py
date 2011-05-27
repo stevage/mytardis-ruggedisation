@@ -162,6 +162,37 @@ class LDAPBackend(AuthProvider, UserProvider, GroupProvider):
             if l:
                 l.unbind_s()
 
+    #
+    # AuthProvider
+    #
+    def getUsernameByEmail(self, email):
+
+        l = None
+
+        try:
+            searchScope = ldap.SCOPE_SUBTREE
+            retrieveAttributes = ["uid"]
+            l = ldap.initialize(self._url)
+            l.protocol_version = ldap.VERSION3
+            searchFilter = '(|(mail=' + email + ')(mailalternateaddress=' + email + '))'
+            ldap_result = l.search_s(self._user_base, ldap.SCOPE_SUBTREE,
+                                      searchFilter, retrieveAttributes)
+
+            if ldap_result[0][1]['uid'][0]:
+                return ldap_result[0][1]['uid'][0]
+            else:
+                return None
+
+        except ldap.LDAPError:
+            print "ldap error"
+            return None
+        except IndexError:
+            print "index error"
+            return None
+        finally:
+            if l:
+                l.unbind_s()
+
     def get_user(self, user_id):
         raise NotImplemented()
 
