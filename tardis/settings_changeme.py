@@ -169,6 +169,7 @@ DEFAULT_AUTH = 'localdb'
 
 AUTH_PROFILE_MODULE = 'tardis_portal.UserProfile'
 
+
 ACCOUNT_ACTIVATION_DAYS = 3
 
 # Email Configuration

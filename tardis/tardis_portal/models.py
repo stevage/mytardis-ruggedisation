@@ -143,8 +143,6 @@ class Experiment(models.Model):
     description = models.TextField(blank=True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
-    created_time = models.DateTimeField(null=True, blank=True,
-        auto_now_add=True)
     created_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User)
@@ -762,7 +760,7 @@ def _getParameter(parameter):
         return mark_safe(value)
 
     elif parameter.name.isFilename():
-        if parameter.name.units.startswith('image'):
+        if parameter.name.units.startswith('image') and	parameter.string_value:
             parset = type(parameter.parameterset).__name__
             viewname = ''
             if parset == 'DatafileParameterSet':
@@ -775,8 +773,8 @@ def _getParameter(parameter):
                 value = "<img src='%s' />" % reverse(viewname=viewname,
                                                      args=[parameter.id])
                 return mark_safe(value)
-
-        return parameter.string_value
+	else:
+	    return parameter.string_value
 
     elif parameter.name.isDateTime():
         value = str(parameter.datetime_value)
@@ -878,7 +876,10 @@ def pre_save_parameter(sender, **kwargs):
             if not exists(dirname):
                 mkdir(dirname)
             f = open(filepath, 'w')
-            f.write(b64decode(b64))
+	    try:
+		f.write(b64decode(b64))
+	    except TypeError:
+		f.write(b64)
             f.close()
             parameter.string_value = filename
 

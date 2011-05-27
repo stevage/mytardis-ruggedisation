@@ -62,7 +62,7 @@ from tardis.tardis_portal.forms import ExperimentForm, \
     ChangeGroupPermissionsForm, ChangeUserPermissionsForm, \
     ImportParamsForm, create_parameterset_edit_form, \
     save_datafile_edit_form, create_datafile_add_form,\
-    save_datafile_add_form
+    save_datafile_add_form, MXDatafileSearchForm
 
 from tardis.tardis_portal.errors import UnsupportedSearchQueryTypeError
 from tardis.tardis_portal.staging import add_datafile_to_dataset,\
@@ -82,7 +82,6 @@ from tardis.tardis_portal.auth import auth_service
 from tardis.tardis_portal.shortcuts import render_response_index, \
     return_response_error, return_response_not_found, \
     return_response_error_message, render_response_search
-from tardis.tardis_portal.MultiPartForm import MultiPartForm
 from tardis.tardis_portal.metsparser import parseMets
 from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 
@@ -117,11 +116,7 @@ def site_settings(request):
     if request.method == 'POST':
         if 'username' in request.POST and 'password' in request.POST:
 
-            username = request.POST['username']
-            password = request.POST['password']
-
-            user = auth_service.authenticate(username=username,
-                                             password=password,
+            user = auth_service.authenticate(request=request,
                                              authMethod=localdb_auth_key)
             if user is not None:
                 if user.is_staff:
@@ -139,10 +134,9 @@ def site_settings(request):
 
 
 def load_image(request, experiment_id, parameter):
-    from os.path import abspath, join
-    file_path = abspath(join(settings.FILE_STORE_PATH,
-                             str(experiment_id),
-                             parameter.string_value))
+    file_path = path.abspath(path.join(settings.FILE_STORE_PATH,
+                                       str(experiment_id),
+                                       parameter.string_value))
 
     from django.core.servers.basehttp import FileWrapper
     wrapper = FileWrapper(file(file_path))
@@ -521,7 +515,8 @@ def metsexport_experiment(request, experiment_id):
 
     from os.path import basename
     from django.core.servers.basehttp import FileWrapper
-    from tardis.tardis_portal.metsexporter import exporter
+    from tardis.tardis_portal.metsexporter import MetsExporter
+    exporter = MetsExporter()
     filename = exporter.export(experiment_id)
     response = HttpResponse(FileWrapper(file(filename)),
                             mimetype='application')
@@ -649,35 +644,8 @@ def manage_auth_methods(request):
         return list_auth_methods(request)
 
 
-def register_experiment_ws_xmldata_internal(request):
-    logger.debug('def register_experiment_ws_xmldata_internal')
-    if request.method == 'POST':
-
-        username = request.POST['username']
-        password = request.POST['password']
-        filename = request.POST['filename']
-        eid = request.POST['eid']
-
-        from django.contrib.auth import authenticate
-        user = authenticate(username=username, password=password)
-        if user is not None:
-            if not user.is_active:
-                return return_response_error(request)
-        else:
-            return return_response_error(request)
-
-        _registerExperimentDocument(filename=filename,
-                created_by=user, expid=eid)
-
-        response = HttpResponse('Finished cataloging: %s' % eid,
-                                status=200)
-        response['Location'] = request.build_absolute_uri(
-            '/experiment/view/' + str(eid))
-
-        return response
-
-
 # TODO removed username from arguments
+@transaction.commit_on_success
 def _registerExperimentDocument(filename, created_by, expid=None,
                                 owners=[], username=None):
     '''
@@ -709,39 +677,38 @@ def _registerExperimentDocument(filename, created_by, expid=None,
         logger.debug('processing METS')
         eid = parseMets(filename, created_by, expid)
 
-    # for each PI
-    for owner in owners:
-        if owner:
-            # TODO: enable LDAP module here!
+    auth_key = ''
+    try:
+        auth_key = settings.DEFAULT_AUTH
+    except AttributeError:
+        logger.error('no default authentication for experiment ownership set')
 
-            # try get user from email
-            # if settings.LDAP_ENABLE:
-            #     u = ldap_auth.get_or_create_user_ldap(owner)
-            # else:
-                # print "owner", owner
-            u = User.objects.get(username=owner)
+    if auth_key:
+        for owner in owners:
+            # for each PI
+            if owner:
+                user = auth_service.getUser({'pluginname': auth_key,
+                                             'id': owner})
+                # if exist, create ACL
+                if user:
+                    logger.debug('registering owner: ' + owner)
+                    e = Experiment.objects.get(pk=eid)
 
-            # if exist, create ACL
-            if u:
-                logger.debug('registering owner: ' + owner)
-                e = Experiment.objects.get(pk=eid)
-
-                acl = ExperimentACL(experiment=e,
-                                    pluginId=django_user,
-                                    entityId=str(u.id),
-                                    canRead=True,
-                                    canWrite=True,
-                                    canDelete=True,
-                                    isOwner=True,
-                                    aclOwnershipType=ExperimentACL.OWNER_OWNED)
-                acl.save()
+                    acl = ExperimentACL(experiment=e,
+                                        pluginId=django_user,
+                                        entityId=str(user.id),
+                                        canRead=True,
+                                        canWrite=True,
+                                        canDelete=True,
+                                        isOwner=True,
+                                        aclOwnershipType=ExperimentACL.OWNER_OWNED)
+                    acl.save()
 
     return eid
 
 
 # web service
 def register_experiment_ws_xmldata(request):
-    import threading
 
     status = ''
     if request.method == 'POST':  # If the form has been submitted...
@@ -754,13 +721,10 @@ def register_experiment_ws_xmldata(request):
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             originid = form.cleaned_data['originid']
+            from_url = form.cleaned_data['from_url']
 
-            from_url = None
-            if 'form_url' in request.POST:
-                from_url = request.POST['from_url']
-
-            from django.contrib.auth import authenticate
-            user = authenticate(username=username, password=password)
+            user = auth_service.authenticate(request=request,
+                                             authMethod=localdb_auth_key)
             if user:
                 if not user.is_active:
                     return return_response_error(request)
@@ -773,64 +737,46 @@ def register_experiment_ws_xmldata(request):
                 created_by=user,
                 )
             e.save()
+	    eid = e.id
 
-            eid = e.id
-
-            # TODO: this entire function needs a fancy class with functions for
-            # each part..
-            from os import makedirs, system
-            from os.path import exists, join
-            dir = join(settings.FILE_STORE_PATH, str(eid))
-            if not exists(dir):
-                makedirs(dir)
-                system('chmod g+w ' + dir)
-
-            filename = dir + '/METS.xml'
-            file = open(filename, 'wb+')
+            filename = path.join(e.get_or_create_directory(),
+                                 'mets_upload.xml')
+	    print filename
+            f = open(filename, 'wb+')
             for chunk in xmldata.chunks():
-                file.write(chunk)
-            file.close()
+                f.write(chunk)
+            f.close()
 
-            class RegisterThread(threading.Thread):
-
-                @transaction.commit_on_success
-                def run(self):
-                    logger.info('=== processing experiment %s: START' % eid)
-                    owners = request.POST.getlist('experiment_owner')
-                    try:
-                        _registerExperimentDocument(filename=filename,
-                                                    created_by=user,
-                                                    expid=eid,
-                                                    owners=owners,
-                                                    username=username)
-                        logger.info('=== processing experiment %s: DONE' % eid)
-                    except:
-                        e.delete()
-                        logger.exception('=== processing experiment %s: FAILED!' % eid)
-            RegisterThread().start()
+            logger.info('=== processing experiment: START')
+            owners = request.POST.getlist('experiment_owner')
+            try:
+                _registerExperimentDocument(filename=filename,
+					    created_by=user,
+					    expid=eid,
+					    owners=owners,
+					    username=username)
+                logger.info('=== processing experiment %s: DONE' % eid)
+            except:
+                logger.exception('=== processing experiment %s: FAILED!' % eid)
+                return return_response_error(request)
 
             if from_url:
-
-                class FileTransferThread(threading.Thread):
-
-                    def run(self):
-                        # todo remove hard coded u/p for sync transfer....
-                        logger.debug('started transfer thread')
-                        file_transfer_url = from_url + '/file_transfer/'
-                        data = urlencode({
+                logger.debug('=== sending file request')
+                try:
+                    file_transfer_url = from_url + '/file_transfer/'
+                    data = urlencode({
                             'originid': str(originid),
                             'eid': str(eid),
-                            'site_settings_url': request.build_absolute_uri(
-                                    '/site-settings.xml/'),
-                            'username': str('synchrotron'),
-                            'password': str('tardis'),
+                            'site_settings_url':
+                                request.build_absolute_uri('site-settings.xml/'),
                             })
-                        urlopen(file_transfer_url, data)
+                    urlopen(file_transfer_url, data)
+                    logger.info('=== file-transfer request submitted to %s'
+                                % file_transfer_url)
+                except:
+                    logger.exception('=== file-transfer request to %s FAILED!'
+                                     % file_transfer_url)
 
-                logger.debug('Sending file request')
-                FileTransferThread().start()
-
-            logger.debug('returning response from main call')
             response = HttpResponse(str(eid), status=200)
             response['Location'] = request.build_absolute_uri(
                 '/experiment/view/' + str(eid))
@@ -1248,6 +1194,15 @@ def __forwardToSearchDatafileFormPage(request, searchQueryType,
         searchForm=None):
     """Forward to the search data file form page."""
 
+    # TODO: remove this later on when we have a more generic search form
+    if searchQueryType == 'mx':
+        url = 'tardis_portal/search_datafile_form_mx.html'
+	searchForm = MXDatafileSearchForm()
+	c = Context({'header': 'Search Datafile',
+		     'searchForm': searchForm})
+	return HttpResponse(render_response_search(request, url, c))
+	
+
     url = 'tardis_portal/search_datafile_form.html'
     if not searchForm:
         #if searchQueryType == 'saxs':
@@ -1257,10 +1212,6 @@ def __forwardToSearchDatafileFormPage(request, searchQueryType,
         #    # TODO: what do we need to do if the user didn't provide a page to
         #            display?
         #    pass
-
-    # TODO: remove this later on when we have a more generic search form
-    if searchQueryType == 'mx':
-        url = 'tardis_portal/search_datafile_form_mx.html'
 
     from itertools import groupby
 

@@ -271,10 +271,12 @@ class MXDatafileSearchForm(DatafileSearchForm):
         required=False, label='Max Resolution Limit')
     xrayWavelengthFrom = forms.IntegerField(
         required=False, label='X-ray Wavelength From',
-        widget=forms.TextInput(attrs={'size': '4'}))
+        widget=forms.TextInput(attrs={'size': '4'})
+    	)
     xrayWavelengthTo = forms.IntegerField(
         required=False, label='X-ray Wavelength To',
-        widget=forms.TextInput(attrs={'size': '4'}))
+        widget=forms.TextInput(attrs={'size': '4'})
+    	)
 
 
 def createLinkedUserAuthenticationForm(authMethods):
@@ -321,7 +323,7 @@ class RegisterExperimentForm(forms.Form):
     xmldata = forms.FileField()
     experiment_owner = forms.CharField(max_length=400, required=False)
     originid = forms.CharField(max_length=400, required=False)
-
+    from_url = forms.CharField(max_length=400, required=False)
 
 class Author_Experiment(forms.ModelForm):
 
