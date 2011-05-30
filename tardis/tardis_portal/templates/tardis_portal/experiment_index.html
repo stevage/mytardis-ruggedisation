@@ -34,9 +34,7 @@
       {% if experiments %}
         <strong>{{ experiments.count }}</strong> experiment{{ experiments.count|pluralize}}
       {% endif %}
-      <br/>
-      <br/>
-
+	
       {% if experiments %}
         <table class="experiment-table">
 	  {% for experiment in experiments %}
@@ -86,8 +84,6 @@
       public experiment{{ public_experiments.count|pluralize }}
     {% endif %}
 
-    <br/>
-    <br/>
 
     {% if public_experiments %}
       <table class="experiment-table">
