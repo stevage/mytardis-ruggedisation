@@ -72,8 +72,8 @@ class MonashANDSService():
                         party_rif_cs
                         )
 
+        message = ""
         if 'ldap_party' in request.POST:
-            message = ""
             fail = False
 
             for email in request.POST.getlist('ldap_party'):
@@ -192,28 +192,29 @@ class MonashANDSService():
 
         if mas_settings.HANDLE_ENABLE:
             if not experiment.handle:
+                try:
+                    from HandleService import HandleService
+                    from django.contrib.sites.models import Site
 
-                from HandleService import HandleService
-                from django.contrib.sites.models import Site
+                    hdlsrv = HandleService()
 
-                hdlsrv = HandleService()
+                    response = hdlsrv.mint(
+                        mas_settings.AUTHTYPE, mas_settings.IDENTIFIER,
+                        mas_settings.AUTHDOMAIN, mas_settings.APPID,
+                        mas_settings.MINTURL, "http://" +\
+                            Site.objects.get_current().domain +\
+                            "/experiment/view/" + str(experiment.id))
+                    from xml.dom import minidom
+                    xmldoc = minidom.parseString(response)
 
-                response = hdlsrv.mint(
-                    mas_settings.AUTHTYPE, mas_settings.IDENTIFIER,
-                    mas_settings.AUTHDOMAIN, mas_settings.APPID,
-                    mas_settings.MINTURL, "http://" +\
-                        Site.objects.get_current().domain +\
-                        "/experiment/view/" + str(experiment.id))
+                    handle = xmldoc.firstChild.childNodes[1].attributes["handle"].value
 
-                from xml.dom import minidom
-                xmldoc = minidom.parseString(response)
+                    if handle:
+                        experiment.handle = handle
+                        experiment.save()
 
-                handle = xmldoc.firstChild.childNodes[1].attributes["handle"].value
-
-                if handle:
-                    experiment.handle = handle
-                    experiment.save()
-
+                except KeyError:
+                    logger.error("Persistent handle minting failed")
 
         if settings.OAI_DOCS_PATH:
             XMLWriter.write_template_to_file(
