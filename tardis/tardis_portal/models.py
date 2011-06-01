@@ -175,9 +175,10 @@ class Experiment(models.Model):
         dirname = path.join(settings.FILE_STORE_PATH,
                             str(self.id))
         if not path.exists(dirname):
-            from os import mkdir
+            from os import chmod, mkdir
             try:
                 mkdir(dirname)
+                chmod(dirname, 770)
             except:
                 dirname = None
         return dirname
@@ -505,6 +506,7 @@ class Dataset_File(models.Model):
         filename = self.get_absolute_filepath()
         os.remove(filename)
         self.delete()
+
 
 def save_DatasetFile(sender, **kwargs):
 
