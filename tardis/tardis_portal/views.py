@@ -688,7 +688,7 @@ def _registerExperimentDocument(filename, created_by, expid=None,
             # for each PI
             if owner:
                 user = auth_service.getUser({'pluginname': auth_key,
-                                             'email': owner})
+                                             'id': owner})
                 # if exist, create ACL
                 if user:
                     logger.debug('registering owner: ' + owner)
@@ -737,11 +737,11 @@ def register_experiment_ws_xmldata(request):
                 created_by=user,
                 )
             e.save()
-            eid = e.id
+	    eid = e.id
 
             filename = path.join(e.get_or_create_directory(),
                                  'mets_upload.xml')
-            print filename
+	    print filename
             f = open(filename, 'wb+')
             for chunk in xmldata.chunks():
                 f.write(chunk)
@@ -751,10 +751,10 @@ def register_experiment_ws_xmldata(request):
             owners = request.POST.getlist('experiment_owner')
             try:
                 _registerExperimentDocument(filename=filename,
-                                            created_by=user,
-                                            expid=eid,
-                                            owners=owners,
-                                            username=username)
+					    created_by=user,
+					    expid=eid,
+					    owners=owners,
+					    username=username)
                 logger.info('=== processing experiment %s: DONE' % eid)
             except:
                 logger.exception('=== processing experiment %s: FAILED!' % eid)
@@ -768,7 +768,7 @@ def register_experiment_ws_xmldata(request):
                             'originid': str(originid),
                             'eid': str(eid),
                             'site_settings_url':
-                                request.build_absolute_uri('/site-settings.xml/'),
+                                request.build_absolute_uri('site-settings.xml/'),
                             })
                     urlopen(file_transfer_url, data)
                     logger.info('=== file-transfer request submitted to %s'
@@ -1197,11 +1197,11 @@ def __forwardToSearchDatafileFormPage(request, searchQueryType,
     # TODO: remove this later on when we have a more generic search form
     if searchQueryType == 'mx':
         url = 'tardis_portal/search_datafile_form_mx.html'
-        searchForm = MXDatafileSearchForm()
-        c = Context({'header': 'Search Datafile',
-                     'searchForm': searchForm})
-        return HttpResponse(render_response_search(request, url, c))
-
+	searchForm = MXDatafileSearchForm()
+	c = Context({'header': 'Search Datafile',
+		     'searchForm': searchForm})
+	return HttpResponse(render_response_search(request, url, c))
+	
 
     url = 'tardis_portal/search_datafile_form.html'
     if not searchForm:
