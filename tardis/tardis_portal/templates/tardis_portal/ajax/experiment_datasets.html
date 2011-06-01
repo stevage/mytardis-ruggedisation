@@ -141,7 +141,7 @@
     $('.pagelink').live('click', function( event ){
 	var href = $(this).attr("href");
 	html = $(this).html();
-	$(this).html(html + " " + loadingHTML);
+	$(this).html(loadingHTML);
 	$(this).parents('.datafile_list').load(href, function(){
 
 		$(".dataset_selector_all").unbind('click');
@@ -156,9 +156,6 @@
 		    $(this).parent().find('.datafile_checkbox').removeAttr("checked");
 
 		});
-
-
-	    $(this).html(html);
 
 	})
 	return false;
