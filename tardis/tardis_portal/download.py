@@ -210,17 +210,20 @@ def download_datafiles(request):
                             absolute_filename)
 
                         print filepath + "######"
-                        import os
-                        if not os.path.exists(settings.FILE_STORE_PATH +\
-                            "/" + filepath):
 
-                            filePath = '%s/%s ' % (expid, absolute_filename)
+                        try:
+                            wrapper = FileWrapper(file(
+                                datafile.get_absolute_filepath()))\
+                            #exists test. os.exists broken
+                        except IOError:
+                            print "OLD FILE DETECTED"
+                            filepath = '%s/%s ' % (expid, absolute_filename)
 
-                        fileString += filePath
+                        fileString += filepath
                         print fileString
                     else:
                         fileString += '%s/%s ' % (expid, absolute_filename)
-                    
+
                     fileSize += long(datafile.size)
         else:
             return return_response_not_found(request)
@@ -247,14 +250,17 @@ def download_datafiles(request):
                         #temp fix for old data
                         filepath = '%s/%s/%s ' % (expid, str(datafile.dataset.id),
                             absolute_filename)
-			
-                        print filepath + "######"
-                        import os
-                        if not os.path.exists(settings.FILE_STORE_PATH +\
-                            "/" + filepath):
 
-                            filePath = '%s/%s ' % (expid, absolute_filename)
-                        
+                        print filepath + "######"
+
+                        try:
+                            wrapper = FileWrapper(file(
+                                datafile.get_absolute_filepath()))\
+                            #exists test. os.exists broken
+                        except IOError:
+                            print "OLD FILE DETECTED"
+                            filepath = '%s/%s ' % (expid, absolute_filename)
+
                         fileString += filePath
                         print fileString
                     else:
