@@ -19,7 +19,8 @@ import os
 from tardis.apps.monash_ands.ldap_query import \
     LDAPUserQuery
 import suds
-
+from django.contrib.sites.models import Site
+from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 
 class MonashANDSService():
 
@@ -158,12 +159,26 @@ class MonashANDSService():
                         activity_rif_cs
                         )
 
-        c = Context({
+        cch = CreativeCommonsHandler(experiment_id=experiment.id)
+
+        license_name = ""
+        if cch.has_cc_license():
+            psm = cch.get_or_create_cc_parameterset()
+
+            license_name = ""
+            try:
+                license_name = psm.get_param('license_name', True)
+            except ExperimentParameter.DoesNotExist:
+                pass
+
+        c = Context(dict({
                     'now': datetime.datetime.now(),
                     'experiment': experiment,
                     'party_keys': monash_id_list,
                     'activity_keys': request.POST.getlist('activity'),
-                    })
+                    'site_domain': Site.objects.get_current().domain,
+                    'license_name': license_name,
+                    }))
 
         custom_description = None
         if 'custom_description' in request.POST:
@@ -194,7 +209,6 @@ class MonashANDSService():
             if not experiment.handle:
                 try:
                     from HandleService import HandleService
-                    from django.contrib.sites.models import Site
 
                     hdlsrv = HandleService()
 
