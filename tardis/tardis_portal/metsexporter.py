@@ -12,26 +12,18 @@ from tardis.tardis_portal.models import *
 from tardis.tardis_portal.schema.mets import *
 
 
-<<<<<<< HEAD
-=======
 logger = logging.getLogger(__name__)
 
 
->>>>>>> master
 # XHTML namespace prefix
 prefix = 'tardis'
 
 
 class MetsExporter():
 
-<<<<<<< HEAD
-    def export(self, experimentId, replace_protocols={}):
-       # initialise the metadata counter
-=======
     def export(self, experimentId, replace_protocols={}, filename=None, export_images=False):
         self.export_images = export_images
         # initialise the metadata counter
->>>>>>> master
         metadataCounter = 1
         experiment = Experiment.objects.get(id=experimentId)
 
@@ -217,17 +209,6 @@ class MetsExporter():
                         self.export_images == True:
 
                     # encode image as b64
-<<<<<<< HEAD
-                    expid = parameter.getExpId()
-                    file_path = abspath(join(settings.FILE_STORE_PATH,
-                                             str(expid),
-                                             parameter.string_value))
-		    try:
-			metadataDict[parameter.name.name] = \
-                        b64encode(open(file_path).read())
-		    except:
-			logger.exception('b64encoding failed: %s' % file_path)
-=======
                     file_path = abspath(experiment.get_or_create_directory(),
                                         parameter.string_value)
                     try:
@@ -235,7 +216,6 @@ class MetsExporter():
                         b64encode(open(file_path).read())
                     except:
                         logger.exception('b64encoding failed: %s' % file_path)
->>>>>>> master
                 else:
                     metadataDict[parameter.name.name] = \
                         parameter.string_value.strip() or 'None'
@@ -255,22 +235,6 @@ class MetsExporter():
         metadataDict - a dictionary of the metadata fields where key is the
             name of the field while the value is the value of the field.
         """
-<<<<<<< HEAD
-	import xml.etree.ElementTree as ET
-
-        # build a tree structure
-        xmlDataContentEl = ET.Element('%s:%s' %(prefix, elementName))
-
-        for k, v in metadataDict.iteritems():
-	    metadataField = ET.SubElement(xmlDataContentEl, '%s:%s' %(prefix, k))
-            metadataField.text = v
-
-	xmlDataContentEl.set('xmlns:' + prefix, schemaURI)
-        return xmlDataContentEl
-
-    def getDmdSecXmlDataForExperiment(self, experiment, schemaURI):
-	import xml.etree.ElementTree as ET
-=======
         import xml.etree.ElementTree as ET
 
         # build a tree structure
@@ -285,7 +249,6 @@ class MetsExporter():
 
     def getDmdSecXmlDataForExperiment(self, experiment, schemaURI):
         import xml.etree.ElementTree as ET
->>>>>>> master
 
         # build a tree structure
         xmlDataContentEl = ET.Element("mods:mods")
@@ -308,17 +271,6 @@ class MetsExporter():
         abstract = ET.SubElement(xmlDataContentEl, "mods:abstract")
         abstract.text = experiment.description
 
-<<<<<<< HEAD
-	start_time = experiment.start_time
-	end_time = experiment.end_time
-	if start_time and end_time:
-	    dateElement = ET.SubElement(xmlDataContentEl, "tardis:tardis")
-	    startElement = ET.SubElement(dateElement, "tardis:startTime")
-	    startElement.text = str(start_time)
-	    endElement = ET.SubElement(dateElement, "tardis:endTime")
-	    endElement.text = str(end_time)
-	    dateElement.set('xmlns:tardis', "http://tardisdates.com/")
-=======
         start_time = experiment.start_time
         end_time = experiment.end_time
         if start_time and end_time:
@@ -328,7 +280,6 @@ class MetsExporter():
             endElement = ET.SubElement(dateElement, "tardis:endTime")
             endElement.text = str(end_time)
             dateElement.set('xmlns:tardis', "http://tardisdates.com/")
->>>>>>> master
 
         authors = Author_Experiment.objects.filter(experiment=experiment)
         for author in authors:
@@ -342,21 +293,13 @@ class MetsExporter():
 
         # TODO: figure out where I could get the PDB details
 
-<<<<<<< HEAD
-	xmlDataContentEl.set('xmlns:mods', schemaURI)
-=======
         xmlDataContentEl.set('xmlns:mods', schemaURI)
->>>>>>> master
         _xmlData = xmlData()
         _xmlData.add_xsdAny_(xmlDataContentEl)
         return _xmlData
 
     def getDmdSecXmlDataForDataset(self, dataset, schemaURI):
-<<<<<<< HEAD
-	import xml.etree.ElementTree as ET
-=======
         import xml.etree.ElementTree as ET
->>>>>>> master
 
         # build a tree structure
         xmlDataContentEl = ET.Element("mods:mods")
@@ -366,11 +309,7 @@ class MetsExporter():
         title.text = dataset.description
 
         # TODO: figure out where I could get the PDB details
-<<<<<<< HEAD
-	xmlDataContentEl.set('xmlns:mods', schemaURI)
-=======
         xmlDataContentEl.set('xmlns:mods', schemaURI)
->>>>>>> master
         _xmlData = xmlData()
         _xmlData.add_xsdAny_(xmlDataContentEl)
         return _xmlData

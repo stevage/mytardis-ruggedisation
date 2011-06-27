@@ -240,8 +240,8 @@ class AuthService():
 
         plugin = user_dict['pluginname']
 
-        username = ""
-        if "email" in user_dict:
+        username = ''
+        if not 'id' in user_dict:
             email = user_dict['email']
             username =\
                 self._authentication_backends[plugin].getUsernameByEmail(email)
@@ -257,17 +257,14 @@ class AuthService():
 
         # length of the maximum username
         max_length = 30
-        username = username[:max_length]
 
-        # remove email component
+        # the username to be used on the User table
         if username.find('@') > 0:
-            # the username to be used on the User table
-            name = username.partition('@')[0]
+            unique_username = username.partition('@')[0][:max_length]
         else:
-            name = username
+            unique_username = username[:max_length]
 
         # Generate a unique username
-        unique_username = username
         i = 0
         try:
             while (User.objects.get(username=unique_username)):
@@ -277,7 +274,7 @@ class AuthService():
             pass
 
         password = User.objects.make_random_password()
-        user = User.objects.create_user(username=username,
+        user = User.objects.create_user(username=unique_username,
                                         password=password,
                                         email=user_dict.get("email", ""))
         user.save()
