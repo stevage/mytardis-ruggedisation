@@ -1955,11 +1955,11 @@ def stats(request):
     public_experiments = Experiment.objects.filter()
 
     size = 0
-    for df in public_datafiles:
-        try:
-            size = size + long(df.size)
-        except:
-            pass
+#    for df in public_datafiles:
+#        try:
+#            size = size + long(df.size)
+#        except:
+#            pass
 
     public_datafile_size = size
 
