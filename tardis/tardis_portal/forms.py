@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 #
-# Copyright (c) 2010, Monash e-Research Centre
+# Copyright (c) 2010-2011, Monash e-Research Centre
 #   (Monash University, Australia)
-# Copyright (c) 2010, VeRSI Consortium
+# Copyright (c) 2010-2011, VeRSI Consortium
 #   (Victorian eResearch Strategic Initiative, Australia)
 # All rights reserved.
 # Redistribution and use in source and binary forms, with or without
@@ -52,14 +52,24 @@ from django.db import transaction
 from django.contrib.auth.models import User
 from django.utils.translation import ugettext_lazy as _
 
+from form_utils import forms as formutils
 from registration.models import RegistrationProfile
 
 from tardis.tardis_portal import models
 from tardis.tardis_portal.fields import MultiValueCommaSeparatedField
-from tardis.tardis_portal.widgets import CommaSeparatedInput, Span
+from tardis.tardis_portal.widgets import CommaSeparatedInput, Span, TextInput
 from tardis.tardis_portal.models import UserProfile, UserAuthentication
 from tardis.tardis_portal.auth.localdb_auth \
     import auth_key as locabdb_auth_key
+
+from tardis.tardis_portal.ParameterSetManager import ParameterSetManager
+
+
+def getAuthMethodChoices():
+    authMethodChoices = ()
+    for authMethods in settings.AUTH_PROVIDERS:
+        authMethodChoices += ((authMethods[0], authMethods[1]),)
+    return authMethodChoices
 
 
 class LoginForm(AuthenticationForm):
@@ -72,13 +82,9 @@ class LoginForm(AuthenticationForm):
                              label="Username",
                              max_length=75)
 
-        authMethodChoices = ()
-        for authMethods in settings.AUTH_PROVIDERS:
-            authMethodChoices += ((authMethods[0], authMethods[1]),)
-
         self.fields['authMethod'] = \
             forms.CharField(required=True,
-                            widget=forms.Select(choices=authMethodChoices),
+                            widget=forms.Select(choices=getAuthMethodChoices()),
                             label='Authentication Method')
 
 
@@ -101,11 +107,12 @@ class RegistrationForm(forms.Form):
 
     username = forms.RegexField(
         regex=r'^[\w\.]+$',
-        max_length=31 - len(locabdb_auth_key),  # 31, max pw len with _ char
+        max_length=30,
         widget=forms.TextInput(attrs=attrs_dict),
         label=_("Username"),
         error_messages={'invalid':
-                            _("This value must contain only letters, numbers and underscores.")})
+            _("This value must contain only letters, \
+            numbers and underscores.")})
     email = forms.EmailField(widget=forms.TextInput(attrs=dict(attrs_dict,
                                                                maxlength=75)),
                              label=_("Email address"))
@@ -124,10 +131,10 @@ class RegistrationForm(forms.Form):
         in use.
 
         """
-        username = '%s_%s' % (locabdb_auth_key, self.cleaned_data['username'])
+        username = '%s' % self.cleaned_data['username']
 
         try:
-            user = User.objects.get(username__iexact=username)
+            User.objects.get(username__iexact=username)
         except User.DoesNotExist:
             return username
         raise forms.ValidationError(
@@ -162,7 +169,7 @@ class RegistrationForm(forms.Form):
 
         authentication = UserAuthentication(
             userProfile=userProfile,
-            username=self.cleaned_data['username'].split(locabdb_auth_key)[1],
+            username=self.cleaned_data['username'],
             authenticationMethod=locabdb_auth_key)
         authentication.save()
 
@@ -170,6 +177,7 @@ class RegistrationForm(forms.Form):
 
 
 class ChangeUserPermissionsForm(ModelForm):
+
     class Meta:
         from django.forms.extras.widgets import SelectDateWidget
         from tardis.tardis_portal.models import ExperimentACL
@@ -192,6 +200,51 @@ class ChangeGroupPermissionsForm(forms.Form):
             widget=SelectDateWidget(), required=False)
     expiryDate = forms.DateTimeField(label='Expiry Date',
             widget=SelectDateWidget(), required=False)
+
+
+class AddUserPermissionsForm(forms.Form):
+
+    authMethod = forms.CharField(required=True,
+        widget=forms.Select(choices=getAuthMethodChoices()),
+        label='Authentication Method')
+    adduser = forms.CharField(label='User', required=False, max_length=100)
+    adduser.widget.attrs['class'] = 'usersuggest'
+    read = forms.BooleanField(label='READ', required=False, initial=True)
+    read.widget.attrs['class'] = 'canRead'
+    write = forms.BooleanField(label='WRITE', required=False)
+    write.widget.attrs['class'] = 'canWrite'
+    delete = forms.BooleanField(label='DELETE', required=False)
+    delete.widget.attrs['class'] = 'canDelete'
+
+
+class AddGroupPermissionsForm(forms.Form):
+
+    addgroup = forms.CharField(label='Group', required=False, max_length=100)
+    addgroup.widget.attrs['class'] = 'groupsuggest'
+    create = forms.BooleanField(label='CREATE?', required=False)
+    create.widget.attrs['class'] = 'creategroup'
+    authMethod = forms.CharField(required=True,
+        widget=forms.Select(choices=getAuthMethodChoices()),
+        label='Authentication Method')
+    adduser = forms.CharField(label='User', required=False, max_length=100)
+    adduser.widget.attrs['class'] = 'usersuggest'
+    read = forms.BooleanField(label='READ', required=False, initial=True)
+    read.widget.attrs['class'] = 'canRead'
+    write = forms.BooleanField(label='WRITE', required=False)
+    write.widget.attrs['class'] = 'canWrite'
+    delete = forms.BooleanField(label='DELETE', required=False)
+    delete.widget.attrs['class'] = 'canDelete'
+
+
+class ManageGroupPermissionsForm(forms.Form):
+
+    authMethod = forms.CharField(required=True,
+        widget=forms.Select(choices=getAuthMethodChoices()),
+        label='Authentication Method')
+    adduser = forms.CharField(label='User', required=False, max_length=100)
+    adduser.widget.attrs['class'] = 'usersuggest'
+    admin = forms.BooleanField(label='Group Admin', required=False, initial=False)
+    admin.widget.attrs['class'] = 'isAdmin'
 
 
 class DatafileSearchForm(forms.Form):
@@ -218,10 +271,12 @@ class MXDatafileSearchForm(DatafileSearchForm):
         required=False, label='Max Resolution Limit')
     xrayWavelengthFrom = forms.IntegerField(
         required=False, label='X-ray Wavelength From',
-        widget=forms.TextInput(attrs={'size': '4'}))
+        widget=forms.TextInput(attrs={'size': '4'})
+        )
     xrayWavelengthTo = forms.IntegerField(
         required=False, label='X-ray Wavelength To',
-        widget=forms.TextInput(attrs={'size': '4'}))
+        widget=forms.TextInput(attrs={'size': '4'})
+        )
 
 
 def createLinkedUserAuthenticationForm(authMethods):
@@ -254,18 +309,6 @@ class IRDatafileSearchForm(DatafileSearchForm):
     pass
 
 
-class EquipmentSearchForm(forms.Form):
-
-    key = forms.CharField(label='Short Name',
-        max_length=30, required=False)
-    description = forms.CharField(label='Description',
-        required=False)
-    make = forms.CharField(label='Make', max_length=60, required=False)
-    model = forms.CharField(label='Model', max_length=60, required=False)
-    type = forms.CharField(label='Type', max_length=60, required=False)
-    serial = forms.CharField(label='Serial No', max_length=60, required=False)
-
-
 class ImportParamsForm(forms.Form):
 
     username = forms.CharField(max_length=400, required=True)
@@ -280,7 +323,7 @@ class RegisterExperimentForm(forms.Form):
     xmldata = forms.FileField()
     experiment_owner = forms.CharField(max_length=400, required=False)
     originid = forms.CharField(max_length=400, required=False)
-
+    from_url = forms.CharField(max_length=400, required=False)
 
 class Author_Experiment(forms.ModelForm):
 
@@ -295,6 +338,7 @@ class FullExperimentModel(UserDict):
     the :func:`tardis.tardis_portal.forms.FullExperiment.save` function.
     It provides a convience method for saving the model objects.
     """
+
     def save_m2m(self):
         """
         {'experiment': experiment,
@@ -308,21 +352,26 @@ class FullExperimentModel(UserDict):
             ae.experiment = ae.experiment
             ae.save()
         for ds in self.data['datasets']:
-            ds.experiment = ds.experiment
-            ds.save()
+            if not ds.immutable:
+                ds.experiment = ds.experiment
+                ds.save()
         for ds_f in self.data['dataset_files']:
-            ds_f.dataset = ds_f.dataset
-            ds_f.save()
+            if not ds.immutable:
+                ds_f.dataset = ds_f.dataset
+                ds_f.save()
 
         # XXX because saving the form can be now done without
         # commit=False this won't be called during the creation
         # of new experiments.
         if hasattr(self.data['datasets'], 'deleted_forms'):
             for dataset in self.data['datasets'].deleted_forms:
-                dataset.instance.delete()
+                if not dataset.instance.immutable:
+                    dataset.instance.delete()
+
         if hasattr(self.data['dataset_files'], 'deleted_forms'):
             for dataset in self.data['dataset_files'].deleted_forms:
-                dataset.instance.delete()
+                if not dataset.instance.immutable:
+                    dataset.instance.delete()
 
 
 class DataFileFormSet(BaseInlineFormSet):
@@ -336,14 +385,14 @@ class DataFileFormSet(BaseInlineFormSet):
         super(DataFileFormSet, self).__init__(**kwargs)
 
     def save_new(self, form, commit=True):
-        # this is a local file so correct the missing details
+        #this is a local file so correct the missing details
         datafile = super(DataFileFormSet, self).save_new(form, commit=False)
 
         filepath = form.cleaned_data['filename']
         datafile.filename = basename(filepath)
 
         if not 'url' in form.cleaned_data or not form.cleaned_data['url']:
-            datafile.url = 'file://' + filepath
+            datafile.url = filepath
 
         if not 'size' in form.cleaned_data or not form.cleaned_data['size']:
             datafile.size = u'0'
@@ -354,16 +403,12 @@ class DataFileFormSet(BaseInlineFormSet):
         if commit == True:
             datafile = super(DataFileFormSet, self).save_new(form,
                                                              commit=commit)
-        if self._post_save_cb:
-            self._post_save_cb(datafile, True)
         return datafile
 
     def save_existing(self, form, instance, commit=True):
         datafile = super(DataFileFormSet, self).save_existing(form,
                                                               instance,
                                                               commit=commit)
-        if self._post_save_cb:
-            self._post_save_cb(datafile, False)
         return datafile
 
 
@@ -384,8 +429,7 @@ class ExperimentForm(forms.ModelForm):
 
     def __init__(self, data=None, files=None, auto_id='%s', prefix=None,
                  initial=None, error_class=ErrorList, label_suffix=':',
-                 empty_permitted=False, instance=None, extra=0,
-                 datafile_post_save_cb=None):
+                 empty_permitted=False, instance=None, extra=0):
         self.author_experiments = []
         self.datasets = {}
         self.dataset_files = {}
@@ -401,43 +445,64 @@ class ExperimentForm(forms.ModelForm):
                                              empty_permitted=False)
 
         def custom_field_cb(field):
+            #if field.name == 'filename':
+            #    return field.formfield(required=False)
             if field.name == 'url':
-                return field.formfield(required=False)
-            elif field.name == 'filename':
-                return field.formfield(widget=Span)
+                return field.formfield(widget=Span, required=False)
+            else:
+                return field.formfield()
+
+        def custom_dataset_field_cb(field):
+            if field.name == 'description':
+                return field.formfield(
+                    widget=TextInput(attrs={'size': '80'}))
             else:
                 return field.formfield()
 
         # initialise formsets
-        dataset_formset = inlineformset_factory(models.Experiment,
-                                                models.Dataset,
-                                                extra=extra, can_delete=True)
-        datafile_formset = inlineformset_factory(models.Dataset,
-                                                 models.Dataset_File,
-                                                 formset=DataFileFormSet,
-                                                 formfield_callback=custom_field_cb,
-                                                 extra=0, can_delete=True)
+        if instance == None or instance.dataset_set.count() == 0:
+            extra = 1
+        dataset_formset = inlineformset_factory(
+            models.Experiment,
+            models.Dataset,
+            formfield_callback=custom_dataset_field_cb,
+            extra=extra, can_delete=True)
+
+        datafile_formset = inlineformset_factory(
+            models.Dataset,
+            models.Dataset_File,
+            formset=DataFileFormSet,
+            formfield_callback=custom_field_cb,
+            extra=0, can_delete=True)
 
         # fix up experiment form
         post_authors = self._parse_authors(data)
         self._fill_authors(post_authors)
         if instance:
             authors = instance.author_experiment_set.all()
-            self.authors_experiments = [Author_Experiment(instance=a) for a in authors]
+            self.authors_experiments = [Author_Experiment(instance=a) for a
+                                        in authors]
             self.initial['authors'] = ', '.join([a.author for a in authors])
             self.fields['authors'] = \
-                MultiValueCommaSeparatedField([author.fields['author'] for author in self.author_experiments],
-                                              widget=CommaSeparatedInput())
+                MultiValueCommaSeparatedField([author.fields['author'] for
+                                            author in self.author_experiments],
+                                            widget=CommaSeparatedInput())
 
         # fill formsets
         self.datasets = dataset_formset(data=data,
                                         instance=instance,
                                         prefix="dataset")
         for i, df in enumerate(self.datasets.forms):
+            if 'immutable' in df.initial:
+                if df.initial['immutable']:
+                    df.fields['description'].widget.attrs['readonly'] = True
+                    df.fields['description'].editable = False
+                    df.fields['immutable'].editable = False
+                    df.fields['immutable'].widget.attrs['readonly'] = True
+
             self.dataset_files[i] = datafile_formset(data=data,
-                                                     instance=df.instance,
-                                                     post_save_cb=datafile_post_save_cb,
-                                                     prefix="dataset-%s-datafile" % i)
+                                         instance=df.instance,
+                                         prefix="ds-%s-datafile" % i)
 
     def _parse_authors(self, data=None):
         """
@@ -469,8 +534,9 @@ class ExperimentForm(forms.ModelForm):
             self.author_experiments.append(f)
 
         self.fields['authors'] = \
-            MultiValueCommaSeparatedField([author.fields['author'] for author in self.author_experiments],
-                                          widget=CommaSeparatedInput())
+            MultiValueCommaSeparatedField([author.fields['author'] for
+                                        author in self.author_experiments],
+                                        widget=CommaSeparatedInput())
 
     def get_dataset_files(self, number):
         """
@@ -511,23 +577,32 @@ class ExperimentForm(forms.ModelForm):
             o_ae = ae.save(commit=commit)
             author_experiments.append(o_ae)
         for key, dataset in enumerate(self.datasets.forms):
-            # XXX for some random reason the link between the instance needs
-            # to be reinitialised
-            dataset.instance.experiment = experiment
-            o_dataset = dataset.save(commit)
-            datasets.append(o_dataset)
-            # save any datafiles if the data set has any
-            if self.dataset_files[key]:
-                o_df = self.dataset_files[key].save(commit)
-                dataset_files += o_df
+            if dataset not in self.datasets.deleted_forms:
+                # XXX for some random reason the link between
+                # the instance needs
+                # to be reinitialised
+                dataset.instance.experiment = experiment
+                o_dataset = dataset.save(commit)
+                datasets.append(o_dataset)
+                # save any datafiles if the data set has any
+                mutable = True
+                if 'immutable' in dataset.initial:
+                    if dataset.initial['immutable']:
+                        mutable = False
+
+                if self.dataset_files[key] and mutable:
+                    o_df = self.dataset_files[key].save(commit)
+                    dataset_files += o_df
 
         if hasattr(self.datasets, 'deleted_forms'):
             for ds in self.datasets.deleted_forms:
-                ds.instance.delete()
+                if not ds.instance.immutable:
+                    ds.instance.delete()
 
         if hasattr(self.dataset_files, 'deleted_forms'):
             for df in self.dataset_files.deleted_forms:
-                df.instance.delete()
+                if not ds.instance.immutable:
+                    df.instance.delete()
 
         return FullExperimentModel({'experiment': experiment,
                                     'author_experiments': author_experiments,
@@ -570,16 +645,16 @@ def createSearchDatafileForm(searchQueryType):
 
     from errors import UnsupportedSearchQueryTypeError
     from tardis.tardis_portal.models import ParameterName
-    from tardis.tardis_portal import constants
 
     parameterNames = None
 
-    if searchQueryType in constants.SCHEMA_DICT:
+    if searchQueryType in models.Schema.getSubTypes():
         parameterNames = \
             ParameterName.objects.filter(
-            schema__namespace__in=[constants.SCHEMA_DICT[searchQueryType]\
-            ['datafile'], constants.SCHEMA_DICT[searchQueryType]['dataset']],
-            is_searchable='True')
+            schema__namespace__in=models.Schema.getNamespaces(
+            models.Schema.DATAFILE, searchQueryType) +
+            models.Schema.getNamespaces(models.Schema.DATASET,
+            searchQueryType), is_searchable='True')
 
         fields = {}
 
@@ -589,7 +664,7 @@ def createSearchDatafileForm(searchQueryType):
                 initial=searchQueryType)
 
         for parameterName in parameterNames:
-            if parameterName.is_numeric:
+            if parameterName.data_type == ParameterName.NUMERIC:
                 if parameterName.comparison_type \
                     == ParameterName.RANGE_COMPARISON:
                     fields[parameterName.name + 'From'] = \
@@ -629,15 +704,19 @@ def createSearchExperimentForm():
 
     from django.forms.extras.widgets import SelectDateWidget
     from tardis.tardis_portal.models import ParameterName
-    from tardis.tardis_portal import constants
 
-    parameterNames = []
+    parameterNameGroups = {}
 
-    for experimentSchema in constants.EXPERIMENT_SCHEMAS:
-        parameterNames += \
-            ParameterName.objects.filter(
+    for experimentSchema in models.Schema.getNamespaces(
+            type=models.Schema.EXPERIMENT):
+        parameterName = ParameterName.objects.filter(
             schema__namespace__iexact=experimentSchema,
             is_searchable='True')
+        if experimentSchema in parameterNameGroups:
+            parameterNameGroups[experimentSchema] += parameterName
+        else:
+            parameterNameGroups[experimentSchema] = []
+            parameterNameGroups[experimentSchema] += parameterName
 
     fields = {}
 
@@ -652,37 +731,57 @@ def createSearchExperimentForm():
     fields['date'] = forms.DateTimeField(label='Experiment Date',
             widget=SelectDateWidget(), required=False)
 
-    for parameterName in parameterNames:
-        if parameterName.is_numeric:
-            if parameterName.comparison_type \
-                == ParameterName.RANGE_COMPARISON:
-                fields[parameterName.name + 'From'] = \
-                    forms.DecimalField(label=parameterName.full_name
-                        + ' From', required=False)
-                fields[parameterName.name + 'To'] = \
-                    forms.DecimalField(label=parameterName.full_name
-                        + ' To', required=False)
-            else:
-                # note that we'll also ignore the choices text box entry
-                # even if it's filled if the parameter is of numeric type
-                # TODO: decide if we are to raise an exception if
-                #       parameterName.choices is not empty
-                fields[parameterName.name] = \
-                    forms.DecimalField(label=parameterName.full_name,
-                        required=False)
-        else:  # parameter is a string
-            if parameterName.choices != '':
-                fields[parameterName.name] = \
-                    forms.CharField(label=parameterName.full_name,
-                    widget=forms.Select(choices=__getParameterChoices(
-                    parameterName.choices)), required=False)
-            else:
-                fields[parameterName.name] = \
-                    forms.CharField(label=parameterName.full_name,
-                    max_length=255, required=False)
+    formutilFields = {}
+    formutilFields['main fields'] = ['title', 'description', 'institutionName', 'creator', 'date']
 
-    return type('SearchExperimentForm', (forms.BaseForm, ),
-                    {'base_fields': fields})
+    for schema, parameterNames in parameterNameGroups.items():
+        formutilFields[schema] = []
+
+        for parameterName in parameterNames:
+            if parameterName.data_type == ParameterName.NUMERIC:
+                if parameterName.comparison_type \
+                    == ParameterName.RANGE_COMPARISON:
+                    fields[parameterName.name + 'From'] = \
+                        forms.DecimalField(label=parameterName.full_name
+                            + ' From', required=False)
+                    fields[parameterName.name + 'To'] = \
+                        forms.DecimalField(label=parameterName.full_name
+                            + ' To', required=False)
+                    formutilFields[schema].append(parameterName.name + 'From')
+                    formutilFields[schema].append(parameterName.name + 'To')
+                else:
+                    # note that we'll also ignore the choices text box entry
+                    # even if it's filled if the parameter is of numeric type
+                    # TODO: decide if we are to raise an exception if
+                    #       parameterName.choices is not empty
+                    fields[parameterName.name] = \
+                        forms.DecimalField(label=parameterName.full_name,
+                            required=False)
+                    formutilFields[schema].append(parameterName.name)
+            else:  # parameter is a string
+                if parameterName.choices != '':
+                    fields[parameterName.name] = \
+                        forms.CharField(label=parameterName.full_name,
+                        widget=forms.Select(choices=__getParameterChoices(
+                        parameterName.choices)), required=False)
+                else:
+                    fields[parameterName.name] = \
+                        forms.CharField(label=parameterName.full_name,
+                        max_length=255, required=False)
+                formutilFields[schema].append(parameterName.name)
+
+    fieldsets = []
+
+    for groupName, fieldlist in formutilFields.items():
+        fieldsets.append((groupName, {'fields': fieldlist}))
+
+#    class Meta:
+#        fieldsets = [('first', {'fields': ['key', 'description']}),
+#                     ('second', {'fields': ['make', 'model', 'type', 'serial']})]
+
+    return type('SearchExperimentForm', (formutils.BetterBaseForm, forms.BaseForm, ),
+                    {'base_fields': fields, 'base_fieldsets': fieldsets,
+                     'base_row_attrs': {}})
 
 
 def __getParameterChoices(choicesString):
@@ -713,20 +812,216 @@ def __getParameterChoices(choicesString):
     return paramChoices
 
 
-def createSearchDatafileSelectionForm():
-
-    from tardis.tardis_portal import constants
+def createSearchDatafileSelectionForm(initial=None):
 
     supportedDatafileSearches = (('-', 'Datafile'),)
-    for key in constants.SCHEMA_DICT:
+    for key in models.Schema.getSubTypes():
         supportedDatafileSearches += ((key, key.upper()),)
 
     fields = {}
     fields['type'] = \
         forms.CharField(label='type',
         widget=forms.Select(choices=supportedDatafileSearches),
-        required=False)
+        required=False, initial=initial)
     fields['type'].widget.attrs['class'] = 'searchdropdown'
-
     return type('DatafileSelectionForm', (forms.BaseForm, ),
                     {'base_fields': fields})
+
+
+class NoInput(forms.Widget):
+
+    def render(self, name, value, attrs=None):
+        from django.utils.safestring import mark_safe
+        return mark_safe(value)
+
+
+class StaticField(forms.Field):
+
+    widget = NoInput
+
+    def clean(self, value):
+        return
+
+
+def create_parameterset_edit_form(
+    parameterset,
+    request=None):
+
+    from tardis.tardis_portal.models import ParameterName
+
+    # if POST data to save
+    if request:
+        from django.utils.datastructures import SortedDict
+        fields = SortedDict()
+
+        for key, value in sorted(request.POST.iteritems()):
+
+            x = 1
+
+            stripped_key = key.replace('_s47_', '/')
+            stripped_key = stripped_key.rpartition('__')[0]
+
+            parameter_name = ParameterName.objects.get(
+                schema=parameterset.schema,
+                name=stripped_key)
+
+            units = ""
+            if parameter_name.units:
+                units = " (" + parameter_name.units + ")"
+                # if not valid, spit back as exact
+                if parameter_name.isNumeric():
+                    fields[key] = \
+                        forms.DecimalField(label=parameter_name.full_name + units,
+                                           required=False,
+                                           initial=value)
+                else:
+                    fields[key] = \
+                        forms.CharField(label=parameter_name.full_name + units,
+                                        max_length=255, required=False,
+                                        initial=value)
+
+        return type('DynamicForm', (forms.BaseForm, ), {'base_fields': fields})
+
+    else:
+        from django.utils.datastructures import SortedDict
+        fields = SortedDict()
+        psm = ParameterSetManager(parameterset=parameterset)
+
+        for dfp in psm.parameters:
+
+            x = 1
+
+            form_id = dfp.name.name + "__" + str(x)
+
+            while form_id in fields:
+                x = x + 1
+                form_id = dfp.name.name + "__" + str(x)
+
+            units = ""
+            if dfp.name.units:
+                units = " (" + dfp.name.units + ")"
+
+            form_id = form_id.replace('/', '_s47_')
+
+            if dfp.name.isNumeric():
+                fields[form_id] = \
+                    forms.DecimalField(label=dfp.name.full_name + units,
+                                       required=False,
+                                       initial=dfp.numerical_value)
+            else:
+                fields[form_id] = \
+                    forms.CharField(label=dfp.name.full_name + units,
+                                    max_length=255,
+                                    required=False,
+                                    initial=dfp.string_value)
+
+            if dfp.name.immutable:
+                fields[form_id].widget.attrs['readonly'] = 'readonly'
+
+        return type('DynamicForm', (forms.BaseForm, ),
+                    {'base_fields': fields})
+
+
+def save_datafile_edit_form(parameterset, request):
+
+    psm = ParameterSetManager(parameterset=parameterset)
+
+    psm.delete_all_params()
+
+    for key, value in sorted(request.POST.iteritems()):
+        if value:
+            stripped_key = key.replace('_s47_', '/')
+            stripped_key = stripped_key.rpartition('__')[0]
+
+            psm.new_param(stripped_key, value)
+
+
+def create_datafile_add_form(
+    schema, parentObject,
+    request=None):
+
+    from tardis.tardis_portal.models import ParameterName
+
+    # if POST data to save
+    if request:
+        from django.utils.datastructures import SortedDict
+        fields = SortedDict()
+
+        for key, value in sorted(request.POST.iteritems()):
+
+            x = 1
+
+            stripped_key = key.replace('_s47_', '/')
+            stripped_key = stripped_key.rpartition('__')[0]
+
+            parameter_name = ParameterName.objects.get(
+                schema__namespace=schema,
+                name=stripped_key)
+
+            units = ""
+            if parameter_name.units:
+                units = " (" + parameter_name.units + ")"
+
+            # if not valid, spit back as exact
+            if parameter_name.isNumeric():
+                fields[key] = \
+                    forms.DecimalField(label=parameter_name.full_name + units,
+                                       required=False,
+                                       initial=value,
+                                       )
+            else:
+                fields[key] = \
+                    forms.CharField(label=parameter_name.full_name + units,
+                                    max_length=255, required=False,
+                                    initial=value,
+                                    )
+
+        return type('DynamicForm', (forms.BaseForm, ), {'base_fields': fields})
+
+    else:
+        from django.utils.datastructures import SortedDict
+        fields = SortedDict()
+
+        parameternames = ParameterName.objects.filter(
+            schema__namespace=schema).order_by('name')
+
+        for dfp in parameternames:
+
+            x = 1
+
+            form_id = dfp.name + "__" + str(x)
+
+            while form_id in fields:
+                x = x + 1
+                form_id = dfp.name + "__" + str(x)
+
+            units = ""
+            if dfp.units:
+                units = " (" + dfp.units + ")"
+
+            form_id = form_id.replace('/', '_s47_')
+
+            if dfp.isNumeric():
+                fields[form_id] = \
+                forms.DecimalField(label=dfp.full_name + units,
+                required=False)
+            else:
+                fields[form_id] = \
+                forms.CharField(label=dfp.full_name + units,
+                max_length=255, required=False)
+
+        return type('DynamicForm', (forms.BaseForm, ),
+            {'base_fields': fields})
+
+
+def save_datafile_add_form(schema, parentObject, request):
+
+    psm = ParameterSetManager(schema=schema,
+        parentObject=parentObject)
+
+    for key, value in sorted(request.POST.iteritems()):
+        if value:
+            stripped_key = key.replace('_s47_', '/')
+            stripped_key = stripped_key.rpartition('__')[0]
+
+            psm.new_param(stripped_key, value)

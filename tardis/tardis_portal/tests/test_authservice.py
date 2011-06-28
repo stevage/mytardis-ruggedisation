@@ -9,6 +9,7 @@ from tardis.tardis_portal.auth.interfaces import GroupProvider
 
 
 class MockSettings(object):
+
     def __init__(self):
         self.AUTH_PROVIDERS = ()
         self.USER_PROVIDERS = ()
@@ -16,6 +17,7 @@ class MockSettings(object):
 
 
 class MockGroupProvider(GroupProvider):
+
     def __init__(self):
         self.name = u'mockdb'
         self.groups = [{"name": "Group 456", 'id': '2',
@@ -28,7 +30,7 @@ class MockGroupProvider(GroupProvider):
 
     def getGroups(self, request):
         for i in self.groups:
-            if str(request.user) in i['members']:
+            if str(request.user).split("_")[1] in i['members']:
                 yield i['id']
 
     def getGroupById(self, id):
@@ -54,6 +56,7 @@ class MockGroupProvider(GroupProvider):
 
 
 class MockRequest(HttpRequest):
+
     def __init__(self):
         super(MockRequest, self).__init__()
 
@@ -62,22 +65,22 @@ class MockRequest(HttpRequest):
 
 
 class MockAuthProvider():
-    def __init__(self):
-        pass
 
     def authenticate(self, request):
         username = request.POST['username']
+        username = '%s_%s' % ('mockdb', username)
         return User.objects.get(username=username)
 
 
 class AuthServiceTestCase(TestCase):
+
     urls = 'tardis.tardis_portal.tests.urls'
 
     def setUp(self):
         from django.contrib.auth.models import User
-        self.user1 = User.objects.create_user('user1', '', 'secret')
-        self.user2 = User.objects.create_user('user2', '', 'secret')
-        self.user3 = User.objects.create_user('user3', '', 'secret')
+        self.user1 = User.objects.create_user('mockdb_user1', '', 'secret')
+        self.user2 = User.objects.create_user('mockdb_user2', '', 'secret')
+        self.user3 = User.objects.create_user('mockdb_user3', '', 'secret')
 
         from tardis.tardis_portal.auth import AuthService, auth_service
         s = MockSettings()
@@ -112,7 +115,7 @@ class AuthServiceTestCase(TestCase):
 
     def testGroupProvider(self):
         c = Client()
-        login = c.login(username='user1', password='secret')
+        login = c.login(username='mockdb_user1', password='secret')
         self.assertTrue(login)
         self.assert_(SESSION_KEY in c.session)
 
@@ -121,7 +124,8 @@ class AuthServiceTestCase(TestCase):
         self.assertTrue(',1)' in r)
         self.assertTrue(',2)' in r)
 
-        c.login(username='user2', password='secret')
+        login = c.login(username='mockdb_user2', password='secret')
+        self.assertTrue(login)
         self.assert_(SESSION_KEY in c.session)
 
         r = str(c.get('/test/groups/'))
@@ -163,7 +167,8 @@ class AuthServiceTestCase(TestCase):
         # check the correct group provider is registered
         self.assertEqual(len(a._group_providers), 1)
 
-        self.assertEqual(len([g for g in a.getGroupsForEntity('user1')]), 2)
+        self.assertEqual(len([g for g in a.getGroupsForEntity('user1')]),
+                         2)
         self.assertEqual(len([g for g in a.getGroupsForEntity('Group 123')]),
                          1)
 
@@ -178,9 +183,9 @@ class AuthServiceTestCase(TestCase):
 
         request = MockRequest()
         request.setPost('username', 'user1')
-        request.setPost('authMethod', 'mockauth')
+        request.setPost('authMethod', 'mockdb')
 
         user = a.authenticate(authMethod='mockauth', request=request)
 
-        realUser = User.objects.get(username='user1')
+        realUser = User.objects.get(username='mockdb_user1')
         self.assertEqual(user, realUser)

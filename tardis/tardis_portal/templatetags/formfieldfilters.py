@@ -6,6 +6,7 @@ This module holds filters that can be used in postprocessing a form field.
 
 from django import template
 
+
 register = template.Library()
 
 
@@ -15,3 +16,9 @@ def size(value, actualSize):
 
     value.field.widget.attrs['size'] = actualSize
     return value
+
+
+@register.filter
+def parametername_form(value):
+    "Removes all values of arg from the given string"
+    return value.replace('/', '_s47_')

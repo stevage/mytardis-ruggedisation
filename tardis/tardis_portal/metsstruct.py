@@ -6,20 +6,25 @@ metadata values.
 .. moduleauthor::  Gerson Galang <gerson.galang@versi.edu.au>
 '''
 
-from tardis.tardis_portal.logger import logger
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 
 class Experiment():
 
-    def __init__(self, id, metadataId):
+    def __init__(self, id, metadataIds):
         self.id = id
-        self.metadataId = metadataId
+        self.metadataIds = metadataIds
         self.datasets = []
         self.authors = []
         self.title = None
         self.description = None
         self.institution = None
         self.url = None
+        self.start_time = None
+        self.end_time = None
 
     def __str__(self):
         returnStr = 'Experiment\n' + \
@@ -33,9 +38,9 @@ class Experiment():
 
 class Dataset():
 
-    def __init__(self, id, metadataId):
+    def __init__(self, id, metadataIds):
         self.id = id
-        self.metadataId = metadataId
+        self.metadataIds = metadataIds
         self.datafiles = []
         self.experiment = None
         self.title = None
@@ -54,11 +59,11 @@ class Dataset():
 
 class Datafile():
 
-    def __init__(self, id, name, size, metadataId):
+    def __init__(self, id, name, size, metadataIds):
         self.id = id
         self.name = name
         self.size = size
-        self.metadataId = metadataId
+        self.metadataIds = metadataIds
         self.url = None
         self.dataset = None
 
@@ -67,7 +72,7 @@ class Datafile():
                '   - id: ' + toString(self.id) + '\n' + \
                '   - name: ' + toString(self.name) + '\n' + \
                '   - size: ' + toString(self.size) + '\n' + \
-               '   - metadataId: ' + toString(self.metadataId) + '\n' + \
+               '   - metadataIds: ' + toString(self.metadataIds) + '\n' + \
                '   - datasetId: ' + toString(self.dataset.id) + '\n'
 
 

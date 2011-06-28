@@ -1,10 +1,60 @@
+# -*- coding: utf-8 -*-
+#
+# Copyright (c) 2010-2011, Monash e-Research Centre
+#   (Monash University, Australia)
+# Copyright (c) 2010-2011, VeRSI Consortium
+#   (Victorian eResearch Strategic Initiative, Australia)
+# All rights reserved.
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#
+#    *  Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#    *  Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#    *  Neither the name of the VeRSI, the VeRSI Consortium members, nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE REGENTS AND CONTRIBUTORS ``AS IS'' AND ANY
+# EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL THE REGENTS AND CONTRIBUTORS BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+
+"""
+models.py
+
+.. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
+.. moduleauthor:: Russell Sim <russell.sim@monash.edu>
+
+"""
+
 from django.conf import settings
 from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib import auth
+from tardis.tardis_portal.staging import get_full_staging_path
 
 
 class AuthService():
+    """The AuthService provides an interface for querying the
+    auth(n|z) framework within MyTARDIS. The auth service works by
+    reading the class path to plugins from the settings file.
+
+    :param settings: the settings object that contains the list of
+       user and group plugins.
+    :type settings: :py:class:`django.conf.settings`
+
+    """
+
     def __init__(self, settings=settings):
         self._group_providers = []
         self._user_providers = []
@@ -54,18 +104,26 @@ class AuthService():
         specified to use and if authentication didn't work using that
         method, try each Django AuthProvider.
 
+        :param authMethod: the shortname of the auth method.
+        :type authMethod: string
+        :param **credentials: the credentials as expected by the auth plugin
+        :type **credentials: kwargs
         """
 
         if not self._initialised:
             self._manual_init()
-
+        # if authMethod, else fall back to Django internal auth
         if authMethod:
             if authMethod in self._authentication_backends:
                 # note that it's the backend's job to create a user entry
                 # for a user in the DB if he has successfully logged in using
                 # the auth method he has picked and he doesn't exist in the DB
-                return self._authentication_backends[
+                user = self._authentication_backends[
                     authMethod].authenticate(**credentials)
+                if isinstance(user, dict):
+                    user['pluginname'] = authMethod
+                    return self.getUser(user)
+                return user
             else:
                 return None
         else:
@@ -74,6 +132,8 @@ class AuthService():
     def getGroups(self, request):
         """Return a list of tuples containing pluginname and group id
 
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
         """
         if not self._initialised:
             self._manual_init()
@@ -108,7 +168,6 @@ class AuthService():
         :param max_results: the maximum number of elements to return
         :param sort_by: the attribute the users should be sorted on
         :param plugin: restrict the search to the specific group provider
-
         """
         if not self._initialised:
             self._manual_init()
@@ -172,8 +231,69 @@ class AuthService():
         This function is responsible for creating the
         user within the Django DB and returning the resulting
         user model.
-
         """
+        from django.contrib.auth.models import User
+        from tardis.tardis_portal.models import UserProfile, UserAuthentication
+
         if not self._initialised:
             self._manual_init()
-        pass
+
+        plugin = user_dict['pluginname']
+
+        username = ''
+        if not 'id' in user_dict:
+            email = user_dict['email']
+            username =\
+                self._authentication_backends[plugin].getUsernameByEmail(email)
+        else:
+            username = user_dict['id']
+
+        try:
+            user = UserAuthentication.objects.get(username=username,
+                            authenticationMethod=plugin).userProfile.user
+            return user
+        except UserAuthentication.DoesNotExist:
+            pass
+
+        # length of the maximum username
+        max_length = 30
+
+        # the username to be used on the User table
+        if username.find('@') > 0:
+            unique_username = username.partition('@')[0][:max_length]
+        else:
+            unique_username = username[:max_length]
+
+        # Generate a unique username
+        i = 0
+        try:
+            while (User.objects.get(username=unique_username)):
+                i += 1
+                unique_username = username[:max_length - len(str(i))] + str(i)
+        except User.DoesNotExist:
+            pass
+
+        password = User.objects.make_random_password()
+        user = User.objects.create_user(username=unique_username,
+                                        password=password,
+                                        email=user_dict.get("email", ""))
+        user.save()
+
+        userProfile = UserProfile(user=user,
+                                  isDjangoAccount=False)
+        userProfile.save()
+
+        userAuth = UserAuthentication(userProfile=userProfile,
+            username=username, authenticationMethod=plugin)
+        userAuth.save()
+
+        if settings.STAGING_PROTOCOL == plugin:
+            # to be put in its own function
+            staging_path = get_full_staging_path(username)
+            import os
+            if not os.path.exists(staging_path):
+                os.makedirs(staging_path)
+                os.system('chmod g+w ' + staging_path)
+                os.system('chown ' + username + ' ' + staging_path)
+
+        return user

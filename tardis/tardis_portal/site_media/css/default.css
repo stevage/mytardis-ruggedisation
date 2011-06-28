@@ -30,8 +30,9 @@ h2, h3 {
 }
 
 h1 {
-	letter-spacing: 1px;
+	letter-spacing: -1px;
 	font-size: 2.2em;
+	color: #781F1F;
 	font-weight: normal;
 }
 
@@ -54,7 +55,6 @@ p {
 }
 
 blockquote {
-	background: url(../images/mimg08.jpg) no-repeat left top;
 	font-family: Georgia, "Times New Roman", Times, serif;
 	font-style: italic;
 	margin: 0 0 0 15px;
@@ -159,8 +159,6 @@ img.right {
 	padding-left: 10px;
 	text-align: center;
 	font-size: 3.2em;
-	letter-spacing: 4px;    
-    color: #2a1a15;	
 
 }
 
@@ -173,8 +171,7 @@ img.right {
 	padding-left: 10px;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size:14px;
-
-    letter-spacing: 0px;	
+	color: #000000;
 }
 
 #logo h2 a, #logo p a {
@@ -398,12 +395,14 @@ table.member-table img {
 
 table.experiment-table {
 	margin: 0;
-	padding: 0;
+	padding: 12px;
 	font-size: 12px;
 	}
 
 table.experiment-table th {
 	text-align: left;
+	height: 15px;
+	padding-top: 20px;
 	}
 
 	.dataset_metadata
@@ -477,10 +476,29 @@ table.experiment-table th {
 		width: 90%;
 		padding: 10px;
 		margin: 10px;
+		display: none;
 	}
 
 	a.filelink {
 		color: #9b3430;
+	}
+	
+	.file
+	{
+	    font-weight: bold;
+	}
+	
+	.datafile
+	{
+	    line-height: 1.5em;
+	}
+	
+	.dataset
+	{
+	    list-style-type: none;
+		list-style-image: none;
+		list-style-position: inside;
+		
 	}
 
 	#statusBox {
@@ -533,20 +551,47 @@ table.experiment-table th {
 		padding: 10px 0 10px 0;
 	}
 
-	.access_list
+	.access_list, .access_list1, .access_list2, .access_list3
 	{
 		background-color: white;
 		margin-left: 10px;
 		margin-top: 10px;
-		padding: 5px;
+		padding: 5px 15px 5px 15px;
 	}
 	
+	.activity_summary
+	{
+	    padding: 5px;
+	    border: 1px solid gray;
+	    margin-bottom: 20px;
+	}
+
+	.party_box
+	{
+	    padding: 10px;
+	    border: 1px solid gray;
+	    margin-bottom: 15px;	    
+	}
+	
+	.party_box li
+	{
+	    padding: 2px;
+	}
+		
+	.white_box
+	{
+		background-color: white;
+		margin-left: 10px;
+
+		padding: 3px 15px 5px 15px;	    
+	}
+
 	.msg_list {
 	margin: 10px;
 	padding: 0px;
 	width: 90%;
 	}
-	
+
 	.msg_head {
 	padding: 5px 10px;
 	cursor: pointer;
@@ -557,7 +602,7 @@ table.experiment-table th {
 	font-size: 14px;
 	font-weight: bold;
 	}
-	
+
 	.my_files {
 	padding: 5px 10px;
 	position: relative;
@@ -566,42 +611,42 @@ table.experiment-table th {
 	margin:1px;
 	font-size: 14px;
 	font-weight: bold;
-	}	
-	
+	}
+
 	.add_new_dataset {
 	padding: 5px 10px;
 	cursor: pointer;
 	position: relative;
 	background-color: #878787;
 	color: white;
-	
+
 	margin:1px;
 	font-size: 14px;
 	font-weight: bold;
 	text-align: center;
-	}	
-	
+	}
+
 	.msg_body {
 	padding: 5px 10px 15px 20px;
 	background-color:white;
 	}
-	
+
 	.staging_dataset {
 		background-color: white; padding: 5px;
 	}
-	
+
 	.remove_dataset {
 		font-size: 12px;
 		font-weight: normal;
-		cursor: pointer;		
+		cursor: pointer;
 	}
-	
+
 	.remove_file {
 		font-size: 12px;
 		font-weight: normal;
 		cursor: pointer;
-	}	
-	
+	}
+
 	.dataset {
 		border-width: 1px;
 		border-color: black;
@@ -609,36 +654,36 @@ table.experiment-table th {
 		padding: 10px 30px 10px 30px;
 		width: 80%;
 	}
-	
+
     .fieldWrapper {
         padding: 0 0 15px 0;
 
-    }	
-    
-    .fieldWrapper input {
-        width: 500px;
+    }
 
-    }	
-    
+    .fieldWrapper input {
+        width: 300px;
+
+    }
+
     .fieldWrapper textarea {
         width: 500px;
 
-    }    
-    
+    }
+
     .upload_files_link
     {
         display: block;
         font-weight: bold;
         margin-bottom: 20px;
     }
-    
+
     .upload_files_box
     {
         background-color: #F5EFEF;
         padding: 10px;
         width: 95%;
     }
-    
+
     .download_entire_experiment
     {
         text-align: right;
@@ -659,22 +704,62 @@ ul.errorlist {
     background: red url(/media/img/admin/icon_alert.gif) 5px .3em no-repeat;
 }
 
-.publishform h3
+#description
 {
-    font-family: Tahoma, Arial, Helvetica, sans-serif;
-    font-weight: bold;
+    height: 50px;
+}
+
+.fieldWrapper textarea
+{
+    height: 50px;
+}
+
+/*Styles for fuzz overlay & message box*/
+ #fuzz{ position:absolute; background: url('../images/gray_trans_back.png'); top:0; left:0; width:100%; z-index:100; 
+     display:none; text-align:left; }
+     
+ .publishform h3
+ {
+     font-family: Tahoma, Arial, Helvetica, sans-serif;
+     font-weight: bold;
+     font-size: 12px;
+ }     
+ 
+.delete-row
+{
     font-size: 12px;
+    text-transform:capitalize;
+    height: 24px;
+    padding-right: 12px;
+    display: block;
+    background-color: white;
+    text-align: right;
 }
 
-.activity {
-    padding: 12px;
-    margin: 5px;
-    border-color: black;
-    border-width: 1px;
-    border-style: solid;
+#mountpath {
+    background-color: #F0F3F6;
+    text-align: center;
+    padding: 7px;
 }
 
-.activity .members {
+#custom_description {
+    width: 95%;
+    height: 80px;
+}
+
+#cc_js_license_example
+{
+    border: 1px solid black;
+    margin: 7px;
+    margin-top: 30px;
+    padding: 10px;
+    width: 80%;
+}
+
+.license_box
+{
     padding: 5px;
-    padding-left: 20px;
+/*    border: 1px solid gray;*/
+    margin-bottom: 5px;
+    width: 40%;
 }

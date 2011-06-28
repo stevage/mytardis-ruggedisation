@@ -1,4 +1,3 @@
-
 """
 managers.py
 
@@ -14,10 +13,28 @@ from django.core.exceptions import PermissionDenied
 from django.contrib.auth.models import User, Group
 
 from tardis.tardis_portal.auth.localdb_auth import django_user, django_group
-from tardis.tardis_portal.logger import logger
 
 
-class ExperimentManager(models.Manager):
+class OracleSafeManager(models.Manager):
+    """
+    Implements a custom manager which automatically defers the
+    retreival of any TextField fields on calls to get_query_set. This
+    is to avoid the known issue that 'distinct' calls on query_sets
+    containing TextFields fail when Oracle is being used as the
+    backend.
+    """
+    def get_query_set(self):
+        from django.db import connection
+        if connection.settings_dict['ENGINE'] == 'django.db.backends.oracle':
+            fields = [a.attname for a in self.model._meta.fields
+                      if a.db_type(connection=connection) == 'NCLOB']
+            return \
+                super(OracleSafeManager, self).get_query_set().defer(*fields)
+        else:
+            return super(OracleSafeManager, self).get_query_set()
+
+
+class ExperimentManager(OracleSafeManager):
     """
     Implements a custom manager for the Experiment model which checks
     the authorisation rules for the requesting user first
@@ -46,11 +63,6 @@ class ExperimentManager(models.Manager):
         # if the user is not authenticated, they will see only public
         # experiments
         if request.user.is_authenticated():
-            # which experiments are owned by the user?
-            query |= Q(experimentacl__pluginId=django_user,
-                       experimentacl__entityId=str(request.user.id),
-                       experimentacl__isOwner=True)
-
             # for which experiments does the user have read access
             # based on USER permissions?
             query |= Q(experimentacl__pluginId=django_user,
@@ -65,14 +77,15 @@ class ExperimentManager(models.Manager):
             # based on GROUP permissions
             for name, group in request.groups:
                 query |= Q(experimentacl__pluginId=name,
-                           experimentacl__entityId=str(group),
-                           experimentacl__canRead=True)\
-                           & (Q(experimentacl__effectiveDate__lte=datetime.today())
-                              | Q(experimentacl__effectiveDate__isnull=True))\
-                           & (Q(experimentacl__expiryDate__gte=datetime.today())
-                              | Q(experimentacl__expiryDate__isnull=True))
+                    experimentacl__entityId=str(group),
+                    experimentacl__canRead=True)\
+                    & (Q(experimentacl__effectiveDate__lte=datetime.today())
+                    | Q(experimentacl__effectiveDate__isnull=True))\
+                    & (Q(experimentacl__expiryDate__gte=datetime.today())
+                    | Q(experimentacl__expiryDate__isnull=True))
 
-        return super(ExperimentManager, self).get_query_set().filter(query).distinct()
+        return super(ExperimentManager, self).get_query_set().filter(
+            query).distinct()
 
     def get(self, request, experiment_id):
         """
@@ -96,21 +109,15 @@ class ExperimentManager(models.Manager):
         if not request.user.is_authenticated():
             raise PermissionDenied
 
-        # does the user own this experiment?
+        # check if there is a user based authorisation role
         query = Q(experiment=experiment,
                   pluginId=django_user,
                   entityId=str(request.user.id),
-                  isOwner=True)
-
-        # check if there is a user based authorisation role
-        query |= Q(experiment=experiment,
-                   pluginId=django_user,
-                   entityId=str(request.user.id),
-                   canRead=True)\
-                   & (Q(effectiveDate__lte=datetime.today())
-                      | Q(effectiveDate__isnull=True))\
-                   & (Q(expiryDate__gte=datetime.today())
-                      | Q(expiryDate__isnull=True))
+                  canRead=True)\
+                  & (Q(effectiveDate__lte=datetime.today())
+                     | Q(effectiveDate__isnull=True))\
+                  & (Q(expiryDate__gte=datetime.today())
+                     | Q(expiryDate__isnull=True))
 
         # and finally check all the group based authorisation roles
         for name, group in request.groups:
@@ -145,14 +152,15 @@ class ExperimentManager(models.Manager):
             return []
 
         # build the query to filter the ACL table
-        from tardis.tardis_portal.models import ExperimentACL
-        experiments = super(ExperimentManager, self).get_query_set().filter(
-            experimentacl__pluginId=django_user,
-            experimentacl__entityId=str(request.user.id),
-            experimentacl__isOwner=True,
-            )
+        query = Q(experimentacl__pluginId=django_user,
+                  experimentacl__entityId=str(request.user.id),
+                  experimentacl__isOwner=True)\
+                  & (Q(experimentacl__effectiveDate__lte=datetime.today())
+                     | Q(experimentacl__effectiveDate__isnull=True))\
+                  & (Q(experimentacl__expiryDate__gte=datetime.today())
+                     | Q(experimentacl__expiryDate__isnull=True))
 
-        return experiments
+        return super(ExperimentManager, self).get_query_set().filter(query)
 
     def users(self, request, experiment_id):
         """
@@ -168,8 +176,8 @@ class ExperimentManager(models.Manager):
 
         from tardis.tardis_portal.models import ExperimentACL
         acl = ExperimentACL.objects.filter(pluginId=django_user,
-                                           experiment__id=experiment_id,
-                                           aclOwnershipType=ExperimentACL.OWNER_OWNED)
+                                   experiment__id=experiment_id,
+                                   aclOwnershipType=ExperimentACL.OWNER_OWNED)
         return [User.objects.get(pk=int(a.entityId)) for a in acl]
 
     def user_owned_groups(self, request, experiment_id):
@@ -186,8 +194,8 @@ class ExperimentManager(models.Manager):
 
         from tardis.tardis_portal.models import ExperimentACL
         acl = ExperimentACL.objects.filter(pluginId=django_group,
-                                           experiment__id=experiment_id,
-                                           aclOwnershipType=ExperimentACL.OWNER_OWNED)
+                                   experiment__id=experiment_id,
+                                   aclOwnershipType=ExperimentACL.OWNER_OWNED)
 
         return [Group.objects.get(pk=str(a.entityId)) for a in acl]
 
@@ -205,8 +213,8 @@ class ExperimentManager(models.Manager):
 
         from tardis.tardis_portal.models import ExperimentACL
         acl = ExperimentACL.objects.filter(pluginId=django_group,
-                                           experiment__id=experiment_id,
-                                           aclOwnershipType=ExperimentACL.SYSTEM_OWNED)
+                                   experiment__id=experiment_id,
+                                   aclOwnershipType=ExperimentACL.SYSTEM_OWNED)
 
         return [Group.objects.get(pk=str(a.entityId)) for a in acl]
 
@@ -239,3 +247,13 @@ class ExperimentManager(models.Manager):
             if group:
                 result += group
         return result
+
+
+class ParameterNameManager(models.Manager):
+    def get_by_natural_key(self, namespace, name):
+        return self.get(schema__namespace=namespace, name=name)
+
+
+class SchemaManager(models.Manager):
+    def get_by_natural_key(self, namespace):
+        return self.get(namespace=namespace)

@@ -1,37 +1,64 @@
-import logging
 from os import path
 
-DATABASE_ENGINE = 'sqlite3'
-DATABASE_NAME = ':memory:'
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+DEBUG = False
+
+DATABASES = {
+    'default': {
+        # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+        'ENGINE': 'django.db.backends.sqlite3',
+        # Name of the database to use. For SQLite, it's the full path.
+        'NAME': ':memory:',
+        'USER': '',
+        'PASSWORD': '',
+        'HOST': '',
+        'PORT': '',
+    }
+}
+
 ROOT_URLCONF = 'tardis.urls'
-DEBUG = True
-STATIC_DOC_ROOT = path.join(path.abspath(path.dirname(__file__)),
-                            'tardis_portal/site_media')
-FILE_STORE_PATH = path.join(path.abspath(path.dirname(__file__)),
-                            '../var/store/')
-# LDAP configuration
-LDAP_ENABLE = False
 
 FILE_STORE_PATH = path.abspath(path.join(path.dirname(__file__),
-    '../var/store/'))
+                                         '../var/store/'))
 STAGING_PATH = path.abspath(path.join(path.dirname(__file__),
-    "../var/staging/"))
+                                      "../var/staging/"))
 
-ADMIN_MEDIA_STATIC_DOC_ROOT = ''
-HANDLEURL = ''
+STAGING_PROTOCOL = 'localdb'
+STAGING_MOUNT_PREFIX = 'smb://localhost/staging/'
+
+GET_FULL_STAGING_PATH_TEST = path.join(STAGING_PATH, "test_user")
+
 SITE_ID = '1'
-MEDIA_URL = '/site_media/'
-TEMPLATE_DIRS = ['.']
-#TEMPLATE_DIRS = ['.', 'tardis_portal/']
 
-# TODO: move vbl auth provider settings to mecat module
+TEMPLATE_DIRS = ['.']
+
+STATIC_DOC_ROOT = path.join(path.dirname(__file__),
+                            'tardis_portal/site_media').replace('\\', '/')
+
+MEDIA_ROOT = STATIC_DOC_ROOT
+
+MEDIA_URL = '/site_media/'
+
+ADMIN_MEDIA_STATIC_DOC_ROOT = path.join(path.dirname(__file__),
+                                        '../parts/django/django/contrib/admin/media/').replace('\\', '/')
+
+
 AUTH_PROVIDERS = (('localdb', 'Local DB',
                   'tardis.tardis_portal.auth.localdb_auth.DjangoAuthBackend'),
-                  ('vbl', 'VBL', 'tardis.tardis_portal.tests.mock_vbl_auth.MockBackend'),
+                  ('vbl', 'VBL',
+                   'tardis.tardis_portal.tests.mock_vbl_auth.MockBackend'),
+                  ('ldap', 'LDAP',
+                   'tardis.tardis_portal.auth.ldap_auth.ldap_auth'),
 )
 USER_PROVIDERS = ('tardis.tardis_portal.auth.localdb_auth.DjangoUserProvider',)
+
 GROUP_PROVIDERS = ('tardis.tardis_portal.auth.localdb_auth.DjangoGroupProvider',
                    'tardis.tardis_portal.auth.ip_auth.IPGroupProvider'
+)
+
+DOWNLOAD_PROVIDERS = (
+    ('vbl', 'tardis.tardis_portal.tests.mock_vbl_download'),
 )
 
 MIDDLEWARE_CLASSES = (
@@ -39,8 +66,18 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'tardis.tardis_portal.auth.AuthorizationMiddleware',
-    'tardis.tardis_portal.minidetector.Middleware'
+    'tardis.tardis_portal.logging_middleware.LoggingMiddleware',
+    'tardis.tardis_portal.minidetector.Middleware',
+    'django.middleware.transaction.TransactionMiddleware'
 )
+
+TARDIS_APP_ROOT = 'tardis.apps'
+TARDIS_APPS = ('equipment',)
+
+if TARDIS_APPS:
+    apps = tuple(["%s.%s" % (TARDIS_APP_ROOT, app) for app in TARDIS_APPS])
+else:
+    apps = ()
 
 INSTALLED_APPS = (
         'django.contrib.auth',
@@ -51,21 +88,39 @@ INSTALLED_APPS = (
         'django.contrib.admindocs',
         'django_extensions',
         'tardis.tardis_portal',
-        'registration',
         'tardis.tardis_portal.templatetags',
+        'registration',
         'django_nose',
-)
 
-# TODO: move to mecat settings module
-VBLSTORAGEGATEWAY = \
-'https://vbl.synchrotron.org.au/StorageGateway/VBLStorageGateway.wsdl'
+) + apps
 
-TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+# LDAP configuration
+LDAP_USE_TLS = False
+LDAP_URL = "ldap://localhost:38911/"
 
-LOG_FILENAME = None
-# LOG_FILENAME = '/var/log/tardis/tardis.log'
+LDAP_USER_LOGIN_ATTR = "uid"
+LDAP_USER_ATTR_MAP = {"givenName": "display", "mail": "email"}
+LDAP_GROUP_ID_ATTR = "cn"
+LDAP_GROUP_ATTR_MAP = {"description": "display"}
 
-LOG_FORMAT = "%(asctime)s - %(levelname)-8s - %(message)s"
+#LDAP_ADMIN_USER = ''
+#LDAP_ADMIN_PASSWORD = ''
+LDAP_BASE = 'dc=example, dc=com'
+LDAP_USER_BASE = 'ou=People, ' + LDAP_BASE
+LDAP_GROUP_BASE = 'ou=Group, ' + LDAP_BASE
 
-# logging levels are: DEBUG, INFO, WARN, ERROR, CRITICAL
-LOG_LEVEL = logging.ERROR
+SYSTEM_LOG_LEVEL = 'INFO'
+MODULE_LOG_LEVEL = 'INFO'
+
+SYSTEM_LOG_FILENAME = 'request.log'
+MODULE_LOG_FILENAME = 'tardis.log'
+
+SYSTEM_LOG_MAXBYTES = 0
+MODULE_LOG_MAXBYTES = 0
+
+UPLOADIFY_PATH = '%s%s' % (MEDIA_URL, 'js/uploadify/')
+UPLOADIFY_UPLOAD_PATH = '%s%s' % (MEDIA_URL, 'uploads/')
+
+DEFAULT_INSTITUTION = "Monash University"
+
+IMMUTABLE_METS_DATASETS = True

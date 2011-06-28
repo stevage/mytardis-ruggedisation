@@ -35,6 +35,7 @@
 
 
 class AuthProvider:
+
     def authenticate(self, request):
         """
         from a request authenticate try to authenticate the user.
@@ -42,8 +43,12 @@ class AuthProvider:
         """
         raise NotImplemented()
 
+    def get_user(self, user_id):
+        raise NotImplemented()
+
 
 class UserProvider:
+
     def getUserById(self, id):
         """
         return the user dictionary in the format of::
@@ -68,8 +73,16 @@ class UserProvider:
         """
         raise NotImplemented()
 
+    def getUsernameByEmail(self, email):
+        """
+        returns the username (format string) from the auth domain
+        needed for resolving experiment owners during ingestion
+        """
+        raise NotImplemented()
+
 
 class GroupProvider:
+
     def getGroups(self, request):
         """
         return an iteration of the available groups.
@@ -93,5 +106,3 @@ class GroupProvider:
         return a list of groups associated with a particular entity id
         """
         raise NotImplemented()
-
-

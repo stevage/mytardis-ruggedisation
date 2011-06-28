@@ -4,6 +4,8 @@ views.py.
 
 .. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
 '''
+import logging
+
 from django.conf import settings
 from django.http import HttpResponse
 from django.template import Context
@@ -13,7 +15,9 @@ from tardis.tardis_portal.models import UserProfile, UserAuthentication, \
 from tardis.tardis_portal.auth import localdb_auth
 from tardis.tardis_portal.forms import createLinkedUserAuthenticationForm
 from tardis.tardis_portal.shortcuts import render_response_index
-from tardis.tardis_portal.logger import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 def list_auth_methods(request):
@@ -237,8 +241,20 @@ def merge_auth_method(request):
             entityId=userIdToBeReplaced)
 
         for experimentACL in experimentACLs:
-            experimentACL.entityId = replacementUserId
-            experimentACL.save()
+
+            # now let's check if there's already an existing entry in the ACL
+            # for the given experiment and replacementUserId
+            try:
+                acl = ExperimentACL.objects.get(pluginId='django_user',
+                    entityId=replacementUserId, experiment=experimentACL.experiment)
+                acl.canRead = acl.canRead or experimentACL.canRead
+                acl.canWrite = acl.canWrite or experimentACL.canWrite
+                acl.canDelete = acl.canDelete or acl.canDelete
+                acl.save()
+                experimentACL.delete()
+            except ExperimentACL.DoesNotExist:
+                experimentACL.entityId = replacementUserId
+                experimentACL.save()
 
         # let's also change the group memberships of all the groups that 'user'
         # is a member of

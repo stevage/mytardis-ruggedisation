@@ -4,11 +4,15 @@ Local DB Authentication module.
 .. moduleauthor:: Gerson Galang <gerson.galang@versi.edu.au>
 '''
 
+import logging
+
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.backends import ModelBackend
 
 from tardis.tardis_portal.auth.interfaces import GroupProvider, UserProvider
-from tardis.tardis_portal.logger import logger
+
+
+logger = logging.getLogger(__name__)
 
 
 auth_key = u'localdb'
@@ -42,12 +46,20 @@ class DjangoAuthBackend():
     """Authenticate against Django's Model Backend.
 
     """
+
     def authenticate(self, request):
+        """authenticate a user, this expect the user will be using
+        form based auth and the *username* and *password* will be
+        passed in as **POST** variables.
+
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
+        """
         username = request.POST['username']
         password = request.POST['password']
+
         if not username or not password:
             return None
-        username = '%s_%s' % (auth_key, username)
         return _modelBackend.authenticate(username, password)
 
     def get_user(self, user_id):
@@ -58,15 +70,13 @@ class DjangoGroupProvider(GroupProvider):
     name = u'django_group'
 
     def getGroups(self, request):
-        """
-        return an iteration of the available groups.
+        """return an iteration of the available groups.
         """
         groups = request.user.groups.all()
         return [g.id for g in groups]
 
     def getGroupById(self, id):
-        """
-        return the group associated with the id::
+        """return the group associated with the id::
 
             {"id": 123,
             "display": "Group Name",}

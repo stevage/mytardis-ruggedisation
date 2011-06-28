@@ -5,10 +5,10 @@ Created on 24/01/2011
 '''
 from tardis.tardis_portal.models import *
 from django.contrib.auth.models import User, AnonymousUser
-from tardis.tardis_portal.auth.vbl_auth import auth_key, EPN_LIST
 
-auth_key = auth_key
-EPN_LIST = EPN_LIST
+
+auth_key = 'vbl'
+
 
 class MockBackend():
     """
@@ -22,6 +22,7 @@ class MockBackend():
     session key used for downloads as well as the user's EPN list
 
     """
+
     def authenticate(self, request):
         username = request.POST['username']
         password = request.POST['password']
@@ -68,7 +69,7 @@ class MockBackend():
             userAuth.save()
 
         # result contains comma separated list of epns
-        request.session[EPN_LIST] = 'has been set'
+        request.session['_EPN_LIST'] = 'has been set'
         return user
 
     def get_user(self, user_id):

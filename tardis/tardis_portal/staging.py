@@ -36,18 +36,18 @@ staging.py
 
 """
 
+import logging
 import shutil
-from os import path, makedirs, listdir
+from os import path, makedirs, listdir, rmdir
 
 from django.conf import settings
 
-from tardis.tardis_portal.models import Dataset_File
-from tardis.tardis_portal.logger import logger
+
+logger = logging.getLogger(__name__)
 
 
 def staging_traverse(staging=settings.STAGING_PATH):
-    """
-    Recurse through directories and form HTML list tree for jtree
+    """Recurse through directories and form HTML list tree for jtree
 
     :param staging: the path to begin traversing
     :type staging: string
@@ -55,14 +55,17 @@ def staging_traverse(staging=settings.STAGING_PATH):
     """
 
     ul = '<ul><li id="phtml_1"><a>My Files</a><ul>'
-    for f in listdir(staging):
+    filelist = listdir(staging)
+    filelist.sort()
+    for f in filelist:
         ul = ul + traverse(path.join(staging, f), staging)
     return ul + '</ul></li></ul>'
 
 
 def traverse(pathname, dirname=settings.STAGING_PATH):
-    """
-    Traverse a path and return a nested group of unordered list HTML tags::
+    """Traverse a path and return an alphabetically by filename
+    sorted nested group of
+    unordered (<ul>) list HTML tags::
 
        <ul>
          <li id="dir2/file2"><a>file2</a></li>
@@ -80,73 +83,139 @@ def traverse(pathname, dirname=settings.STAGING_PATH):
     :type dirname: string
     :rtype: string
     """
-
-    li = '<li id="%s"><a>%s</a>' % (path.relpath(pathname, dirname),
+    if path.isdir(pathname):
+        li = '<li id="%s"><a>%s</a>' % (path.relpath(pathname, dirname),
                                     path.basename(pathname))
+    else:
+        li = '<li class="fileicon" id="%s"><a>%s</a>' % (path.relpath(pathname, dirname),
+                                    path.basename(pathname))
+
+    if pathname.rpartition('/')[2].startswith('.'):
+        return ''
     if path.isfile(pathname):
         return li + '</li>'
     if path.isdir(pathname):
         ul = '<ul>'
-        for f in listdir(pathname):
+        filelist = listdir(pathname)
+        filelist.sort()
+        for f in filelist:
             ul = ul + traverse(path.join(pathname, f), dirname)
         return li + ul + '</ul></li>'
     return ''
 
 
 class StagingHook():
-    def __init__(self, user, experimentId, staging=None, store=None):
+    __name__ = 'StagingHook'
+
+    def __init__(self, staging=None, store=None):
         self.staging = staging or settings.STAGING_PATH
         self.store = store or settings.FILE_STORE_PATH
-        self.user = user
-        self.experimentId = experimentId
 
-    def __call__(self, datafile, created=False):
-        if created == False:
+    def __call__(self, sender, **kwargs):
+        """
+        post save callback
+
+        sender
+            The model class.
+        instance
+            The actual instance being saved.
+        created
+            A boolean; True if a new record was created.
+        """
+        instance = kwargs.get('instance')
+        created = kwargs.get('created')
+        if not created:
+            # Don't extract on edit
             return
-        stage_files(datafile, self.experimentId, self.staging, self.store)
+        if not instance.protocol == "staging":
+            return
+        stage_file(instance)
 
 
-def stage_files(datafiles,
-                experiment_id,
-                staging=settings.STAGING_PATH,
-                store=settings.FILE_STORE_PATH,
-                ):
+def stage_file(datafile):
+    """move files from the staging area to the dataset.
+    treat directories with care.
+
+    :param datafile: a datafile to be staged
+    :type datafile: :class:`tardis.tardis_portal.models.Dataset_File`
     """
-    move files from the staging area to the dataset.
+    dataset_path = datafile.dataset.get_absolute_filepath()
+    copyfrom = datafile.url
 
-    :param datafiles: one or more dataset files
-    :type datafiles: :class:`tardis.tardis_portal.models.Dataset_File`
-    :param experiment_id: the id of the experiment that the datafiles belong to
-    :type experiment_id: string or int
-    """
-    experiment_path = path.join(store, str(experiment_id))
-    if not path.exists(experiment_path):
-        makedirs(experiment_path)
+    relpath = calculate_relative_path(datafile.protocol,
+                                      datafile.url)
+    copyto = path.join(dataset_path, relpath)
+    original_copyto = copyto
 
-    if not isinstance(datafiles, list):
-        datafiles = [datafiles]
-    for datafile in datafiles:
-        urlpath = datafile.url.partition('//')[2]
-        todir = path.join(experiment_path, path.split(urlpath)[0])
-        if not path.exists(todir):
-            makedirs(todir)
-
-        copyfrom = path.join(staging, urlpath)  # to be url
-        copyto = path.join(experiment_path, urlpath)
-        logger.debug("copy from: %s" % copyfrom)
-        logger.debug("copy to: %s" % copyto)
+    logger.debug('staging file: %s to %s' % (copyfrom, copyto))
+    if path.isdir(copyfrom):
+        if not path.exists(copyto):
+            makedirs(copyto)
+    else:
         if path.exists(copyto):
-            logger.error("can't stage %s destination exists" % copyto)
-
+            logger.error("duplicate file: %s . Renaming." % copyto)
+            copyto = duplicate_file_check_rename(copyto)
             # TODO raise error
 
-            continue
+        if not path.exists(path.dirname(copyto)):
+            makedirs(path.dirname(copyto))
 
-        logger.debug('staging file: %s to %s' % (copyfrom, copyto))
-        datafile.size = path.getsize(copyfrom)
-        datafile.save()
-        shutil.move(copyfrom, copyto)
+        shutil.copy(copyfrom, copyto)
 
+    # duplicate file handling
+    split_copyto = copyto.rpartition('/')
+    filename = split_copyto[2]
+    relpath = relpath.rpartition('/')[0]
+    if relpath:
+        relpath = relpath + path.sep
+
+    datafile.filename = filename
+    datafile.url = "tardis://" + relpath + filename
+    datafile.protocol = "tardis"
+    datafile.size = path.getsize(datafile.get_absolute_filepath())
+    datafile.save()
+
+    # rmdir each dir from copyfrom[get_staging_path():] if empty
+    # currently doesn't do anything since we're copying and not moving..
+    basedir = copyfrom[:-len(relpath)]
+    while len(relpath) > 0:
+        try:
+            rmdir(basedir + relpath)
+        except OSError:
+            pass
+        relpath = path.dirname(relpath)
+
+
+def get_staging_path():
+    """
+    return the path to the staging directory
+    """
+    return settings.STAGING_PATH
+
+
+def calculate_relative_path(protocol, filepath):
+    """return the relative path to the datafile, that is the absolute path
+    minus the staging directory information.
+
+    :param protocol: a protocol
+    :type protocol: string
+    :param url: a url like path
+    :type url: string
+    """
+    if protocol == "staging":
+        staging = settings.STAGING_PATH
+        rpath = filepath[len(staging)+1:]
+        return rpath.partition("/")[2]
+    elif protocol == "tardis":
+        staging = settings.STAGING_PATH
+        rpath = filepath[len(staging)-1:]
+        return rpath.lstrip(path.sep)
+    else:
+        logger.error("the staging path of the file %s is invalid!" % filepath)
+        raise ValueError("Unknown protocol, there is no way to calculate a relative url for %s urls." % protocol)
+
+    # if not filepath.startswith(staging):
+    #     raise ValueError("filepath %s is either already relative or invalid." % filepath)
 
 def duplicate_file_check_rename(copyto):
     """
@@ -214,12 +283,13 @@ def add_datafile_to_dataset(dataset, filepath, size):
     :type size: string
     :rtype: The new datafile object
     """
+    from tardis.tardis_portal.models import Dataset_File
 
     experiment_path = path.join(settings.FILE_STORE_PATH,
                                 str(dataset.experiment.id))
 
     dataset_path = path.join(experiment_path, str(dataset.id))
-    urlpath = 'file:/' + filepath[len(experiment_path):]
+    urlpath = 'tardis:/' + filepath[len(dataset_path):]
     filename = urlpath.rpartition('/')[2]
 
     datafile = Dataset_File(dataset=dataset, filename=filename,
@@ -227,3 +297,17 @@ def add_datafile_to_dataset(dataset, filepath, size):
     datafile.save()
 
     return datafile
+
+
+def get_full_staging_path(username):
+    # check if the user is authenticated using the deployment's staging protocol
+    try:
+        from tardis.tardis_portal.models import UserAuthentication
+        userAuth = UserAuthentication.objects.get(
+            userProfile__user__username=username,
+            authenticationMethod=settings.STAGING_PROTOCOL)
+    except UserAuthentication.DoesNotExist:
+        return None
+
+    from os import path
+    return path.join(settings.STAGING_PATH, username)
