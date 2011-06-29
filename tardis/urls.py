@@ -8,6 +8,8 @@ from registration.views import register
 
 from tardis.tardis_portal.forms import RegistrationForm
 
+from django.http import HttpResponseRedirect, HttpResponse
+
 core_urls = patterns(
     'tardis.tardis_portal.views',
     (r'^$', 'index'),
@@ -16,6 +18,7 @@ core_urls = patterns(
     (r'^partners/$', 'partners'),
     (r'^stats/$', 'stats'),
     (r'^import_params/$', 'import_params'),
+    (r'^robots\.txt$', lambda r: HttpResponse("User-agent: *\nDisallow: /download/\nDisallow: /stats/", mimetype="text/plain"))	
 )
 
 experiment_urls = patterns(
@@ -142,7 +145,6 @@ urlpatterns = patterns(
     # (r'^search/quick/$', 'tardis.tardis_portal.views.search_quick'),
     '',
     (r'', include(core_urls)),
-
     # Experiment Views
     (r'^experiment/', include(experiment_urls)),
 

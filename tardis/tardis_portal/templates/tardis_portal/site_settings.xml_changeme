@@ -31,9 +31,8 @@
 	<email-endswith>monash.edu.au</email-endswith>
 	<register>
 		<url>{{baseurl}}/experiment/register/</url>
-		<username>synchrotron</username>
-		<password>tardis</password>
-		<fileProtocol>tardis</fileProtocol>
+		<username>user</username>
+		<password>pass</password>
 	</register>
 	<transfer>
 		<type>gridftp</type>
@@ -50,3 +49,4 @@
 		<optionTCPBS>0</optionTCPBS>
 	</transfer>
 </site-settings>
+
