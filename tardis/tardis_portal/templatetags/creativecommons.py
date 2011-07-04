@@ -10,7 +10,7 @@ def show_cc_license(value):
 
     """
     experiment = Experiment.objects.get(id=value)
-    cch = CreativeCommonsHandler(experiment_id=experiment.id)
+    cch = CreativeCommonsHandler(experiment_id=experiment.id, create=False)
 
 
     if not cch.has_cc_license():

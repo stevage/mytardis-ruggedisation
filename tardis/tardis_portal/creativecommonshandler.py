@@ -13,12 +13,16 @@ class CreativeCommonsHandler():
     "/creative_commons/2011/05/17"
     experiment_id = None
 
-    def __init__(self, experiment_id=experiment_id):
+    def __init__(self, experiment_id=experiment_id, create=True):
 
         self.experiment_id = experiment_id
-        self.psm = self.get_or_create_cc_parameterset()
 
-    def get_or_create_cc_parameterset(self):
+        if create:
+            self.psm = self.get_or_create_cc_parameterset(create=True)
+        else:
+            self.psm = self.get_or_create_cc_parameterset(create=False)
+
+    def get_or_create_cc_parameterset(self, create=True):
 
         # get cc license parameterset, if any
         parameterset = ExperimentParameterSet.objects.filter(
@@ -26,9 +30,12 @@ class CreativeCommonsHandler():
         experiment__id=self.experiment_id)
 
         if not len(parameterset):
-            experiment = Experiment.objects.get(id=self.experiment_id)
-            self.psm = ParameterSetManager(schema=self.schema,
-                    parentObject=experiment)
+            if create:
+                experiment = Experiment.objects.get(id=self.experiment_id)
+                self.psm = ParameterSetManager(schema=self.schema,
+                        parentObject=experiment)
+            else:
+                return None
         else:
             self.psm = ParameterSetManager(parameterset=parameterset[0])
 
