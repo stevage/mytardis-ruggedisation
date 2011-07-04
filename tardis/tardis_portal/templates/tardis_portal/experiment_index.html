@@ -40,7 +40,7 @@
 	  {% for experiment in experiments %}
 	    <tr>
 	      <th>
-		<a href="{{ experiment.get_absolute_url }}">{{ experiment.title }}</a>
+		<a href="{{ experiment.get_absolute_url }}">{{ experiment.title }}</a> {% if experiment.public %}(public){% endif %}
 	      </th>
 	    </tr>
 	    <tr>
