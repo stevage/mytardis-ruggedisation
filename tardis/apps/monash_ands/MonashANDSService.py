@@ -20,6 +20,12 @@ from tardis.apps.monash_ands.ldap_query import \
 import suds
 from django.contrib.sites.models import Site
 from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
+# import the logging library
+import logging
+
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
+
 
 class MonashANDSService():
 
@@ -227,6 +233,7 @@ class MonashANDSService():
                         experiment.save()
 
                 except KeyError:
+                    logger.error(response)
                     logger.error("Persistent handle minting failed")
 
         if settings.OAI_DOCS_PATH:
