@@ -22,6 +22,14 @@ def index(request, experiment_id):
     allowed_protocol = sys.modules['%s.%s.settings' %
                 (settings.TARDIS_APP_ROOT, 'monash_ands')].ALLOWED_PROTOCOL
 
+    if not request.user.is_authenticated():
+        # todo: de-duplicate
+        from django.template import Context
+        c = Context()
+        c['disallowed_protocol'] = True
+
+        return HttpResponse(render_response_index(request, url, c))
+
     ua = UserAuthentication.objects.get(username=request.user.username)
     if not ua.authenticationMethod == allowed_protocol:
         from django.template import Context
