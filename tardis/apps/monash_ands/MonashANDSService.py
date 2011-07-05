@@ -3,7 +3,6 @@ Monash ANDS Publish Provider (Research Master Interaction)
 
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 '''
-from tardis.tardis_portal.logger import logger
 from django.conf import settings
 from django.template import Context
 from tardis.tardis_portal.models import Experiment, ExperimentParameter, \

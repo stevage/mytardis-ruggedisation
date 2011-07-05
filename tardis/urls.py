@@ -138,7 +138,6 @@ for app in settings.TARDIS_APPS:
                             (r'^%s/' % app,
                              include('%s.%s.urls' %
                                      (settings.TARDIS_APP_ROOT, app))))
-
 urlpatterns = patterns(
     # (r'^search/quick/$', 'tardis.tardis_portal.views.search_quick'),
     '',
