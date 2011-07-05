@@ -37,19 +37,27 @@ class HandleService:
         return self.request(postString, body)
 
     def request(self, postString, body):
+
+	logger.debug('Requesting handle')
+        logger.debug(postString)
+        logger.debug(body)
+
         #connect to Handle Service
         req = urllib2.Request(postString, body)
         #open the connection
-        try:
-            response = urllib2.urlopen(req)
-        except HTTPError, e:
-            logger.error('The handle server could not fulfill the request.')
-            logger.debug('Exception: ', e.code)
-        except URLError, e:
-            logger.error('Failed to reach the handle server.')
-            logger.debug('Reason: ', e.reason)
-        else:
-            data = response.read()
+        
+        response = None   
+
+        #try:
+        response = urllib2.urlopen(req)
+        #except HTTPError, e:
+        #    logger.error('The handle server could not fulfill the request.')
+        #    logger.debug('Exception: ', e.code)
+        #except URLError, e:
+        #    logger.error('Failed to reach the handle server.')
+        #    logger.debug('Reason: ', e.reason)
+        
+        data = response.read()
             #read the response
             #result = ''
             #while 1:
@@ -58,5 +66,4 @@ class HandleService:
             #        break
             #        result = result + repr(data)
             #        sys.stdout.write(data)
-            logger.debug('Finished to sender Handle Service')
         return data
