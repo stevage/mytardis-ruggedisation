@@ -110,7 +110,7 @@
 	{% endif %}
 	  - <a href="{% url django.contrib.auth.views.logout %}"> [Log Out]</a>
       {% else %}
-	  <a href="{% url registration.views.register %}"> [Register] </a>
+{#	  <a href="{% url registration.views.register %}"> [Register] </a>#}
 	  <a href="{% url tardis.tardis_portal.views.login %}"> [Log In]</a>
       {% endif %}
     </div> <!-- headerloginstatus -->

@@ -55,9 +55,9 @@ accounts_urls = patterns(
     'tardis.tardis_portal.views',
     (r'^login/$', 'login'),
     (r'^manage_auth_methods/$', 'manage_auth_methods'),
-    (r'^register/$', register,
-     {'form_class': RegistrationForm}),
-    (r'', include('registration.urls')),
+#    (r'^register/$', register,
+#     {'form_class': RegistrationForm}),
+#    (r'', include('registration.urls')),
     )
 
 datafile_urls = patterns(
