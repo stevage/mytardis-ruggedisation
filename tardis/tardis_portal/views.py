@@ -1793,7 +1793,7 @@ def change_group_permissions(request, experiment_id, group_id):
 
 
 @never_cache
-@transaction.commit_manually
+#@transaction.commit_manually
 @authz.experiment_ownership_required
 def add_experiment_access_group(request, experiment_id, groupname):
 
