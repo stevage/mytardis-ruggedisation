@@ -2059,6 +2059,7 @@ def upload_complete(request,
     return render_to_response(template_name, c)
 
 
+@login_required
 def upload(request, dataset_id, *args, **kwargs):
     """
     Uploads a datafile to the store and datafile metadata
@@ -2073,23 +2074,26 @@ def upload(request, dataset_id, *args, **kwargs):
 
     dataset = Dataset.objects.get(id=dataset_id)
 
-    logger.debug('called upload')
-    if request.method == 'POST':
-        logger.debug('got POST')
-        if request.FILES:
+    if authz.has_write_permissions(request, dataset.experiment.id):
+        logger.debug('called upload')
+        if request.method == 'POST':
+            logger.debug('got POST')
+            if request.FILES:
 
-            uploaded_file_post = request.FILES['Filedata']
+                uploaded_file_post = request.FILES['Filedata']
 
-            #print 'about to write uploaded file'
-            filepath = write_uploaded_file_to_dataset(dataset,
-                    uploaded_file_post)
-            #print filepath
+                #print 'about to write uploaded file'
+                filepath = write_uploaded_file_to_dataset(dataset,
+                        uploaded_file_post)
+                #print filepath
 
-            add_datafile_to_dataset(dataset, filepath,
-                                    uploaded_file_post.size)
-            #print 'added datafile to dataset'
+                add_datafile_to_dataset(dataset, filepath,
+                                        uploaded_file_post.size)
+                #print 'added datafile to dataset'
 
-    return HttpResponse('True')
+        return HttpResponse('True')
+    else:
+        return return_response_error(request)
 
 
 def upload_files(request, dataset_id,
