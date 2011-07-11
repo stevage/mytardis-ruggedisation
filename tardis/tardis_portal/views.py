@@ -1964,7 +1964,7 @@ def stats(request):
     public_datafile_size = size
 
     # using count() is more efficient than using len() on a query set
-    c = Context({'public_datafiles': public_datafiles.count(),
+    c = Context({'public_datafiles': public_datafiles,
                 'public_experiments': public_experiments.count(),
                 'public_datafile_size': public_datafile_size})
     return HttpResponse(render_response_index(request,
