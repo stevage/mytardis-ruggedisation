@@ -1950,8 +1950,8 @@ def remove_experiment_access_group(request, experiment_id, group_id):
 def stats(request):
 
     # stats
-
-    public_datafiles = Dataset_File.objects.filter()
+    public_datafiles = 0
+    #public_datafiles = Dataset_File.objects.filter()
     public_experiments = Experiment.objects.filter()
 
     size = 0
