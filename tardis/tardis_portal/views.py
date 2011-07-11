@@ -239,11 +239,16 @@ def partners(request):
 def experiment_index(request):
 
     experiments = None
+    shared_experiments = None
 
     if request.user.is_authenticated():
-        experiments = authz.get_accessible_experiments(request)
+        experiments = authz.get_owned_experiments(request)
         if experiments:
             experiments = experiments.order_by('-update_time')
+
+        shared_experiments = authz.get_shared_experiments(request)
+        if shared_experiments:
+            shared_experiments = shared_experiments.order_by('-update_time')
 
     public_experiments = Experiment.objects.filter(public=True)
     if public_experiments:
@@ -251,6 +256,7 @@ def experiment_index(request):
 
     c = Context({
         'experiments': experiments,
+        'shared_experiments': shared_experiments,
         'public_experiments': public_experiments,
         'subtitle': 'Experiment Index',
         'bodyclass': 'list',
