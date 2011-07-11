@@ -194,7 +194,8 @@ class ChangeGroupPermissionsForm(forms.Form):
 
     canRead = forms.BooleanField(label='canRead', required=False)
     canWrite = forms.BooleanField(label='canWrite', required=False)
-    canDelete = forms.BooleanField(label='canDelete', required=False)
+    canDelete = forms.BooleanField(label='', required=False,
+                                   widget=forms.HiddenInput)
 
     effectiveDate = forms.DateTimeField(label='Effective Date',
             widget=SelectDateWidget(), required=False)
@@ -213,7 +214,8 @@ class AddUserPermissionsForm(forms.Form):
     read.widget.attrs['class'] = 'canRead'
     write = forms.BooleanField(label='WRITE', required=False)
     write.widget.attrs['class'] = 'canWrite'
-    delete = forms.BooleanField(label='DELETE', required=False)
+    delete = forms.BooleanField(label='', required=False,
+                                   widget=forms.HiddenInput)
     delete.widget.attrs['class'] = 'canDelete'
 
 
@@ -232,7 +234,8 @@ class AddGroupPermissionsForm(forms.Form):
     read.widget.attrs['class'] = 'canRead'
     write = forms.BooleanField(label='WRITE', required=False)
     write.widget.attrs['class'] = 'canWrite'
-    delete = forms.BooleanField(label='DELETE', required=False)
+    delete = forms.BooleanField(label='', required=False,
+                                   widget=forms.HiddenInput)
     delete.widget.attrs['class'] = 'canDelete'
 
 
