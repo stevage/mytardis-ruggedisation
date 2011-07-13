@@ -120,10 +120,10 @@
 	<h3>Licensing</h3>
 	<div class="white_box">
 		{% if not has_cc_license %}
-			No license is currently set for this experiment. If that's acceptable then continue. Otherwise, first go to the <a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License page to set it.</a>
+			No license is currently set for this project. If that's acceptable then continue. Otherwise, first go to the <a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License page to set it.</a>
 		{% else %}
 		<p>
-			Current experiment license is:
+			Current project license is:
 		</p>
 		<p>
 			<div class="license_box">{{experiment.id|show_cc_license|safe}}</div>
@@ -136,7 +136,7 @@
 	<h3>Custom Description (Optional)</h3>
 	<div class="white_box">
 	<p>
-		Useful for situations in which you want to keep an experiment private and leave contact details instead of the current experiment description.
+		Useful for situations in which you want to keep an project private and leave contact details instead of the current project description.
 	</p>	
 		<div>
 			<div class="party_box" align="center">
@@ -144,7 +144,7 @@
 
 				<textarea id="custom_description" name="custom_description">{{custom_description}}</textarea>
 				</p>
-				<p>Leave blank to use the current Experiment Description below:</p>
+				<p>Leave blank to use the current Project Description below:</p>
 			  <p><small>
 				{% if experiment.description %}{{experiment.description}}{% else %}<em>None</em>{% endif %}
 			  </small>
@@ -158,7 +158,7 @@
 		<div>
 		  <p>
 			<em>
-				Please choose related Monash researchers to this experiment. There must be at least one researcher associated.
+				Please choose related Monash researchers to this project. There must be at least one researcher associated.
 			</em>
 		  </p>
 		  <p>
@@ -197,7 +197,7 @@
 				</ul>
 				<br/>
 				{% if not registered %}
-					<input type="checkbox" id="registrantNotIncluded"/>I do <strong>not</strong> wish to be listed as a researcher in this experiment.
+					<input type="checkbox" id="registrantNotIncluded"/>I do <strong>not</strong> wish to be listed as a researcher in this project.
 				{% endif %}
 			  </p>
 		
@@ -217,7 +217,7 @@
 	<h3>Related Projects</h3>
 	<div class="white_box">
 		{% if activity_summaries %}
-		<p><em>The following projects were retrieved for {{username}}... Please select projects related to this experiment..</em>
+		<p><em>The following projects were retrieved for {{username}}... Please select projects related to this project..</em>
 		</p>
 		{% for activity_summary in activity_summaries %}
 			<div class="activity_summary">
@@ -257,7 +257,7 @@
 		</div>
 	</div>	
 	
-	<input id="ands_register" type="button" value="Register Experiment"/>
+	<input id="ands_register" type="button" value="Register Project"/>
 	</form>
 	{% else %}
 	<div class="white_box">
@@ -274,7 +274,7 @@
 </p>
 {% else %}
 <p>
-	You must be an experiment owner to register with ANDS.
+	You must be an project owner to register with ANDS.
 </p>
 {% endif %}
 

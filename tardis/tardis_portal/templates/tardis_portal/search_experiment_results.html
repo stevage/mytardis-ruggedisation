@@ -5,10 +5,10 @@
 {% if experiments.count %}
 <em>
   <strong>{{ experiments.count }}</strong>
-  experiment{{ experiments.count|pluralize }} found.
+  project{{ experiments.count|pluralize }} found.
 </em>
 {% else %}
-No experiments found
+No projects found
 {% endif %}
 <table class="experiment-table">
   {% for experiment in experiments %}

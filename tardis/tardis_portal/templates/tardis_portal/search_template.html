@@ -21,7 +21,7 @@
     <div id="content">
       <div class="post">
 	<h1 class="title"><a href="#">Search</a></h1>
-	<div class="searchmenu" style="padding-left: 10px">Search <a href="{% url tardis.tardis_portal.views.search_experiment %}">Experiment</a>
+	<div class="searchmenu" style="padding-left: 10px">Search <a href="{% url tardis.tardis_portal.views.search_experiment %}">Project</a>
 	  | <form action="{% url tardis.tardis_portal.views.search_datafile %}" method="GET" style="display: inline">
 	    {{ searchDatafileSelectionForm.type }}
 	    <noscript><input type="submit" value="Submit"></noscript>

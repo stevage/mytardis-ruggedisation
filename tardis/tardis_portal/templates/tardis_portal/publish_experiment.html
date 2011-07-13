@@ -47,7 +47,7 @@
 		</script>		
 			<div id="content">
 				<div class="post">
-					<h1 class="title"><a name="abouttardis">Publish Experiment</a></h1>
+					<h1 class="title"><a name="abouttardis">Publish Project</a></h1>
 					<div class="entry">
 							
 							
@@ -56,10 +56,10 @@
 							{% if legal %}
 								
 								{% if success %}
-									<h3>Experiment Publication Successful</h3>
-									<a href="../">Go back to your experiment.</a>
+									<h3>Project Publication Successful</h3>
+									<a href="../">Go back to your project.</a>
 								{% else %}
-									<h3><span style="color: red;">Experiment Publication Failed</span></h3>
+									<h3><span style="color: red;">Project Publication Failed</span></h3>
 									<p>See messages below for more information:</p>
 									
 									<p>
@@ -82,7 +82,7 @@
 						</p>
 						{% else %}
 							{% if not has_cc_license %}
-									No license is currently set for this experiment. Please go to the <a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License page to set it.</a>
+									No license is currently set for this project. Please go to the <a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License page to set it.</a>
 							{% else %}
                                 <form action="." method="POST" class="publishform">
                                 <p>
@@ -94,7 +94,7 @@
                                     <h2>ANDS Research Data Australia Registration</h2>
                                     <p><img src="/site_media/images/ands-logo-hi-res.jpg"></p>
 
-                                    <p>You have not yet registered this experiment with ANDS Research Data Australia. Doing so has many benefits including a persistent handles, and a 33% increase in your attractiveness to the opposite gender*. This is obviously temporary text. Relax!</p>
+                                    <p>You have not yet registered this project with ANDS Research Data Australia. Doing so has many benefits including a persistent handles, and a 33% increase in your attractiveness to the opposite gender*. This is obviously temporary text. Relax!</p>
 
                                     <p><a href="../">Click here to go back to your Experiment. From there click 'ANDS Register'.</a></p>
 
@@ -109,7 +109,7 @@
                                     <h2>Licensing</h2>
 
                                     <p>
-                                        Current experiment license is:
+                                        Current project license is:
                                     </p>
                                     <p>
                                         <div class="license_box">{{experiment.id|show_cc_license|safe}}</div>

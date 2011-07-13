@@ -1,11 +1,11 @@
 body {
 	margin: 0;
 	padding: 0;
-	background: #232323 url(../images/mimg01.jpg) repeat-x left top;
+	background: #3B4E4E url(../images/mimg01.jpg) repeat-x left top;
 	text-align: left;
 	font-family: Tahoma, Arial, Helvetica, sans-serif;
 	font-size: 12px;
-	color: #404040;
+	color: #3a444b;
 }
 
 form {
@@ -32,7 +32,7 @@ h2, h3 {
 h1 {
 	letter-spacing: -1px;
 	font-size: 2.2em;
-	color: #781F1F;
+	color: #2C212C;
 	font-weight: normal;
 }
 
@@ -70,7 +70,7 @@ ol {
 }
 
 a {
-	color: #781F1F;
+	color: #2C212C;
 	text-decoration: none;
 }
 
@@ -308,7 +308,7 @@ img.right {
 #bottombar {
 	clear: both;
 	width: 1000px;
-	background: #000000;
+	background: #3B4E4E;
 	color: #CCCCCC;
 	padding: 10px 0 0 0;
 }

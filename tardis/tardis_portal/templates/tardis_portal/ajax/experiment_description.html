@@ -92,7 +92,7 @@ $(document).ready(function() {
   <p>
     {# {% if experiment.experimentparameterset_set.count %} #}
 	<div class="experiment_md_container">
-	<strong>Experiment Metadata:</strong>
+	<strong>Project Metadata:</strong>
 
 	{% if has_write_permissions %}{% if not experiment.public %}
 	<a href="{% url tardis.tardis_portal.views.add_experiment_par experiment.id %}"
@@ -142,7 +142,7 @@ $(document).ready(function() {
   </p>
 
   <p>
-    <strong>Experiment Last Updated:</strong>
+    <strong>Project Last Updated:</strong>
     {{ experiment.update_time|date:"jS F Y H:i" }}<br/>
   </p>
 	<p>
@@ -153,9 +153,9 @@ $(document).ready(function() {
     {% for p in protocol %}
       <p>
 	{% if p.0 %}
-	  <strong><a href="{{p.1}}">Download Entire Experiment ({{p.0|upper}})</a></strong><br/>
+	  <strong><a href="{{p.1}}">Download Entire Project ({{p.0|upper}})</a></strong><br/>
 	{% else %}
-	  <strong><a href="{{p.1}}">Download Entire Experiment</a></strong><br/>
+	  <strong><a href="{{p.1}}">Download Entire Project</a></strong><br/>
 	{% endif %}
       </p>
     {% endfor %}
@@ -164,7 +164,7 @@ $(document).ready(function() {
 		<a href="{% url tardis.tardis_portal.views.choose_license experiment.id %}">Choose License</a>
 	</p>
 	{% if not experiment.public %}
-		<strong><a href="publish/">Publish Experiment</a></strong><br/>
+		<strong><a href="publish/">Publish Project</a></strong><br/>
 	{% endif %}
 	{% endif %}
   </div>
@@ -172,7 +172,7 @@ $(document).ready(function() {
   <p align="right">
     <br/>
     {% if owners %}
-      <strong>Experiment Administrators </strong><br/>
+      <strong>Project Administrators </strong><br/>
       {% for owner in owners %}
         {% if owner.email %}
           <a href="mailto:{{owner.email}}">{{ owner.email}}</a>
@@ -186,7 +186,7 @@ $(document).ready(function() {
 	</p>
 	<p align="right">
 	{% if experiment.public %}
-		<em>This experiment is public.</em>
+		<em>This project is public.</em>
 	{% endif %}
       
   </p>
