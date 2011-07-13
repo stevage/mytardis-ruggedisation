@@ -212,7 +212,7 @@ class AddUserPermissionsForm(forms.Form):
     adduser.widget.attrs['class'] = 'usersuggest'
     read = forms.BooleanField(label='READ', required=False, initial=True)
     read.widget.attrs['class'] = 'canRead'
-    write = forms.BooleanField(label='WRITE', required=False)
+    write = forms.BooleanField(label='EDIT', required=False)
     write.widget.attrs['class'] = 'canWrite'
     delete = forms.BooleanField(label='', required=False,
                                    widget=forms.HiddenInput)
@@ -232,7 +232,7 @@ class AddGroupPermissionsForm(forms.Form):
     adduser.widget.attrs['class'] = 'usersuggest'
     read = forms.BooleanField(label='READ', required=False, initial=True)
     read.widget.attrs['class'] = 'canRead'
-    write = forms.BooleanField(label='WRITE', required=False)
+    write = forms.BooleanField(label='EDIT', required=False)
     write.widget.attrs['class'] = 'canWrite'
     delete = forms.BooleanField(label='', required=False,
                                    widget=forms.HiddenInput)
