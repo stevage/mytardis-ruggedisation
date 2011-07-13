@@ -49,7 +49,7 @@ def index(request, experiment_id):
 
         c['experiment'] = e
 
-        cch = CreativeCommonsHandler(experiment_id=experiment_id)
+        cch = CreativeCommonsHandler(experiment_id=experiment_id, create=False)
         c['has_cc_license'] = cch.has_cc_license()
 
         return HttpResponse(render_response_index(request, url, c))

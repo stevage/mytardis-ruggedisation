@@ -73,3 +73,10 @@ class CreativeCommonsHandler():
             self.psm.delete_params('license_image')
             self.psm.delete_params('license_name')
             self.psm.delete_params('license_uri')
+
+            parametersets = ExperimentParameterSet.objects.filter(
+            schema__namespace=self.schema,
+            experiment__id=self.experiment_id)
+
+            for parameterset in parametersets:
+                parameterset.delete()

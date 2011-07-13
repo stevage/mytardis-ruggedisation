@@ -2378,7 +2378,7 @@ def publish_experiment(request, experiment_id):
         legaltext = legalfile.read()
         legalfile.close()
 
-        cch = CreativeCommonsHandler(experiment_id=experiment_id)
+        cch = CreativeCommonsHandler(experiment_id=experiment_id, create=False)
 
         context_dict = \
         {'username': username,

@@ -28,7 +28,16 @@
  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 -->
 {% extends "tardis_portal/portal_template.html" %}
-		
+
+        {%  block script %}
+          <script type="text/javascript">
+
+              $(document).ready(function() {
+                $('#cc_js_jurisdiction_choice_au').attr('selected', true);
+              });
+          </script>
+        {%  endblock %}
+
 		{% block content %}
 			<div id="content">
 				<div class="post">
