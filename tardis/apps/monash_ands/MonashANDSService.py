@@ -164,7 +164,7 @@ class MonashANDSService():
                         activity_rif_cs
                         )
 
-        cch = CreativeCommonsHandler(experiment_id=experiment.id)
+        cch = CreativeCommonsHandler(experiment_id=experiment.id, create=False)
 
         license_name = ""
         if cch.has_cc_license():
