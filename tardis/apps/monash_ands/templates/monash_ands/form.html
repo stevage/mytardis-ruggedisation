@@ -146,24 +146,24 @@
 				</p>
 				<p>Leave blank to use the current Experiment Description below:</p>
 			  <p><small>
-				{{experiment.description}}
+				{% if experiment.description %}{{experiment.description}}{% else %}<em>None</em>{% endif %}
 			  </small>
 			  </p>
 			  </p>
 			</div>
 		</div>
 	</div>		
-	<h3>Related Parties</h3>
+	<h3>Related Researchers</h3>
 	<div class="white_box">
 		<div>
 		  <p>
 			<em>
-				Please choose related parties to this experiment (must have at least one Monash University party)..
+				Please choose related Monash researchers to this experiment. There must be at least one researcher associated.
 			</em>
 		  </p>
 		  <p>
 			<div class="party_box">
-				Current Monash Parties<br/>
+				Current Associated Researchers<br/>
 				<ul>
 					{% for party in current_parties_ldap %}
 						<li class="party_list_member">
@@ -181,7 +181,7 @@
 					{% endfor %}
 				</ul>				
 				
-				New Monash Parties<br/>
+				New Associated Researchers To Be Added..<br/>
 				<ul id="ldap_party_list">
 					{% if not registered %}
 						<li id="registrant" class="party_list_member">
@@ -197,12 +197,12 @@
 				</ul>
 				<br/>
 				{% if not registered %}
-					<input type="checkbox" id="registrantNotIncluded"/>I do <strong>not</strong> wish to be included as a party in this experiment.
+					<input type="checkbox" id="registrantNotIncluded"/>I do <strong>not</strong> wish to be listed as a researcher in this experiment.
 				{% endif %}
 			  </p>
 		
 			<p>
-				<label>Add user (enter their Monash University email address):</label>
+				<label>Add researcher (enter their Monash University email address):</label>
 			</p>
 			<p>
 				<input type="text" style="width: 300px" maxlength="100" name="ldap_party_add" class="usersuggest ac_input" id="add_ldap_party_box" autocomplete="off">		
@@ -214,10 +214,10 @@
 </p>
 
 <p>
-	<h3>Related Activities</h3>
+	<h3>Related Projects</h3>
 	<div class="white_box">
 		{% if activity_summaries %}
-		<p><em>The following activities were retrieved for {{username}}... Please select activities related to this experiment..</em>
+		<p><em>The following projects were retrieved for {{username}}... Please select projects related to this experiment..</em>
 		</p>
 		{% for activity_summary in activity_summaries %}
 			<div class="activity_summary">
@@ -226,14 +226,14 @@
 				<strong>Grantor Code:</strong> {{ activity_summary.grantorCode }}<br/>
 				<strong>Date Applied:</strong> {{ activity_summary.projectDateApplied }}<br/>
 				<br/>
-				<div align="right"><strong>Include this activity</strong>
+				<div align="right"><strong>Include this project</strong>
 					<input type="checkbox" name="activity" {% for a in current_activities %}{% ifequal activity_summary.projectId a.string_value %} checked {% endifequal %}{% endfor %} value="{{activity_summary.projectId}}">
 				</div>
 			</div>
 		{% endfor %}
 		{% else %}
 			<p>
-				No activities found for {{username}}.
+				No projects found for {{username}}. Please proceed.
 			</p>
 		{% endif %}
 	</div>
@@ -242,7 +242,7 @@
 		<div>
 			<div class="party_box">
 				<p>
-					Register under this RIF-CS profile (leave 'default' if unsure):
+					Register under this domain-specific profile (leave 'default' if unsure):
 					{% if rif_cs_profiles %}
 					<select name="profile">
 						{% for profile in rif_cs_profiles %}
