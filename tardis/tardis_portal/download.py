@@ -213,7 +213,7 @@ def download_datafiles(request):
                         absolute_filename = datafile.url.partition('//')[2]
                         if(datafile.url.partition('//')[0] == 'tardis:'):
                             #temp fix for old data
-                            filepath = '\"%s/%s/%s\" ' % (expid, str(datafile.dataset.id),
+                            filepath = '%s/%s/%s' % (expid, str(datafile.dataset.id),
                                 absolute_filename)
 
                             print filepath + "######"
@@ -224,12 +224,12 @@ def download_datafiles(request):
                                 #exists test. os.exists broken
                             except IOError:
                                 print "OLD FILE DETECTED"
-                                filepath = '%s/%s ' % (expid, absolute_filename)
+                                filepath = '%s/%s' % (expid, absolute_filename)
 
-                            fileString += ('\"' + filepath + '\"" ')
+                            fileString += ('\"' + filepath + '\" ')
                             print fileString
                         else:
-                            fileString += '\"%s/\"%s" ' % (expid, absolute_filename)
+                            fileString += '\"%s/%s\" ' % (expid, absolute_filename)
 
 
             for dfid in datafiles:
@@ -237,7 +237,7 @@ def download_datafiles(request):
                 if datafile.dataset.id in datasets:
                     continue
                 if has_datafile_access(request=request,
-                                        dataset_file_id=datafile.id):
+                        id=datafile.id):
                     p = datafile.protocol
                     if not p in protocols:
                         protocols += [p]
@@ -255,12 +255,12 @@ def download_datafiles(request):
                             #exists test. os.exists broken
                         except IOError:
                             print "OLD FILE DETECTED"
-                            filepath = '\"%s/\"%s ' % (expid, absolute_filename)
+                            filepath = '\"%s/%s\" ' % (expid, absolute_filename)
 
                         fileString += filepath
                         print fileString
                     else:
-                        fileString += '\"%s/\"%s ' % (expid, absolute_filename)
+                        fileString += '\"%s/%s\" ' % (expid, absolute_filename)
         else:
             return return_response_not_found(request)
 
@@ -283,7 +283,7 @@ def download_datafiles(request):
                         # expects tardis: formatted stuff to not include dataset id
 
                         #temp fix for old data
-                        filepath = '%s/%s/%s ' % (expid, str(datafile.dataset.id),
+                        filepath = '\"%s/%s/%s\" ' % (expid, str(datafile.dataset.id),
                             absolute_filename)
 
                         print filepath + "######"
@@ -294,7 +294,7 @@ def download_datafiles(request):
                             #exists test. os.exists broken
                         except IOError:
                             print "OLD FILE DETECTED"
-                            filepath = '%s/%s ' % (expid, absolute_filename)
+                            filepath = '\"%s/%s\" ' % (expid, absolute_filename)
 
                         fileString += ('\"' + filePath + '\" ')
                         print fileString
