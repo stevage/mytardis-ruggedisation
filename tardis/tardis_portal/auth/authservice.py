@@ -42,7 +42,8 @@ from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib import auth
 from tardis.tardis_portal.staging import get_full_staging_path
-
+import logging
+logger = logging.getLogger(__name__)
 
 class AuthService():
     """The AuthService provides an interface for querying the
@@ -240,11 +241,15 @@ class AuthService():
 
         plugin = user_dict['pluginname']
 
+        logger.debug('Trying to find ' + id + ' in user_dict')
         username = ''
         if not 'id' in user_dict:
             email = user_dict['email']
+            logger.debug('id not in user_dict, trying to get username by' +
+                ' email ' + email)
             username =\
                 self._authentication_backends[plugin].getUsernameByEmail(email)
+            logger.debug('get username by email returned ' + username)
         else:
             username = user_dict['id']
 
