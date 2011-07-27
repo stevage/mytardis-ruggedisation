@@ -220,6 +220,9 @@ class LDAPBackend(AuthProvider, UserProvider, GroupProvider):
         return user
 
     def getUsernameByEmail(self, email):
+        if not "@" in email:
+            #input is username not email so return username
+            return email
 
         l = None
         try:
@@ -231,8 +234,9 @@ class LDAPBackend(AuthProvider, UserProvider, GroupProvider):
             ldap_result = l.search_s(self._user_base, ldap.SCOPE_SUBTREE,
                                       searchFilter, retrieveAttributes)
 
-            if ldap_result[0][1]['uid'][0]:
-                return ldap_result[0][1]['uid'][0]
+            logger.debug(ldap_result)
+            if ldap_result['uid']:
+                return ldap_result['uid']
             else:
                 return None
 

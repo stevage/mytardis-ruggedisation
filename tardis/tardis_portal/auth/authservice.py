@@ -249,7 +249,7 @@ class AuthService():
             ' email ' + email)
         username =\
             self._authentication_backends[plugin].getUsernameByEmail(email)
-        logger.debug('get username by email returned ' + username)
+        logger.debug('get username by email returned ' + str(username))
 
         try:
             user = UserAuthentication.objects.get(username=username,
