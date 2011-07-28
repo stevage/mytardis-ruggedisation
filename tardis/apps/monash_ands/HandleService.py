@@ -57,6 +57,8 @@ class HandleService:
         #    logger.error('Failed to reach the handle server.')
         #    logger.debug('Reason: ', e.reason)
         
+        logger.debug('Handle response ' + str(response))
+
         data = response.read()
             #read the response
             #result = ''

@@ -220,7 +220,7 @@ class MonashANDSService():
                     response = hdlsrv.mint(
                         mas_settings.AUTHTYPE, mas_settings.IDENTIFIER,
                         mas_settings.AUTHDOMAIN, mas_settings.APPID,
-                        mas_settings.MINTURL, "http://" +\
+                        mas_settings.MINTURL, \
                             Site.objects.get_current().domain +\
                             "/experiment/view/" + str(experiment.id))
                     from xml.dom import minidom
