@@ -241,12 +241,12 @@ class AuthService():
         plugin = user_dict['pluginname']
 
         username = ''
-        if not 'id' in user_dict:
-            email = user_dict['email']
-            username =\
-                self._authentication_backends[plugin].getUsernameByEmail(email)
-        else:
-            username = user_dict['id']
+        email = user_dict['id']
+        logger.debug('trying to get username by' +
+            ' email ' + email)
+        username =\
+            self._authentication_backends[plugin].getUsernameByEmail(email)
+        logger.debug('get username by email returned ' + str(username))
 
         try:
             user = UserAuthentication.objects.get(username=username,
