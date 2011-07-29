@@ -19,11 +19,19 @@ class EIF038PartyActivityInformationProvider(PartyActivityInformationProvider):
     def __init__(self):
 
         # Basic info
-        url = "http://mobs-qa.its.monash.edu.au:7778/"\
-             "esb/wsil/AI/ResearchMaster/AIRMANDSService_RS?wsdl"
+        #url = "http://mobs-qa.its.monash.edu.au:7778/"\
+        #     "esb/wsil/AI/ResearchMaster/AIRMANDSService_RS?wsdl"
 
         #url = "http://mobs-dev.its.monash.edu.au:7778/esb/wsil"\
         #    "/AI/ResearchMaster/AIRMANDSService_RS?wsdl"
+
+        #url = "http://mobs-qa.its.monash.edu.au:7778/esb/wsil/"\
+        #      "AI/ResearchMaster/AIRMANDSService_RS?wsdl"
+
+
+        url = "http://mobs.its.monash.edu.au:7778/orabpel/"\
+              "ResearchMaster/AIRMANDSService/AIRMANDSService?wsdl"
+
 
         self._client = Client(url)
 
@@ -61,17 +69,21 @@ class EIF038PartyActivityInformationProvider(PartyActivityInformationProvider):
         xmldata = self._client.last_received()
         #print xmldata
 
-        regObj = xmldata.childAtPath('Envelope/Body/registryObjects')
+        regObj = xmldata.childAtPath('Envelope/Body/registryObjects'\
+        '/registryObject')
 
         from lxml import etree
         import StringIO
 
         rif_tree = etree.parse(StringIO.StringIO(regObj))
-        title = rif_tree.xpath('//name/namePart[@type="title"]/text()')[0]
-        given = rif_tree.xpath('//name/namePart[@type="given"]/text()')[0]
-        family = rif_tree.xpath('//name/namePart[@type="family"]/text()')[0]
 
-        return title + " " + given + " " + family
+        logger.debug(str(rif_tree))        
+
+        title = rif_tree.xpath('//name/namePart[@type="title"]/text()')
+        given = rif_tree.xpath('//name/namePart[@type="given"]/text()')
+        family = rif_tree.xpath('//name/namePart[@type="family"]/text()')
+
+        return title[0] + " " + given[0] + " " + family[0]
 
     def get_activity_summary_dict(self, username):
         """
