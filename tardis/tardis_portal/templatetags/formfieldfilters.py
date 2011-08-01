@@ -28,6 +28,8 @@ def parametername_form(value):
 @register.filter
 def sanitize_html(html, bad_tags=['body']):
    """Removes identified malicious HTML content from the given string."""
+   if html is None or html == '':
+      return html
    cleaner = Cleaner(style=False, page_structure=True, remove_tags=bad_tags,
          safe_attrs_only=False)
    return cleaner.clean_html(html)
