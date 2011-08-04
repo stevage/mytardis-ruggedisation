@@ -42,7 +42,8 @@ from django.utils.importlib import import_module
 from django.core.exceptions import ImproperlyConfigured
 from django.contrib import auth
 from tardis.tardis_portal.staging import get_full_staging_path
-
+import logging
+logger = logging.getLogger(__name__)
 
 class AuthService():
     """The AuthService provides an interface for querying the
