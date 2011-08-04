@@ -8,14 +8,14 @@ class Migration(SchemaMigration):
 
     def forwards(self, orm):
         
-        # Adding unique constraint on 'Schema', fields ['namespace']
-        db.create_unique('tardis_portal_schema', ['namespace'])
+        # Adding field 'ParameterName.order'
+        db.add_column('tardis_portal_parametername', 'order', self.gf('django.db.models.fields.PositiveIntegerField')(default=9999, null=True, blank=True), keep_default=False)
 
 
     def backwards(self, orm):
         
-        # Removing unique constraint on 'Schema', fields ['namespace']
-        db.delete_unique('tardis_portal_schema', ['namespace'])
+        # Deleting field 'ParameterName.order'
+        db.delete_column('tardis_portal_parametername', 'order')
 
 
     models = {
@@ -164,7 +164,7 @@ class Migration(SchemaMigration):
             'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"})
         },
         'tardis_portal.parametername': {
-            'Meta': {'unique_together': "(('schema', 'name'),)", 'object_name': 'ParameterName'},
+            'Meta': {'ordering': "('order',)", 'unique_together': "(('schema', 'name'),)", 'object_name': 'ParameterName'},
             'choices': ('django.db.models.fields.CharField', [], {'max_length': '500', 'blank': 'True'}),
             'comparison_type': ('django.db.models.fields.IntegerField', [], {'default': '1'}),
             'data_type': ('django.db.models.fields.IntegerField', [], {'default': '2'}),
@@ -173,6 +173,7 @@ class Migration(SchemaMigration):
             'immutable': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'is_searchable': ('django.db.models.fields.BooleanField', [], {'default': 'False'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '60'}),
+            'order': ('django.db.models.fields.PositiveIntegerField', [], {'default': '9999', 'null': 'True', 'blank': 'True'}),
             'schema': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['tardis_portal.Schema']"}),
             'units': ('django.db.models.fields.CharField', [], {'max_length': '60', 'blank': 'True'})
         },
@@ -180,7 +181,7 @@ class Migration(SchemaMigration):
             'Meta': {'object_name': 'Schema'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '50', 'null': 'True', 'blank': 'True'}),
-            'namespace': ('django.db.models.fields.URLField', [], {'unique': 'True', 'max_length': '400'}),
+            'namespace': ('django.db.models.fields.URLField', [], {'unique': 'True', 'max_length': '255'}),
             'subtype': ('django.db.models.fields.CharField', [], {'max_length': '30', 'null': 'True', 'blank': 'True'}),
             'type': ('django.db.models.fields.IntegerField', [], {'default': '1'})
         },

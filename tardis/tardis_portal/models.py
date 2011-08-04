@@ -679,10 +679,12 @@ class ParameterName(models.Model):
     # TODO: we'll need to rethink the way choices for drop down menus are
     #       represented in the DB. doing it this way is just a bit wasteful.
     choices = models.CharField(max_length=500, blank=True)
+    order = models.PositiveIntegerField(default=9999, null=True, blank=True)
     objects = ParameterNameManager()
 
     class Meta:
         unique_together = (('schema', 'name'),)
+        ordering = ('order', 'name')
 
     def __unicode__(self):
         return (self.schema.name or self.schema.namespace) + ": " + self.name
@@ -823,7 +825,7 @@ class DatafileParameter(models.Model):
         return 'Datafile Param: %s=%s' % (self.name.name, self.get())
 
     class Meta:
-        ordering = ['id']
+        ordering = ['name']
 
 
 class DatasetParameter(models.Model):
@@ -845,7 +847,7 @@ class DatasetParameter(models.Model):
         return 'Dataset Param: %s=%s' % (self.name.name, self.get())
 
     class Meta:
-        ordering = ['id']
+        ordering = ['name']
 
 
 class ExperimentParameter(models.Model):
@@ -866,7 +868,7 @@ class ExperimentParameter(models.Model):
         return 'Experiment Param: %s=%s' % (self.name.name, self.get())
 
     class Meta:
-        ordering = ['id']
+        ordering = ['name']
 
 
 def pre_save_parameter(sender, **kwargs):

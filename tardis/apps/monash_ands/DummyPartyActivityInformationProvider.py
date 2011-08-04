@@ -23,7 +23,7 @@ class DummyPartyActivityInformationProvider(PartyActivityInformationProvider):
 
         monash_id = urllib2.urlopen(requestmp).read()
 
-        return monash_id
+        return username[:3] + str(45)
 
     def get_party_rifcs(self, unique_party_id):
         """
