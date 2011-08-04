@@ -10,12 +10,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+from django.conf import settings
+
 class PartyActivityInformationService():
 
-    def __init__(self, settings=settings):
+    def __init__(self):
         self._pai_provider = None
         self._initialised = False
-        self.settings = settings
+
+        import sys
+        self.settings = sys.modules['%s.%s.settings' %
+                    (settings.TARDIS_APP_ROOT, 'monash_ands')]
 
     def _manual_init(self):
         """Manual init had to be called by all the functions of the PublishService
@@ -25,7 +30,7 @@ class PartyActivityInformationService():
         being exported from auth related modules.
 
         """
-        self._pai_provider = self._safe_import(settings.PARTY_ACTIVITY_INFORMATION_PROVIDER)
+        self._pai_provider = self._safe_import(self.settings.PARTY_ACTIVITY_INFORMATION_PROVIDER)
         self._initialised = True
 
     def _safe_import(self, path):
