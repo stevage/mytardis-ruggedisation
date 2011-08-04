@@ -31,18 +31,19 @@
   <script type="text/javascript">
 	$(document).ready(function() {
 	$("#tabs").tabs({
-	    ajaxOptions: {dataType: "html"},
-	    cookie: { expires: 30 },
-        load: function (e, ui) {
+	   ajaxOptions: {dataType: "html"},
+	   cookie: { expires: 30 },
+       load: function (e, ui) {
              $(ui.panel).find(".tab-loading").remove();
            },
-           select: function (e, ui) {
-             var $panel = $(ui.panel);
+       select: function (e, ui) {
+         var $panel = $(ui.panel);
 
 
-             $panel.append("<div class='tab-loading'>Loading...<img src='/site_media/images/busy.gif'/></div>")
+         $panel.html("<div class='tab-loading'>Loading...<img src='/site_media/images/busy.gif'/></div>")
 
-            }
+        },
+
 	});
 
 	  // Close Button Highlighting. IE doesn't support :hover. Surprise?
