@@ -39,12 +39,38 @@
 	<title>Squirrel {% if subtitle %}- {{ subtitle }} {% endif %}</title>
 	<meta name="keywords" content="">
 	<meta name="description" content="">
-	{% include "tardis_portal/javascript_libraries.html" %}
+	{% include "tardis_portal/javascript_libraries.html" %} 
 
 	{% block script %}
 	{% endblock script %}
 
 	<link href="/site_media/css/default.css" rel="stylesheet" type="text/css" media="screen">
+
+	<script type="text/javascript">
+$(document).ready(function(){
+  var users = (function () {
+  var val = null;
+  var authMethod = "localdb";
+  var data = { authMethod: authMethod };
+  $.ajax({
+    'async': false,
+    'global': false,
+    'data': data,
+    'url': '/ajax/parameter_field_list',
+    'success': function (data) {
+       val = data;
+     }
+     });
+ return val;
+})();
+  
+$("#id_q").autocomplete(users.split(" "), {
+matchContains: true, multiple: true, multipleSeparator: " ", 
+});
+
+
+      });
+	</script>
 
 	<script type="text/javascript">
 $(document).ready(function(){

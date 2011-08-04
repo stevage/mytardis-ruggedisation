@@ -438,6 +438,7 @@ def experiment_datasets(request, experiment_id):
         
         #raw_search doesn't chain...
         results = sqs.raw_search(request.GET['query'])
+        
         matching_datasets = [d.object for d in results if 
                 d.model_name == 'dataset' and 
                 d.experiment_id_stored == int(experiment_id)
@@ -503,7 +504,6 @@ def retrieve_experiment_metadata(request, experiment_id):
     c['has_write_permissions'] = has_write_permissions
     return HttpResponse(render_response_index(request,
                         'tardis_portal/ajax/experiment_metadata.html', c))
-
 
 @login_required
 def create_experiment(request,
@@ -2367,27 +2367,37 @@ def add_par(request, parentObject, otype, stype):
 class ExperimentSearchView(SearchView):
     def __name__(self):
         return "ExperimentSearchView"
-
+    
     def extra_context(self):
         extra = super(ExperimentSearchView, self).extra_context()
         # Results may contain Experiments, Datasets and Dataset_Files.
         # Group them into experiments, noting whether or not the search
         # hits were in the Dataset(s) or Dataset_File(s)
         results = self.results
-
+        
         experiments = {}
+        access_list = []
+
+        if self.request.user.is_authenticated():
+            access_list.extend([e.pk for e in authz.get_accessible_experiments(self.request)])
+
+        access_list.extend([e.pk for e in Experiment.objects.filter(public=True)])
+
         for r in results:
             if (r.model==Experiment):
                 i = int(r.pk)
             else:
-                i = int(r.experiment_id_stored)
+                i = int(r.experiment_id_stored) 
+            
+            if i not in access_list:
+                continue
 
             if i not in experiments.keys():
                 experiments[i]= {}
-                experiments[i]['sr'] = r
-                experiments[i]['dataset_hit'] = False
+                experiments[i]['sr'] = r 
+                experiments[i]['dataset_hit'] = False 
                 experiments[i]['dataset_file_hit'] = False
-                experiments[i]['experiment_hit'] =False
+                experiments[i]['experiment_hit'] =False 
 
             if r.model == Experiment:
                 experiments[i]['experiment_hit'] = True
@@ -2398,7 +2408,7 @@ class ExperimentSearchView(SearchView):
 
         extra['experiments'] = experiments
         return extra
-
+    
     # override SearchView's method in order to
     # return a ResponseContext
     def create_response(self):
@@ -2450,7 +2460,7 @@ def rif_cs(request):
 
         party_url = settings.TEST_MONASH_ANDS_URL\
         + "pilot/GetPartybyMonashID/"
-
+        
         requestmp = urllib2.Request(party_url)
         party_rif_cs = urllib2.urlopen(requestmp).read()
 
@@ -2467,7 +2477,6 @@ def rif_cs(request):
         logger.debug('TEST_MONASH_ANDS_URL setting not found.' +
         ' RIF-CS not shown')
         return return_response_error(request)
-
 
 @never_cache
 @authz.experiment_ownership_required

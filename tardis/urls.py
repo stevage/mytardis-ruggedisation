@@ -190,4 +190,5 @@ urlpatterns = patterns(
     # Apps
     (r'^apps/', include(apppatterns)),
     (r'^robots\.txt$', lambda r: HttpResponse("User-agent: *\nDisallow: /download/\nDisallow: /stats/", mimetype="text/plain"))
+
 )
