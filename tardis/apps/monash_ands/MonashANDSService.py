@@ -9,7 +9,7 @@ from tardis.tardis_portal.models import Experiment, ExperimentParameter, \
     ExperimentParameterSet
 import urllib2
 import datetime
-from tardis.tardis_portal.partyactivityinformationservice \
+from tardis.apps.monash_ands.partyactivityinformationservice \
     import PartyActivityInformationService
 from tardis.tardis_portal.xmlwriter \
     import XMLWriter
