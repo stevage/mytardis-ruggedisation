@@ -277,9 +277,13 @@ class AuthService():
             pass
 
         password = User.objects.make_random_password()
+        
+        logger.debug('attempting to create user with username: ' +\
+        str(unique_username) + ' and email: ' + str(email))
+        
         user = User.objects.create_user(username=unique_username,
                                         password=password,
-                                        email=user_dict.get("email", ""))
+                                        email=email)
         user.save()
 
         userProfile = UserProfile(user=user,

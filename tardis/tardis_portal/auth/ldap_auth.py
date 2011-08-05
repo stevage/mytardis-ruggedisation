@@ -235,8 +235,8 @@ class LDAPBackend(AuthProvider, UserProvider, GroupProvider):
                                       searchFilter, retrieveAttributes)
 
             logger.debug(ldap_result)
-            if ldap_result['uid']:
-                return ldap_result['uid']
+            if ldap_result[0][1]['uid'][0]:
+                return ldap_result[0][1]['uid'][0]
             else:
                 return None
 
