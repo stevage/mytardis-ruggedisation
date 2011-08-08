@@ -6,6 +6,14 @@ from tardis.tardis_portal.ParameterSetManager import\
 from tardis.tardis_portal.models import \
     Experiment, ExperimentParameterSet
 
+"""
+Creative Commons Handler
+
+A wrapper for creative commons interactions on a ParameterSet
+
+.. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
+
+"""
 class CreativeCommonsHandler():
 
     psm = None
@@ -14,17 +22,31 @@ class CreativeCommonsHandler():
     experiment_id = None
 
     def __init__(self, experiment_id=experiment_id, create=True):
-
+        """
+        :param experiment_id: The id of the experiment
+        :type experiment_id: integer
+        :param create: If true, creates a new parameterset object to
+        hold the cc license
+        :type create: boolean
+        """
+        
         self.experiment_id = experiment_id
-
+        
         if create:
             self.psm = self.get_or_create_cc_parameterset(create=True)
         else:
             self.psm = self.get_or_create_cc_parameterset(create=False)
 
     def get_or_create_cc_parameterset(self, create=True):
-
-        # get cc license parameterset, if any
+        """
+        Gets the creative commons parameterset for the experiment
+        :param create: If true, creates a new parameterset object to
+        hold the cc license if one doesn't exist
+        :type create: boolean
+        :return: The parameterset manager for the cc parameterset
+        :rtype: :class:`tardis.tardis_portal.ParameterSetManager.
+        ParameterSetManager`
+        """
         parameterset = ExperimentParameterSet.objects.filter(
         schema__namespace=self.schema,
         experiment__id=self.experiment_id)
@@ -43,8 +65,10 @@ class CreativeCommonsHandler():
 
     def has_cc_license(self):
 
-        # get cc license parameterset, if any
-
+        """
+        :return: True if there's a cc license parameterset for the experiment
+        :rtype: boolean
+        """
         parameterset = ExperimentParameterSet.objects.filter(
         schema__namespace=self.schema,
         experiment__id=self.experiment_id)
@@ -56,7 +80,12 @@ class CreativeCommonsHandler():
             return True
 
     def save_license(self, request):
-            # if cc license then save params
+        """
+        Saves a license parameterset with the POST variables from the
+        creative commons form
+        :param request: a HTTP Request instance
+        :type request: :class:`django.http.HttpRequest`
+        """
         if request.POST['cc_js_want_cc_license'] ==\
             'sure':
             cc_js_result_img = request.POST['cc_js_result_img']

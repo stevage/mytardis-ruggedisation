@@ -6,8 +6,12 @@ from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 register = Library()
 
 def show_cc_license(value):
-    """todo: document
-
+    """
+    Shows creative commons license information for the experiment richly
+    :param value: The experiment ID
+    :type value: string
+    :return: An html-formatted string of the creative commons license
+    :rtype: string
     """
     experiment = Experiment.objects.get(id=value)
     cch = CreativeCommonsHandler(experiment_id=experiment.id, create=False)
