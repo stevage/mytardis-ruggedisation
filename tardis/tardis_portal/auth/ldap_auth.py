@@ -172,7 +172,8 @@ class LDAPBackend(AuthProvider, UserProvider, GroupProvider):
             retrieveAttributes = ["uid"]
             l = ldap.initialize(self._url)
             l.protocol_version = ldap.VERSION3
-            searchFilter = '(|(mail=' + email + ')(mailalternateaddress=' + email + '))'
+            searchFilter =\
+            '(|(mail=' + email + ')(mailalternateaddress=' + email + '))'
             ldap_result = l.search_s(self._user_base, ldap.SCOPE_SUBTREE,
                                       searchFilter, retrieveAttributes)
 
@@ -365,32 +366,38 @@ def ldap_auth():
     try:
         user_login_attr = settings.LDAP_USER_LOGIN_ATTR
     except:
-        raise ValueError('LDAP_USER_LOGIN_ATTR must be specified in settings.py')
+        raise ValueError('LDAP_USER_LOGIN_ATTR must be'
+                         'specified in settings.py')
 
     try:
         user_base = settings.LDAP_USER_BASE
     except:
-        raise ValueError('LDAP_USER_BASE must be specified in settings.py')
+        raise ValueError('LDAP_USER_BASE must be'
+                         'specified in settings.py')
 
     try:
         user_attr_map = settings.LDAP_USER_ATTR_MAP
     except:
-        raise ValueError('LDAP_USER_ATTR_MAP must be specified in settings.py')
+        raise ValueError('LDAP_USER_ATTR_MAP must be'
+                         'specified in settings.py')
 
     try:
         group_id_attr = settings.LDAP_GROUP_ID_ATTR
     except:
-        raise ValueError('LDAP_GROUP_ID_ATTR must be specified in settings.py')
+        raise ValueError('LDAP_GROUP_ID_ATTR must be'
+                         'specified in settings.py')
 
     try:
         group_base = settings.LDAP_GROUP_BASE
     except:
-        raise ValueError('LDAP_GROUP_BASE must be specified in settings.py')
+        raise ValueError('LDAP_GROUP_BASE must be'
+                         'specified in settings.py')
 
     try:
         group_attr_map = settings.LDAP_GROUP_ATTR_MAP
     except:
-        raise ValueError('LDAP_GROUP_ATTR_MAP must be specified in settings.py')
+        raise ValueError('LDAP_GROUP_ATTR_MAP must be'
+                         'specified in settings.py')
 
     _ldap_auth = LDAPBackend("ldap", url, base, user_login_attr,
                              user_base, user_attr_map, group_id_attr,

@@ -14,6 +14,8 @@ A wrapper for creative commons interactions on a ParameterSet
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 
 """
+
+
 class CreativeCommonsHandler():
 
     psm = None
@@ -29,9 +31,9 @@ class CreativeCommonsHandler():
         hold the cc license
         :type create: boolean
         """
-        
+
         self.experiment_id = experiment_id
-        
+
         if create:
             self.psm = self.get_or_create_cc_parameterset(create=True)
         else:

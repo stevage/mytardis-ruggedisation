@@ -5,6 +5,7 @@ from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 
 register = Library()
 
+
 def show_cc_license(value):
     """
     Shows creative commons license information for the experiment richly
@@ -15,7 +16,6 @@ def show_cc_license(value):
     """
     experiment = Experiment.objects.get(id=value)
     cch = CreativeCommonsHandler(experiment_id=experiment.id, create=False)
-
 
     if not cch.has_cc_license():
         return "No license."

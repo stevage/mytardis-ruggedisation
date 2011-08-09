@@ -39,7 +39,9 @@ def download_datafile(request, datafile_id):
             or url.startswith('ftp://'):
             return HttpResponseRedirect(datafile.url)
 
-        elif datafile.protocol == 'tardis' or datafile.url.startswith('tardis'):
+        elif datafile.protocol == 'tardis' or \
+            datafile.url.startswith('tardis'):
+
             raw_path = url.partition('//')[2]
             file_path = path.join(settings.FILE_STORE_PATH,
                                   str(expid),
@@ -67,7 +69,7 @@ def download_datafile(request, datafile_id):
                         'attachment; filename="%s"' % datafile.filename
                     return response
                 except IOError:
-                    return return_response_not_found(request)               
+                    return return_response_not_found(request)
 
         elif datafile.protocol in ['', 'file']:
             file_path = datafile.url.partition('://')[2]
@@ -101,7 +103,8 @@ def download_datafile_ws(request):
         url = urllib.unquote(request.GET['url'])
         raw_path = url.partition('//')[2]
         experiment_id = request.GET['experiment_id']
-        datafile = Dataset_File.objects.filter(url__endswith=raw_path, dataset__experiment__id=experiment_id)[0]
+        datafile = Dataset_File.objects.filter(
+            url__endswith=raw_path, dataset__experiment__id=experiment_id)[0]
 
         if has_datafile_access(request=request,
                                dataset_file_id=datafile.id):
@@ -213,7 +216,8 @@ def download_datafiles(request):
                         absolute_filename = datafile.url.partition('//')[2]
                         if(datafile.url.partition('//')[0] == 'tardis:'):
                             #temp fix for old data
-                            filepath = '%s/%s/%s' % (expid, str(datafile.dataset.id),
+                            filepath = '%s/%s/%s' %\
+                            (expid, str(datafile.dataset.id),
                                 absolute_filename)
 
                             print filepath + "######"
@@ -229,8 +233,8 @@ def download_datafiles(request):
                             fileString += ('\"' + filepath + '\" ')
                             print fileString
                         else:
-                            fileString += '\"%s/%s\" ' % (expid, absolute_filename)
-
+                            fileString += '\"%s/%s\" ' %\
+                            (expid, absolute_filename)
 
             for dfid in datafiles:
                 datafile = Dataset_File.objects.get(pk=dfid)
@@ -244,7 +248,8 @@ def download_datafiles(request):
                     absolute_filename = datafile.url.partition('//')[2]
                     if(datafile.url.partition('//')[0] == 'tardis:'):
                         #temp fix for old data
-                        filepath = '\"%s/%s/%s\" ' % (expid, str(datafile.dataset.id),
+                        filepath = '\"%s/%s/%s\" ' %\
+                        (expid, str(datafile.dataset.id),
                             absolute_filename)
 
                         print filepath + "######"
@@ -255,7 +260,8 @@ def download_datafiles(request):
                             #exists test. os.exists broken
                         except IOError:
                             print "OLD FILE DETECTED"
-                            filepath = '\"%s/%s\" ' % (expid, absolute_filename)
+                            filepath = '\"%s/%s\" ' %\
+                                       (expid, absolute_filename)
 
                         fileString += filepath
                         print fileString
@@ -280,10 +286,12 @@ def download_datafiles(request):
                         protocols += [p]
                     absolute_filename = datafile.url.partition('//')[2]
                     if(datafile.url.partition('//')[0] == 'tardis:'):
-                        # expects tardis: formatted stuff to not include dataset id
+                        # expects tardis: formatted stuff
+                        # to not include dataset id
 
                         #temp fix for old data
-                        filepath = '\"%s/%s/%s\" ' % (expid, str(datafile.dataset.id),
+                        filepath = '\"%s/%s/%s\" ' %\
+                            (expid, str(datafile.dataset.id),
                             absolute_filename)
 
                         print filepath + "######"
@@ -294,7 +302,8 @@ def download_datafiles(request):
                             #exists test. os.exists broken
                         except IOError:
                             print "OLD FILE DETECTED"
-                            filepath = '\"%s/%s\" ' % (expid, absolute_filename)
+                            filepath = '\"%s/%s\" ' %\
+                                       (expid, absolute_filename)
 
                         fileString += ('\"' + filePath + '\" ')
                         print fileString
@@ -337,9 +346,10 @@ def download_datafiles(request):
 
             # logger.info(cmd)
             response = \
-                HttpResponse(FileWrapper(subprocess.Popen(cmd,
-                                                          stdout=subprocess.PIPE,
-                                                          shell=True).stdout),
+                HttpResponse(FileWrapper(subprocess.Popen(
+                                                    cmd,
+                                                    stdout=subprocess.PIPE,
+                                                    shell=True).stdout),
                              mimetype='application/x-tar')
             response['Content-Disposition'] = \
                     'attachment; filename="experiment%s-selection.tar"' % expid
@@ -349,9 +359,10 @@ def download_datafiles(request):
                                        fileString)
             # logger.info(cmd)
             response = \
-                HttpResponse(FileWrapper(subprocess.Popen(cmd,
-                                                          stdout=subprocess.PIPE,
-                                                          shell=True).stdout),
+                HttpResponse(FileWrapper(subprocess.Popen(
+                                                    cmd,
+                                                    stdout=subprocess.PIPE,
+                                                    shell=True).stdout),
                              mimetype='application/zip')
             response['Content-Disposition'] = \
                     'attachment; filename="experiment%s-selection.zip"' % expid

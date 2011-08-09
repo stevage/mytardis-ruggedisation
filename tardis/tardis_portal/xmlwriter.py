@@ -43,9 +43,10 @@ A set of static methods for writing xml files.
 .. moduleauthor:: Steve Androulakis <steve.androulakis@monash.edu>
 
 """
+
+
 class XMLWriter:
 
-    
     @staticmethod
     def write_template_to_file(prefix_dir,
         objectprefix,
@@ -61,9 +62,11 @@ class XMLWriter:
         :type objectprefix: string
         :param uniqueid: The unique ID of the file to be output
         :type uniqueid: string
-        :param templatepath: The relative path to the Django template to be rendered
+        :param templatepath: The relative path to the Django template to be
+        rendered
         :type templatepath: string
-        :param context: The Context object (dictionary of variables for template output)
+        :param context: The Context object (dictionary of variables for
+        template output)
         :type context: :class:`django.template.context.Context`
         :returns: The full path to the created file
         :rtype: string
@@ -76,7 +79,6 @@ class XMLWriter:
             filename, context)
 
         return filename
-
 
     @staticmethod
     def write_xml_to_file(prefix_dir,
@@ -92,7 +94,8 @@ class XMLWriter:
         :type objectprefix: string
         :param uniqueid: The unique ID of the file to be output
         :type uniqueid: string
-        :param xmlstring: The relative path to the Django template to be rendered
+        :param xmlstring: The relative path to the Django template to be
+        rendered
         :type xmlstring: string
         :returns: The full path to the created file
         :rtype: string

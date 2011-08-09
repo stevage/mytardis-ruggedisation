@@ -145,7 +145,6 @@ def load_image(request, experiment_id, parameter):
     return HttpResponse(wrapper, mimetype=parameter.name.units)
 
 
-
 def load_experiment_image(request, parameter_id):
     parameter = ExperimentParameter.objects.get(pk=parameter_id)
     experiment_id = parameter.parameterset.experiment.id
@@ -307,8 +306,10 @@ def view_experiment(request, experiment_id):
     for app in settings.TARDIS_APPS:
         try:
             appnames.append(sys.modules['%s.%s.settings'
-                                        % (settings.TARDIS_APP_ROOT, app)].NAME)
-            appurls.append('%s.%s.views.index' % (settings.TARDIS_APP_ROOT, app))
+                                        % (settings.TARDIS_APP_ROOT,
+                                           app)].NAME)
+            appurls.append('%s.%s.views.index' % (settings.TARDIS_APP_ROOT,
+                                            app))
         except:
             pass
 
@@ -716,14 +717,15 @@ def _registerExperimentDocument(filename, created_by, expid=None,
                     logger.debug('registering owner: ' + owner)
                     e = Experiment.objects.get(pk=eid)
 
-                    acl = ExperimentACL(experiment=e,
-                                        pluginId=django_user,
-                                        entityId=str(user.id),
-                                        canRead=True,
-                                        canWrite=True,
-                                        canDelete=True,
-                                        isOwner=True,
-                                        aclOwnershipType=ExperimentACL.OWNER_OWNED)
+                    acl = ExperimentACL(
+                        experiment=e,
+                        pluginId=django_user,
+                        entityId=str(user.id),
+                        canRead=True,
+                        canWrite=True,
+                        canDelete=True,
+                        isOwner=True,
+                        aclOwnershipType=ExperimentACL.OWNER_OWNED)
                     acl.save()
 
     return eid
@@ -789,7 +791,8 @@ def register_experiment_ws_xmldata(request):
                             'originid': str(originid),
                             'eid': str(eid),
                             'site_settings_url':
-                                request.build_absolute_uri('/site-settings.xml/'),
+                                request.build_absolute_uri(
+                                    '/site-settings.xml/'),
                             })
                     urlopen(file_transfer_url, data)
                     logger.info('=== file-transfer request submitted to %s'
@@ -974,7 +977,8 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     """
 
     datafile_results = authz.get_accessible_datafiles_for_user(request)
-    logger.info('__getFilteredDatafiles: searchFilterData {0}'.format(searchFilterData))
+    logger.info('__getFilteredDatafiles: searchFilterData {0}'.
+        format(searchFilterData))
 
     # there's no need to do any filtering if we didn't find any
     # datafiles that the user has access to
@@ -985,7 +989,8 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
 
     datafile_results = \
         datafile_results.filter(
-datafileparameterset__datafileparameter__name__schema__namespace__in=Schema.getNamespaces(
+datafileparameterset__datafileparameter__name__schema__namespace__in=Schema
+    .getNamespaces(
         Schema.DATAFILE, searchQueryType)).distinct()
 
     # if filename is searchable which i think will always be the case...
@@ -1646,7 +1651,8 @@ def add_experiment_access_user(request, experiment_id, username):
     try:
         experiment = Experiment.objects.get(pk=experiment_id)
     except Experiment.DoesNotExist:
-        return HttpResponse('Experiment (id=%d) does not exist.' % (experiment.id))
+        return HttpResponse('Experiment (id=%d) does not exist.'
+            % (experiment.id))
 
     acl = ExperimentACL.objects.filter(
         experiment=experiment,
@@ -1833,7 +1839,8 @@ def add_experiment_access_group(request, experiment_id, groupname):
         experiment = Experiment.objects.get(pk=experiment_id)
     except Experiment.DoesNotExist:
         transaction.rollback()
-        return HttpResponse('Experiment (id=%d) does not exist' % (experiment_id))
+        return HttpResponse('Experiment (id=%d) does not exist' %
+                            (experiment_id))
 
     # TODO: enable transaction management here...
     if create:
@@ -1946,7 +1953,8 @@ def remove_experiment_access_group(request, experiment_id, group_id):
         return HttpResponse('OK')
     elif acl.count() == 0:
         return HttpResponse('No ACL available.'
-                            'It is likely the group doesnt have access to this experiment.')
+                            'It is likely the group doesnt have access to'
+                            'this experiment.')
     else:
         return HttpResponse('Multiple ACLs found')
 
@@ -2107,7 +2115,8 @@ def upload_files(request, dataset_id,
     """
     Creates an Uploadify 'create files' button with a dataset
     destination. `A workaround for a JQuery Dialog conflict\
-    <http://www.uploadify.com/forums/discussion/3348/uploadify-in-jquery-ui-dialog-modal-causes-double-queue-item/p1>`_
+    <http://www.uploadify.com/forums/discussion/3348/
+        uploadify-in-jquery-ui-dialog-modal-causes-double-queue-item/p1>`_
 
     :param request: a HTTP Request instance
     :type request: :class:`django.http.HttpRequest`
@@ -2151,7 +2160,7 @@ def edit_dataset_par(request, parameterset_id):
 def edit_datafile_par(request, parameterset_id):
     parameterset = DatafileParameterSet.objects.get(id=parameterset_id)
     if authz.has_write_permissions(request,
-                                   parameterset.dataset_file.dataset.experiment.id):
+                            parameterset.dataset_file.dataset.experiment.id):
         return edit_parameters(request, parameterset, otype="datafile")
     else:
         return return_response_error(request)
@@ -2332,7 +2341,7 @@ def publish_experiment(request, experiment_id):
 
         if passed_ands == False:
             success = False
-            messages.append('You must opt out of ANDS registration, or'+\
+            messages.append('You must opt out of ANDS registration, or' + \
                 ' register with ANDS')
 
         if  not 'legal' in request.POST:
@@ -2391,6 +2400,7 @@ def publish_experiment(request, experiment_id):
     c = Context(context_dict)
     return HttpResponse(render_response_index(request,
                         'tardis_portal/publish_experiment.html', c))
+
 
 @authz.experiment_ownership_required
 def choose_license(request, experiment_id):

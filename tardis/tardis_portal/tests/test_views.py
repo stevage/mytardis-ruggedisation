@@ -46,8 +46,8 @@ from django.contrib.auth.models import User, Group
 
 from tardis.tardis_portal.auth.localdb_auth import auth_key as localdb_auth_key
 from tardis.tardis_portal.auth.localdb_auth import django_user
-from tardis.tardis_portal.models import UserProfile, ExperimentACL, Experiment,\
-    Dataset, Dataset_File
+from tardis.tardis_portal.models import UserProfile, ExperimentACL,\
+    Experiment, Dataset, Dataset_File
 
 
 class UploadTestCase(TestCase):
@@ -122,13 +122,13 @@ class UploadTestCase(TestCase):
 
         c = Client()
         c.login(username='tardis_user1', password='secret')
-        
-        response = c.post('/upload/' + str(self.dataset.id) + '/'
-                          , {'Filedata': self.f1})
+
+        response = c.post('/upload/' + str(self.dataset.id) + '/',
+            {'Filedata': self.f1})
 
         test_files_db = \
             Dataset_File.objects.filter(dataset__id=self.dataset.id)
-        
+
         self.assertTrue(path.exists(path.join(self.dataset_path,
                         self.filename)))
         self.assertTrue(self.dataset.id == 1)

@@ -202,7 +202,8 @@ class Experiment(models.Model):
         urls = {}
         kwargs = {'experiment_id': self.id,
                   'comptype': comptype}
-        distinct = Dataset_File.objects.filter(dataset__experiment=self.id).values('protocol').distinct()
+        distinct = Dataset_File.objects.filter(dataset__experiment=self.id)\
+            .values('protocol').distinct()
         for key_value in distinct:
             protocol = key_value['protocol']
             if protocol in ['', 'tardis', 'file', 'http', 'https']:
@@ -219,6 +220,7 @@ class Experiment(models.Model):
                     pass
 
         return urls
+
 
 class ExperimentACL(models.Model):
     """The ExperimentACL table is the core of the `Tardis
@@ -458,7 +460,7 @@ class Dataset_File(models.Model):
         else:
             return ''
 
-    def get_absolute_filepath_old(self): #temp quickfix!
+    def get_absolute_filepath_old(self):  # temp quickfix!
         # check for empty protocol field (historical reason) or
         # 'tardis' which indicates a location within the tardis file
         # store
@@ -754,7 +756,8 @@ def _getParameter(parameter):
             elif parset == 'ExperimentParameterSet':
                 eid = parameter.parameterset.dataset.id
                 psid = parameter.parameterset.id
-                viewname = 'tardis.tardis_portal.views.display_experiment_image'
+                viewname = 'tardis.tardis_portal.views.'
+                'display_experiment_image'
                 args = [eid, psid, parameter.name]
             if viewname:
                 value = "<img src='%s' />" % reverse(viewname=viewname,
