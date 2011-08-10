@@ -355,12 +355,14 @@ def experiment_description(request, experiment_id):
                                        isOwner=True)
 
     # TODO: resolve usernames through UserProvider!
+    # Right now there are exceptions every time for ldap users..
     c['owners'] = []
     for a in acl:
         try:
             c['owners'].append(User.objects.get(pk=str(a.entityId)))
         except User.DoesNotExist:
-            logger.exception('user for acl %i does not exist' % a.id)
+            #logger.exception('user for acl %i does not exist' % a.id)
+            pass
 
     # calculate the sum of the datafile sizes
     size = 0

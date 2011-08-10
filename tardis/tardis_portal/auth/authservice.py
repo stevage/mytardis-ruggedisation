@@ -295,8 +295,12 @@ class AuthService():
             staging_path = get_full_staging_path(username)
             import os
             if not os.path.exists(staging_path):
-                os.makedirs(staging_path)
-                os.system('chmod g+w ' + staging_path)
-                os.system('chown ' + username + ' ' + staging_path)
-
+                try:
+                    os.makedirs(staging_path)
+                    os.system('chmod g+w ' + staging_path)
+                    os.system('chown ' + username + ' ' + staging_path)
+                except OSError:
+                    logger.error("Couldn't create staging directory " +\
+                        str(staging_path))
+                   
         return user
