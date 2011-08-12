@@ -82,7 +82,9 @@ MIDDLEWARE_CLASSES = (
     'tardis.tardis_portal.minidetector.Middleware',
     'tardis.tardis_portal.logging_middleware.LoggingMiddleware',
     'tardis.tardis_portal.auth.AuthorizationMiddleware',
-    'django.middleware.transaction.TransactionMiddleware')
+    'django.middleware.transaction.TransactionMiddleware',
+#    'tardis.tardis_portal.filters.FilterInitMiddleware'
+    )
 
 ROOT_URLCONF = 'tardis.urls'
 
@@ -199,6 +201,13 @@ EMAIL_USE_TLS = True
 #    ("tardis.tardis_portal.filters.exif.make_filter",
 #     ["EXIF", "http://exif.schema"]),  # this filter requires pyexiv2
 #                                       # http://tilloy.net/dev/pyexiv2/
+#    ]
+
+# Post Save Filters
+#POST_SAVE_FILTERS = [
+#    ("tardis.tardis_portal.filters.diffractionimage.make_filter",
+#     ["DIFFRACTION", "http://www.tardis.edu.au/schemas/trdDatafile/1",
+#      "/Users/steve/Desktop/diffdump"]),  #  requires ccp4 diffdump binary
 #    ]
 
 # logging levels are: DEBUG, INFO, WARN, ERROR, CRITICAL
