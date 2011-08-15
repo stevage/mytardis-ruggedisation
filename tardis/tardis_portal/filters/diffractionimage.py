@@ -30,9 +30,9 @@
 #
 
 """
-exif.py
+diffractionimage.py
 
-.. moduleauthor:: Steve Androulakis
+.. moduleauthor:: Steve Androulakis <steve.androulakis@gmail.com>
 
 """
 from fractions import Fraction
@@ -40,12 +40,11 @@ from fractions import Fraction
 from tardis.tardis_portal.models import Schema, DatafileParameterSet
 from tardis.tardis_portal.models import ParameterName, DatafileParameter
 import subprocess
-from tardis_portal.filters.diffdump import run_diffdump
 
 
 class DiffractionImageFilter(object):
-    """This filter provides simple metadata extraction of EXIF tags
-    from images.
+    """This filter runs the CCP4 diffdump binary on a diffraction image
+    and collects its output into the trddatafile schema
 
     If a white list is specified then it takes precidence and all
     other tags will be ignored.
@@ -193,12 +192,6 @@ class DiffractionImageFilter(object):
             else:
                 datatype = ParameterName.NUMERIC
 
-#            new_param = ParameterName(schema=schema,
-#                                      name=p,
-#                                      full_name=p,
-#                                      data_type=datatype)
-#            new_param.save()
-#            parameters.append(new_param)
         return parameters
 
     def getSchema(self):
