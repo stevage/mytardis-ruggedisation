@@ -317,6 +317,7 @@ def get_full_staging_path(username):
 
     from os import path
     staging_path = path.join(settings.STAGING_PATH, username)
+    logger.debug('full staging path returned as ' + str(staging_path))
     if not path.exists(staging_path):
         return None
     else:

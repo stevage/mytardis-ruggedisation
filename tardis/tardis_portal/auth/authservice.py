@@ -290,17 +290,22 @@ class AuthService():
             username=username, authenticationMethod=plugin)
         userAuth.save()
 
+        logger.debug(str(settings.STAGING_PROTOCOL) + ' ' + str(plugin))
+
         if settings.STAGING_PROTOCOL == plugin:
             # to be put in its own function
-            staging_path = get_full_staging_path(username)
-            import os
-            if not os.path.exists(staging_path):
-                try:
-                    os.makedirs(staging_path)
-                    os.system('chmod g+w ' + staging_path)
-                    os.system('chown ' + username + ' ' + staging_path)
-                except OSError:
-                    logger.error("Couldn't create staging directory " +\
-                        str(staging_path))
+            from os import path
+            staging_path = path.join(settings.STAGING_PATH, username)
+            logger.debug('new staging path calced to be ' + str(staging_path))
+            if staging_path != None:
+                import os
+                if not os.path.exists(staging_path):
+                    try:
+                        os.makedirs(staging_path)
+                        #os.system('chmod g+w ' + staging_path)
+                        os.system('chown ' + username + ' ' + staging_path)
+                    except OSError:
+                        logger.error("Couldn't create staging directory " +\
+                            str(staging_path))
                    
         return user

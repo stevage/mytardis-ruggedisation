@@ -192,8 +192,15 @@ def download_datafiles(request):
     fileString = ''
 
     comptype = "zip"
-    if 'comtype' in request.POST:
+    if 'comptype' in request.POST:
         comptype = request.POST['comptype']
+
+    if 'datafile' in request.POST:
+        if len(request.POST.getlist('datafile')) > 500:
+            comptype = "tar"
+
+    if 'dataset' in request.POST:
+        comptype = "tar" #todo quickfix, calc how many files
 
     # the following protocols can be handled by this module
     protocols = ['', 'file', 'tardis']
@@ -272,6 +279,7 @@ def download_datafiles(request):
 
     elif 'url' in request.POST:
         if not len(request.POST.getlist('url')) == 0:
+            comptype = "tar" #todo quickfix for zip error
             fileString = ""
             for url in request.POST.getlist('url'):
                 url = urllib.unquote(url)
