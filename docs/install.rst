@@ -11,7 +11,7 @@ Redhat::
 
 Debian/Ubuntu::
 
-   sudo apt-get install subversion python2.6 python2.6-dev libpq-dev libssl-dev libsasl2-dev libldap2-dev libxslt1.1 libxslt1-dev python-libxslt1 libexiv2-dev
+   sudo apt-get install subversion python python-dev libpq-dev libssl-dev libsasl2-dev libldap2-dev libxslt1.1 libxslt1-dev python-libxslt1 libexiv2-dev
 
 Download
 --------
@@ -64,7 +64,7 @@ Building
 
 Run the Buildout bootstrap script to initialise Buildout::
 
-   python2.6 bootstrap.py
+   python bootstrap.py
 
 Download and build django and all dependencies::
 
@@ -77,6 +77,12 @@ Create and configure the database::
     ./bin/django syncdb && ./bin/django migrate
 
 Answer "no" when asked to create a superuser. More information about the ``syncdb`` and ``migrate`` commands can be found at :doc:`admin`.
+
+Create a superuser::
+
+    ./bin/django createsuperuser
+
+This is deferred until after the migrate as the command has been overridden to set up MyTARDIS specific information.
 
 MyTARDIS can now be executed in its simplest form using::
 
