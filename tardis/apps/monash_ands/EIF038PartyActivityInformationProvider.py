@@ -18,11 +18,8 @@ class EIF038PartyActivityInformationProvider(PartyActivityInformationProvider):
 
     def __init__(self):
 
-<<<<<<< HEAD
-=======
         # Basic info
 
->>>>>>> eif038 cleanup
         url = "http://mobs.its.monash.edu.au:7778/orabpel/"\
               "ResearchMaster/AIRMANDSService/AIRMANDSService?wsdl"
 
