@@ -32,31 +32,61 @@
 
 from django.contrib import admin
 from tardis.tardis_portal import models
+from django.forms import TextInput
+import django.db
 # from south.models import MigrationHistory
+from reversion.admin import VersionAdmin
 
-class ExperimentAdmin(admin.ModelAdmin):
+class ExperimentParameterInline(admin.TabularInline):
+    model = models.ExperimentParameter
+    extra = 0
+    formfield_overrides = {
+      django.db.models.TextField: {'widget': TextInput},
+    }
+
+
+class ExperimentParameterSetAdmin(VersionAdmin):
+    inlines = [ExperimentParameterInline]
+
+
+class ExperimentACLInline(admin.TabularInline):
+    model = models.ExperimentACL
+    extra = 0
+
+
+class ExperimentAdmin(VersionAdmin):
     search_fields = ['title', 'id']
+    inlines = [ExperimentACLInline]
 
 
-class DatasetAdmin(admin.ModelAdmin):
+class DatasetAdmin(VersionAdmin):
     search_fields = ['description', 'experiment__id']
 
 
-class DatafileAdmin(admin.ModelAdmin):
+class DatafileAdmin(VersionAdmin):
     search_fields = ['filename', 'dataset__experiment__id']
 
 
-class SchemaAdmin(admin.ModelAdmin):
+class ParameterNameInline(admin.TabularInline):
+    model = models.ParameterName
+    extra = 0
+
+
+class SchemaAdmin(VersionAdmin):
     search_fields = ['name', 'namespace']
+    inlines = [ParameterNameInline]
 
 
-class ParameterNameAdmin(admin.ModelAdmin):
+class ParameterNameAdmin(VersionAdmin):
     search_fields = ['name', 'schema__id']
 
 
-class ExperimentAclAdmin(admin.ModelAdmin):
+class ExperimentAclAdmin(VersionAdmin):
     search_fields = ['experiment__id']
-
+    list_display = [
+        '__unicode__', 'pluginId', 'entityId', 'canRead',
+        'canWrite', 'canDelete', 'isOwner'
+    ]
 
 
 admin.site.register(models.Experiment, ExperimentAdmin)
@@ -71,7 +101,7 @@ admin.site.register(models.UserProfile)
 admin.site.register(models.ExperimentParameter)
 admin.site.register(models.DatafileParameterSet)
 admin.site.register(models.DatasetParameterSet)
-admin.site.register(models.ExperimentParameterSet)
+admin.site.register(models.ExperimentParameterSet, ExperimentParameterSetAdmin)
 admin.site.register(models.GroupAdmin)
 admin.site.register(models.UserAuthentication)
 admin.site.register(models.ExperimentACL, ExperimentAclAdmin)

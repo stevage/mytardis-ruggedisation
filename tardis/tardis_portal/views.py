@@ -83,7 +83,7 @@ from tardis.tardis_portal.shortcuts import render_response_index, \
     return_response_error, return_response_not_found, \
     return_response_error_message, render_response_search
 from tardis.tardis_portal.metsparser import parseMets
-from tardis.tardis_portal.publish.publishservice import PublishService
+from tardis.tardis_portal.creativecommonshandler import CreativeCommonsHandler
 
 from haystack.query import SearchQuerySet
 from tardis.tardis_portal.forms import RawSearchForm
@@ -241,11 +241,16 @@ def partners(request):
 def experiment_index(request):
 
     experiments = None
+    shared_experiments = None
 
     if request.user.is_authenticated():
-        experiments = authz.get_accessible_experiments(request)
+        experiments = authz.get_owned_experiments(request)
         if experiments:
             experiments = experiments.order_by('-update_time')
+
+        shared_experiments = authz.get_shared_experiments(request)
+        if shared_experiments:
+            shared_experiments = shared_experiments.order_by('-update_time')
 
     public_experiments = Experiment.objects.filter(public=True)
     if public_experiments:
@@ -253,6 +258,7 @@ def experiment_index(request):
 
     c = Context({
         'experiments': experiments,
+        'shared_experiments': shared_experiments,
         'public_experiments': public_experiments,
         'subtitle': 'Experiment Index',
         'bodyclass': 'list',
@@ -360,12 +366,14 @@ def experiment_description(request, experiment_id):
                                        isOwner=True)
 
     # TODO: resolve usernames through UserProvider!
+    # Right now there are exceptions every time for ldap users..
     c['owners'] = []
     for a in acl:
         try:
             c['owners'].append(User.objects.get(pk=str(a.entityId)))
         except User.DoesNotExist:
-            logger.exception('user for acl %i does not exist' % a.id)
+            #logger.exception('user for acl %i does not exist' % a.id)
+            pass
 
     # calculate the sum of the datafile sizes
     size = 0
@@ -425,7 +433,7 @@ def experiment_datasets(request, experiment_id):
         return return_response_not_found(request)
 
     c['experiment'] = experiment
-   
+    
     #TODO Single search should use sessions as well 
     if 'query' in request.GET:
 
@@ -465,7 +473,7 @@ def experiment_datasets(request, experiment_id):
         c['highlighted_datasets'] = None
         c['highlighted_dataset_files'] = None
         c['file_matched_datasets'] = None
-
+    
     c['datasets'] = \
          Dataset.objects.filter(experiment=experiment_id)
 
@@ -836,7 +844,8 @@ def register_experiment_ws_xmldata(request):
                             'originid': str(originid),
                             'eid': str(eid),
                             'site_settings_url':
-                                request.build_absolute_uri('/site-settings.xml/'),
+                                request.build_absolute_uri(
+                                    '/site-settings.xml/'),
                             })
                     urlopen(file_transfer_url, data)
                     logger.info('=== file-transfer request submitted to %s'
@@ -844,6 +853,7 @@ def register_experiment_ws_xmldata(request):
                 except:
                     logger.exception('=== file-transfer request to %s FAILED!'
                                      % file_transfer_url)
+
             response = HttpResponse(str(eid), status=200)
             response['Location'] = request.build_absolute_uri(
                 '/experiment/view/' + str(eid))
@@ -867,7 +877,14 @@ def retrieve_parameters(request, dataset_file_id):
     parametersets = DatafileParameterSet.objects.all()
     parametersets = parametersets.filter(dataset_file__pk=dataset_file_id)
 
-    c = Context({'parametersets': parametersets})
+    experiment_id = Dataset_File.objects.get(id=dataset_file_id).\
+        dataset.experiment.id
+
+    has_write_permissions = \
+        authz.has_write_permissions(request, experiment_id)
+
+    c = Context({'parametersets': parametersets,
+                 'has_write_permissions': has_write_permissions})
 
     return HttpResponse(render_response_index(request,
                         'tardis_portal/ajax/parameters.html', c))
@@ -890,7 +907,7 @@ def retrieve_datafile_list(request, dataset_id):
 
     # pagination was removed by someone in the interface but not here.
     # need to fix.
-    pgresults = 10000
+    pgresults = 500
     # if request.mobile:
     #     pgresults = 30
     # else:
@@ -1044,7 +1061,8 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
     """
 
     datafile_results = authz.get_accessible_datafiles_for_user(request)
-    logger.info('__getFilteredDatafiles: searchFilterData {0}'.format(searchFilterData))
+    logger.info('__getFilteredDatafiles: searchFilterData {0}'.
+        format(searchFilterData))
 
     # there's no need to do any filtering if we didn't find any
     # datafiles that the user has access to
@@ -1055,7 +1073,8 @@ def __getFilteredDatafiles(request, searchQueryType, searchFilterData):
 
     datafile_results = \
         datafile_results.filter(
-datafileparameterset__datafileparameter__name__schema__namespace__in=Schema.getNamespaces(
+datafileparameterset__datafileparameter__name__schema__namespace__in=Schema
+    .getNamespaces(
         Schema.DATAFILE, searchQueryType)).distinct()
 
     # if filename is searchable which i think will always be the case...
@@ -1492,28 +1511,30 @@ def search_datafile(request):
     #except (EmptyPage, InvalidPage):
     #    datafiles = paginator.page(paginator.num_pages)
 
-    #import re
-    #cleanedUpQueryString = re.sub('&page=\d+', '',
-    #    request.META['QUERY_STRING'])
+    import re
+    cleanedUpQueryString = re.sub('&page=\d+', '',
+        request.META['QUERY_STRING'])
    
     # get experiments associated with datafiles
-    experiment_pks = list(set(datafile_results.values_list('dataset__experiment', flat=True))) 
-    experiments = Experiment.safe.in_bulk(experiment_pks)
-    
+    if datafile_results: 
+        experiment_pks = list(set(datafile_results.values_list('dataset__experiment', flat=True))) 
+        experiments = Experiment.safe.in_bulk(experiment_pks)
+    else:
+        experiments = {}
+
     results = {}
     for key, e in experiments.items():
         results[key]=\
             {'sr' : e,
              'dataset_hit' : False, 
-             'datafile_hit' : True, 
+             'dataset_file_hit' : True, 
              'experiment_hit' : False, 
-            }
-    
+            }        
     c = Context({
         'experiments': results,
         'datafiles': datafile_results,
         #'paginator': paginator,
-        #'query_string': cleanedUpQueryString,
+        'query_string': cleanedUpQueryString,
         'subtitle': 'Search Datafiles',
         'nav': [{'name': 'Search Datafile', 'link': '/search/datafile/'}],
         'bodyclass': bodyclass,
@@ -1557,11 +1578,11 @@ def retrieve_field_list(request):
     from tardis.tardis_portal.search_indexes import DatasetIndex
     from tardis.tardis_portal.search_indexes import DatasetFileIndex
 
-    # Get all of the fields in the indexes 
+    # Get all of the fields in the indexes
     allFields = ExperimentIndex.fields.items() + \
              DatasetIndex.fields.items() + \
              DatasetFileIndex.fields.items()
-    
+
     users = User.objects.all()
 
     usernames = [u.username for u in users]
@@ -1569,8 +1590,8 @@ def retrieve_field_list(request):
     # Collect all of the indexed (searchable) fields, except
     # for the main search document ('text')
     searchableFields = ([key for key,f in allFields if f.indexed == True and key is not 'text' ])
-    
-    auto_list = usernames + searchableFields 
+
+    auto_list = usernames + searchableFields
 
     fieldList = ' '.join([str(fn) for fn in auto_list])
     return HttpResponse(fieldList)
@@ -1751,7 +1772,8 @@ def add_experiment_access_user(request, experiment_id, username):
     try:
         experiment = Experiment.objects.get(pk=experiment_id)
     except Experiment.DoesNotExist:
-        return HttpResponse('Experiment (id=%d) does not exist.' % (experiment.id))
+        return HttpResponse('Experiment (id=%d) does not exist.'
+            % (experiment.id))
 
     acl = ExperimentACL.objects.filter(
         experiment=experiment,
@@ -1938,7 +1960,8 @@ def add_experiment_access_group(request, experiment_id, groupname):
         experiment = Experiment.objects.get(pk=experiment_id)
     except Experiment.DoesNotExist:
         transaction.rollback()
-        return HttpResponse('Experiment (id=%d) does not exist' % (experiment_id))
+        return HttpResponse('Experiment (id=%d) does not exist' %
+                            (experiment_id))
 
     # TODO: enable transaction management here...
     if create:
@@ -2016,9 +2039,10 @@ def add_experiment_access_group(request, experiment_id, groupname):
         user.groups.add(group)
         user.save()
 
+    transaction.commit()
     c = Context({'group': group,
                  'experiment_id': experiment_id})
-    response = HttpResponse(render_response_index(request,
+    return HttpResponse(render_response_index(request,
         'tardis_portal/ajax/add_group_result.html', c))
     transaction.commit()
     return response
@@ -2049,7 +2073,8 @@ def remove_experiment_access_group(request, experiment_id, group_id):
         return HttpResponse('OK')
     elif acl.count() == 0:
         return HttpResponse('No ACL available.'
-                            'It is likely the group doesnt have access to this experiment.')
+                            'It is likely the group doesnt have access to'
+                            'this experiment.')
     else:
         return HttpResponse('Multiple ACLs found')
 
@@ -2059,21 +2084,21 @@ def remove_experiment_access_group(request, experiment_id, group_id):
 def stats(request):
 
     # stats
-
-    public_datafiles = Dataset_File.objects.filter()
+    public_datafiles = 0
+    #public_datafiles = Dataset_File.objects.filter()
     public_experiments = Experiment.objects.filter()
 
     size = 0
-    for df in public_datafiles:
-        try:
-            size = size + long(df.size)
-        except:
-            pass
+#    for df in public_datafiles:
+#        try:
+#            size = size + long(df.size)
+#        except:
+#            pass
 
     public_datafile_size = size
 
     # using count() is more efficient than using len() on a query set
-    c = Context({'public_datafiles': public_datafiles.count(),
+    c = Context({'public_datafiles': public_datafiles,
                 'public_experiments': public_experiments.count(),
                 'public_datafile_size': public_datafile_size})
     return HttpResponse(render_response_index(request,
@@ -2206,7 +2231,8 @@ def upload_files(request, dataset_id,
     """
     Creates an Uploadify 'create files' button with a dataset
     destination. `A workaround for a JQuery Dialog conflict\
-    <http://www.uploadify.com/forums/discussion/3348/uploadify-in-jquery-ui-dialog-modal-causes-double-queue-item/p1>`_
+    <http://www.uploadify.com/forums/discussion/3348/
+        uploadify-in-jquery-ui-dialog-modal-causes-double-queue-item/p1>`_
 
     :param request: a HTTP Request instance
     :type request: :class:`django.http.HttpRequest`
@@ -2250,7 +2276,7 @@ def edit_dataset_par(request, parameterset_id):
 def edit_datafile_par(request, parameterset_id):
     parameterset = DatafileParameterSet.objects.get(id=parameterset_id)
     if authz.has_write_permissions(request,
-                                   parameterset.dataset_file.dataset.experiment.id):
+                            parameterset.dataset_file.dataset.experiment.id):
         return edit_parameters(request, parameterset, otype="datafile")
     else:
         return return_response_error(request)
@@ -2406,17 +2432,17 @@ class ExperimentSearchView(SearchView):
         access_list.extend([e.pk for e in Experiment.objects.filter(public=True)])
 
         for r in results:
-            i = int(r.experiment_id_stored) 
-            
+            i = int(r.experiment_id_stored)
+
             if i not in access_list:
                 continue
 
             if i not in experiments.keys():
                 experiments[i]= {}
-                experiments[i]['sr'] = r 
-                experiments[i]['dataset_hit'] = False 
+                experiments[i]['sr'] = r
+                experiments[i]['dataset_hit'] = False
                 experiments[i]['dataset_file_hit'] = False
-                experiments[i]['experiment_hit'] =False 
+                experiments[i]['experiment_hit'] =False
 
             if r.model == Experiment:
                 experiments[i]['experiment_hit'] = True
@@ -2427,7 +2453,7 @@ class ExperimentSearchView(SearchView):
 
         extra['experiments'] = experiments
         return extra
-    
+
     # override SearchView's method in order to
     # return a ResponseContext
     def create_response(self):
@@ -2454,49 +2480,6 @@ def single_search(request):
             ).__call__(request)
 
 
-
-def rif_cs(request):
-    """
-    Display rif_cs of collection / parties / acitivies
-    This function is highly dependent on production requirements
-
-    :param request: a HTTP Request instance
-    :type request: :class:`django.http.HttpRequest`
-
-    """
-
-    #currently set up to work with EIF038 dummy data
-    if settings.TEST_MONASH_ANDS_URL:
-        import datetime
-
-        experiments = Experiment.objects.filter(public=True)
-
-        activity_url = settings.TEST_MONASH_ANDS_URL\
-        + "pilot/GetActivitybyGrantID/"
-
-        requestmp = urllib2.Request(activity_url)
-        activity_rif_cs = urllib2.urlopen(requestmp).read()
-
-        party_url = settings.TEST_MONASH_ANDS_URL\
-        + "pilot/GetPartybyMonashID/"
-        
-        requestmp = urllib2.Request(party_url)
-        party_rif_cs = urllib2.urlopen(requestmp).read()
-
-        c = Context({
-            'experiments': experiments,
-            'now': datetime.datetime.now(),
-            'party_rif_cs': party_rif_cs,
-            'activity_rif_cs': activity_rif_cs,
-        })
-        return HttpResponse(render_response_index(request,\
-        'rif_cs_profile/rif-cs.xml', c),
-        mimetype='application/xml')
-    else:
-        logger.debug('TEST_MONASH_ANDS_URL setting not found.' +
-        ' RIF-CS not shown')
-        return return_response_error(request)
-
 @never_cache
 @authz.experiment_ownership_required
 def publish_experiment(request, experiment_id):
@@ -2514,43 +2497,71 @@ def publish_experiment(request, experiment_id):
     import os
 
     experiment = Experiment.objects.get(id=experiment_id)
-    username = str(request.user).partition('_')[2]
-
-    publishService = PublishService(experiment.id)
+    username = request.user.username
 
     if request.method == 'POST':  # If the form has been submitted...
 
         legal = True
         success = True
+        messages = []
 
         context_dict = {}
-        #fix this slightly dodgy logic
         context_dict['publish_result'] = "submitted"
-        if 'legal' in request.POST:
-            experiment.public = True
-            experiment.save()
 
-            context_dict['publish_result'] = \
-            publishService.execute_publishers(request)
+        passed_ands = False
 
-            for result in context_dict['publish_result']:
-                if not result['status']:
-                    success = False
+        opt_out_ands = False
+        if 'ands_register' in request.POST:
+            opt_out_ands = True
 
-        else:
+        has_ands_registered = True
+        if 'monash_ands' in settings.TARDIS_APPS:
+            from tardis.apps.monash_ands.MonashANDSService\
+                import MonashANDSService
+
+            monashandsService = MonashANDSService(experiment_id)
+
+            has_ands_registered = monashandsService.has_registration_record()
+
+        passed_ands = has_ands_registered or opt_out_ands
+
+        if passed_ands == False:
+            success = False
+            messages.append('You must opt out of ANDS registration, or' + \
+                ' register with ANDS')
+
+        if  not 'legal' in request.POST:
             logger.debug('Legal agreement for exp: ' + experiment_id +
             ' not accepted.')
             legal = False
 
+        if legal and success:
+            experiment.public = True
+            experiment.save()
+
         # set dictionary to legal status and publish success result
         context_dict['legal'] = legal
         context_dict['success'] = success
+        context_dict['messages'] = messages
+
     else:
+
+        has_ands_registered = True
+
+        if 'monash_ands' in settings.TARDIS_APPS:
+            from tardis.apps.monash_ands.MonashANDSService\
+                import MonashANDSService
+
+            monashandsService = MonashANDSService(experiment_id)
+
+            if not monashandsService.has_registration_record():
+                has_ands_registered = False
+
         TARDIS_ROOT = os.path.abspath(\
         os.path.join(os.path.dirname(__file__)))
 
         legalpath = os.path.join(TARDIS_ROOT,
-                      "publish/legal.txt")
+                      "legal.txt")
 
         # if legal file isn't found then we can't proceed
         try:
@@ -2562,16 +2573,31 @@ def publish_experiment(request, experiment_id):
         legaltext = legalfile.read()
         legalfile.close()
 
+        cch = CreativeCommonsHandler(experiment_id=experiment_id, create=False)
+
         context_dict = \
         {'username': username,
-        'publish_forms': publishService.get_template_paths(),
         'experiment': experiment,
         'legaltext': legaltext,
+        'has_cc_license': cch.has_cc_license(),
+        'has_ands_registered': has_ands_registered,
         }
-
-        context_dict = dict(context_dict, \
-        **publishService.get_contexts(request))
 
     c = Context(context_dict)
     return HttpResponse(render_response_index(request,
                         'tardis_portal/publish_experiment.html', c))
+
+
+@authz.experiment_ownership_required
+def choose_license(request, experiment_id):
+    experiment = Experiment.objects.get(id=experiment_id)
+    context_dict = {'submit': False,
+        'experiment': experiment}
+    if request.method == 'POST':
+        cch = CreativeCommonsHandler(experiment_id=experiment_id)
+        cch.save_license(request)
+        context_dict['submit'] = True
+
+    c = Context(context_dict)
+    return HttpResponse(render_response_index(request,
+                        'tardis_portal/choose_license.html', c))

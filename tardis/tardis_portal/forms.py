@@ -196,7 +196,8 @@ class ChangeGroupPermissionsForm(forms.Form):
 
     canRead = forms.BooleanField(label='canRead', required=False)
     canWrite = forms.BooleanField(label='canWrite', required=False)
-    canDelete = forms.BooleanField(label='canDelete', required=False)
+    canDelete = forms.BooleanField(label='', required=False,
+                                   widget=forms.HiddenInput)
 
     effectiveDate = forms.DateTimeField(label='Effective Date',
             widget=SelectDateWidget(), required=False)
@@ -213,9 +214,10 @@ class AddUserPermissionsForm(forms.Form):
     adduser.widget.attrs['class'] = 'usersuggest'
     read = forms.BooleanField(label='READ', required=False, initial=True)
     read.widget.attrs['class'] = 'canRead'
-    write = forms.BooleanField(label='WRITE', required=False)
+    write = forms.BooleanField(label='EDIT', required=False)
     write.widget.attrs['class'] = 'canWrite'
-    delete = forms.BooleanField(label='DELETE', required=False)
+    delete = forms.BooleanField(label='', required=False,
+                                   widget=forms.HiddenInput)
     delete.widget.attrs['class'] = 'canDelete'
 
 
@@ -232,9 +234,10 @@ class AddGroupPermissionsForm(forms.Form):
     adduser.widget.attrs['class'] = 'usersuggest'
     read = forms.BooleanField(label='READ', required=False, initial=True)
     read.widget.attrs['class'] = 'canRead'
-    write = forms.BooleanField(label='WRITE', required=False)
+    write = forms.BooleanField(label='EDIT', required=False)
     write.widget.attrs['class'] = 'canWrite'
-    delete = forms.BooleanField(label='DELETE', required=False)
+    delete = forms.BooleanField(label='', required=False,
+                                   widget=forms.HiddenInput)
     delete.widget.attrs['class'] = 'canDelete'
 
 
@@ -730,7 +733,6 @@ def createSearchExperimentForm():
             schema.parametername_set.filter(is_searchable=True)
         fieldNames = []
         schemaAndFieldLists.append((schema, fieldNames))
-
         for parameterName in searchableParameterNames:
             if parameterName.data_type == ParameterName.NUMERIC:
                 if parameterName.comparison_type \
