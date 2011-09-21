@@ -812,26 +812,26 @@ h2 {
     width: 40%;
 }
 
-.parameters_table {
+.parameter_table {
     display: inline;
     clear: none;
 }
 
-.parameters_table .even {
+.parameter_table .even {
     background-color: #D0D3D6;
 }
 
-.parameters_table .odd {
+.parameter_table .odd {
     background-color: #E0E3E6;
 }
 
-.parameters_table th {
+.parameter_table th {
     border-radius: 8px;
     -webkit-border-radius: 8px;
     -moz-border-radius: 8px;
 }
 
-.parameters_table th {
+.parameter_table th {
     background-color: #c0c3c7;
     font-weight: bold;
     font-size: 14px;
@@ -840,16 +840,16 @@ h2 {
     padding: 5px;
 }
 
-.parameters_table td {
-    padding: 5px;
+.parameter_table td {
+    padding: 5px 10px;
 }
 
-.parameters_table .parameter_name {
+.parameter_table .parameter_name {
     font-weight: bold;
     width: auto;
 }
 
-.parameters_table .parameter_value {
+.parameter_table .parameter_value {
     width: auto;
 }
 
