@@ -5,7 +5,13 @@
     {% for parameter in parameters %}
     <tr class="{% cycle 'odd' 'even' %}">
         <td class="parameter_name">{{ parameter.name.full_name }}</td>
-        <td class="parameter_value">{{ parameter.get }}</td>
+        <td class="parameter_value">
+            {% if parameter.name.isLongString %}
+                {{ parameter.get|linebreaks }}
+            {% else %}
+                {{ parameter.get }}
+            {% endif %}
+        </td>
     </tr>
     {% endfor %}
 </table>
