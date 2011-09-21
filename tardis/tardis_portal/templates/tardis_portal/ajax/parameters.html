@@ -1,12 +1,12 @@
+<div class="datafile_parameters">
 {% for parameterset in parametersets %}
-    <div class="datafile_parameters">
     {% include "tardis_portal/ajax/parameter_table.html" with parameters=parameterset.datafileparameter_set.all %}
-    {% if has_write_permissions %}{% if not experiment.public %}
+    {% if has_write_permissions %}{% if not parameterset.dataset_file.dataset.experiment.public %}
       <div class="edit_schema" style="display: inline;"><a href="{% url tardis.tardis_portal.views.edit_datafile_par parameterset.id %}"
      data-toggle_selector="#datafile_metadata_toggle_{{parameterset.dataset_file_id}}"
         class="jqModalDfEdit"><img src="/site_media/images/icon_changelink.gif" /></a></div>
     {% endif %}{% endif %}
-    </div>
 {% empty %}
     There is no metadata for this file
 {% endfor %}
+</div>
