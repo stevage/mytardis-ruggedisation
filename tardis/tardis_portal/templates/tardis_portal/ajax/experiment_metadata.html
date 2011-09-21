@@ -1,4 +1,4 @@
-<div class="dataset_metadata">
+<div class="experiment_metadata">
   <ul>
     {% for parameterset in experiment.experimentparameterset_set.all %}
         {% include "tardis_portal/ajax/parameter_table.html" with parameters=parameterset.experimentparameter_set.all %}
