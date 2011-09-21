@@ -813,7 +813,7 @@ h2 {
 }
 
 .parameter_table {
-    display: inline;
+    display: inline-table;
     clear: none;
 }
 
@@ -851,5 +851,9 @@ h2 {
 
 .parameter_table .parameter_value {
     width: auto;
+}
+
+div.edit_schema img {
+    vertical-align: top;
 }
 
