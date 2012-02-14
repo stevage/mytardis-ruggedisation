@@ -41,9 +41,11 @@ File filter: <input title='Enter part or all of a filename, then press enter. e.
 <br/>
 Select: <a class="dataset_selector_all clickable">[All]</a> / <a class="dataset_selector_none clickable">[None]</a>
 <br/><br/>
+<!-- actual list of datafiles -->
 {% for datafile in dataset.object_list %}
-<li class="datafile{% if datafile.pk in highlighted_dataset_files %} search_match_file{% endif %}">
-    <input type="checkbox" style="float:left;" class="datafile_checkbox" name="datafile" value="{{datafile.id}}" />
+<!-- <li class="datafile{% if datafile.pk in highlighted_dataset_files %} search_match_file{% endif %}">--></li>
+<li class="datafile{% if datafile.pk in highlighted_dataset_files %} search_match_file{% endif %} {% if not datafile.exists %} datafile_missing {% endif %}">
+	    <input type="checkbox" style="float:left;" class="datafile_checkbox" name="datafile" value="{{datafile.id}}" />
     <span style="float:left;">
 
     <span{% if datafile.pk in highlighted_dataset_files %} style="background-color: #FFFF00"{% endif %}>
@@ -67,6 +69,9 @@ Select: <a class="dataset_selector_all clickable">[All]</a> / <a class="dataset_
         Show/Hide
     </a>
     <div style="clear:both;"></div>
+	{% if datafile.warning_message %}
+	<div class="datafile_warning_message">{{ datafile.warning_message }}</div>
+	{% endif %}
     <ul class="datafile_info" style="display:none;">
     </ul>
 </li>
