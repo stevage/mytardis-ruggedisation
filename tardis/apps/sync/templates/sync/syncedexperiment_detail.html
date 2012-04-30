@@ -16,7 +16,7 @@
 	</tr>
 	<tr>
 	  <td>Status:</td>
-      <td>{{ object.state }}{% if message.progress %} ({{message.progress}}){% endif %}{% if message.error %} ({{message.human_status}}:{{message.error}}){% endif %}</td>
+      <td>{{ object.state }}{% if message.progress %} ({{message.progress}}){% endif %}{% if message.error %}<br/> ({{message.human_status}}:{{message.error}}){% endif %}</td>
     </tr>
       </table>
     </div> <!-- entry -->
