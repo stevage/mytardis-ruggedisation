@@ -12,6 +12,7 @@ logger = logging.getLogger('tardis.mecat')
 
 
 class URLParser(object):
+    """Base class that can retrieve a settings file from a URL then do some more specific parsing.""" 
     def __init__(self, url, **creds):
         self.url = url
         self.creds = creds
@@ -50,6 +51,7 @@ class URLParser(object):
 
 
 class SiteParser(URLParser):
+    """ Retrieves and parses information about MyTardis sites."""
     def _parse_file(self, f):
         """Build a list of dictionaries from the sites file."""
         tree = etree.iterparse(f, events=('start', 'end'))

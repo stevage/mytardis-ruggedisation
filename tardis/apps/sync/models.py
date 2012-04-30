@@ -52,6 +52,8 @@ logger = logging.getLogger(__file__)
 #
 
 class SyncedExperiment(models.Model):
+    """The current transfer state of an experiment (in progress, failed, complete, etc)."""
+    
     experiment = models.ForeignKey(Experiment)
     uid = models.TextField()
     state = ConsumerFSMField(default='Ingested') 
@@ -62,25 +64,30 @@ class SyncedExperiment(models.Model):
     msg = models.TextField(default='')
 
     def is_complete(self):
+        """ Is the transfer over, regardless of success?"""
         return self.state.is_final_state() 
 
     def progress(self):
+        """ Move transfer state to the next state. """
         self.state = self.state.get_next_state(self)
         self.save()
 
     def status(self):
+        """ Return information we have received about the most recent state change. """
         try:
             return json.loads(self.msg)
         except ValueError:
             return None
 
     def save_status(self, status_dict):
+        """ Record information we have received about the most recent state change. """
         self.msg = json.dumps(status_dict)
         self.save()
 
 
 @receiver(received_remote, sender=Experiment)
 def experiment_received(sender, **kwargs):
+    """ Create a SyncedExperiment from { instance, uid, from_url} parameters. """
     exp = kwargs['instance']
     uid = kwargs['uid']
     from_url = kwargs['from_url']

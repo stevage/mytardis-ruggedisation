@@ -6,6 +6,7 @@ logger = logging.getLogger(__name__)
 
 
 class State(object):
+    """ A simple finite statement machine abstract class, with on_entry and on_exit events."""
     def __unicode__(self):
         return "%s" % (self.__class__.__name__)
     
@@ -13,6 +14,7 @@ class State(object):
         return "%s" % (self.__class__.__name__)
 
     def get_next_state(self, *args, **kwargs):
+        """ Returns the next state in the FSM, triggering events if it differs from this one."""
         next_state = self._get_next_state(*args, **kwargs)
         if self.__class__.__name__ != next_state.__class__.__name__:
             self._on_exit(*args, **kwargs)
@@ -21,6 +23,7 @@ class State(object):
         return self
 
     def is_final_state(self):
+        """ Whether this is a termination state. To implement a terminal state, subclass from FinalState. """
         return False
 
     def _get_next_state(self):
@@ -39,10 +42,11 @@ class FinalState(State):
 
 
 class FSMField(models.Field):
-                    
+    """ Manages a group of related states as one FSM."""                
     __metaclass__ = models.SubfieldBase
 
     states = {}
+    """ Contains { 'Statename', StateClass, ... }"""
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('max_length', 50)

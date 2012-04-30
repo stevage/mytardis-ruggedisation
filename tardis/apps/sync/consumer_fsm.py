@@ -6,14 +6,19 @@ from .integrity import IntegrityCheck
 from .signals import transfer_completed, transfer_failed
 
 logger = logging.getLogger(__name__)
+"""
+:mod:`consumer_fsm` -- FSM states representing phases that experiment transfers go through.
+"""
 
 class FailPermanent(FinalState):
+    """ A transfer failed and cannot be resumed. """
     def _on_entry(self, experiment):
         logger.error('Transfer failed: %s' % experiment.uid)
         transfer_failed.send_robust(sender=experiment.__class__, instance=experiment)
 
 
 class Complete(FinalState):
+    """ The contents of an experiment have been transferred but not yet checkd. """
     def _on_entry(self, experiment):
         logger.info('Transfer complete: %s' % experiment.uid)
         transfer_completed.send_robust(sender=experiment.__class__, instance=experiment)
@@ -48,14 +53,17 @@ class CheckingIntegrity(State):
 
 
 class InProgress(StatusCheckState):
+    """ Data transfers are currently underway. """
     pass
 
 
 class Requested(StatusCheckState):
+    """ Data transfers have not yet begun. """
     pass
 
 
 class Ingested(State):
+    """ Some data has been received, and more may now be requested."""
     def _ingestion_complete(self, experiment):
         return True
 

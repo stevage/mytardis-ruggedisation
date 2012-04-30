@@ -29,7 +29,7 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 """
-notify.py
+:mod:`notify` -- Send notification emails about specific transfer events.
 
 .. moduleauthor:: Kieran Spear <kispear@gmail.com>
 .. moduleauthor:: Shaun O'Keefe <shaun.okeefe.0@gmail.com>
@@ -53,6 +53,7 @@ logger = logging.getLogger(__name__)
 
 @receiver(transfer_failed)
 def failed(sender, **kwargs):
+    """Send an email describing a transfer failure."""
     logger.debug('Sending experiment failure emails')
     instance = kwargs['instance']
     email_admins(instance, success=False)
@@ -60,6 +61,7 @@ def failed(sender, **kwargs):
 
 @receiver(transfer_completed)
 def completed(sender, **kwargs):
+    """Send an email describing a transfer success, to an appropriate recipient."""
     logger.debug('Sending experiment complete emails')
     instance = kwargs['instance']
     email_admins(instance, success=True)
@@ -81,9 +83,15 @@ def _get_email_text(synced_exp, success, template='sync/admin_email.txt'):
 
 
 def email_users(synced_exp, success):
+    """Not implemented: send an email to (non-admin) users about a transfer.
+    @param success: boolean, did the transfer succeed?
+    """
     pass
 
 def email_admins(synced_exp, success):
+    """Send an email to admin users about a transfer.
+    @param success: boolean, did the transfer succeed?
+    """
     admins = getattr(settings, 'SYNC_ADMINS', [])
     if not admins:
         return

@@ -120,6 +120,11 @@ class SyncManager(object):
         return sites
 
     def _post_experiment(self, experiment, site_owners, site_settings):
+        '''
+        Contact a remote site and lodge an experiment ingest, using
+        information from site_owners and site_settings. To do this,
+        a METS file is extracted/generated and sent.
+        ''' 
         uid = self.generate_exp_uid(experiment)
         url = site_settings['url']
         username = site_settings['username']

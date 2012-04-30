@@ -158,7 +158,7 @@ STATICFILES_DIRS = (
 TARDIS_APP_ROOT = 'tardis.apps'
 INSTALLED_APPS = (
     #TARDIS_APP_ROOT+'.equipment',
-    #TARDIS_APP_ROOT+'.sync',
+    TARDIS_APP_ROOT+'.sync',
     'django_extensions',
     'django.contrib.auth',
     'django.contrib.contenttypes',

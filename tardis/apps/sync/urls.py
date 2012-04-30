@@ -38,16 +38,14 @@ urls.py
 from django.conf.urls.defaults import patterns, include, url
 
 
-# urls that present the API for the consumer to make requests to
-# and query the provider about the status of transfers
+# API for the consumer query the status of transfers
 provider_urls = patterns(
             'tardis.apps.sync.views',
             url(r'^get/', 'get_experiment', name='sync-get-experiment'),
             url(r'^status/(?P<uid>[\w\.\-]+)/', 'transfer_status', name='sync-transfer-status'),
         )
 
-# urls that present the API for the provider to inform the consumer
-# about new ingestions etc..
+# API for the provider to inform the consumer about new ingests etc.
 consumer_urls = patterns(
             'tardis.apps.sync.views',
             (r'^notify_experiment/(?P<uid>\d+)/$', 'notify_experiment'),

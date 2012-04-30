@@ -4,7 +4,9 @@ from tardis.tardis_portal.models import Experiment, Dataset_File
 
 
 class IntegrityCheck(object):
+    """ Tool to check with contents of an experiment exist on disk.""" 
     def __init__(self, experiment_or_id):
+        """ @param experiment_or_id: An Experiment object, or the id of one. """
         self.experiment = experiment_or_id
         if not isinstance(self.experiment, Experiment):
             self.experiment = Experiment.objects.get(pk=experiment_or_id)
@@ -38,6 +40,7 @@ class IntegrityCheck(object):
         return output
 
     def all_files_complete(self):
+        """Return true if no missing or incomplete files in this experiment."""
         results = self.get_datafiles_integrity()
         return results['files_missing'] == 0 and results['files_incomplete'] == 0
 

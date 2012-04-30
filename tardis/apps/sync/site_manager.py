@@ -4,6 +4,7 @@ from .site_parser import SiteParser, SiteSettingsParser
 
 
 class SiteManager(object):
+    """ Manages information about sites (ie, MyTardis instances) and how to connect to them. """
     def __init__(self, url=settings.MYTARDIS_SITES_URL):
         self.url = url
         try:
