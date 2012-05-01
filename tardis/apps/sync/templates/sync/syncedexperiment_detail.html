@@ -1,24 +1,35 @@
 {% if object %}
   <div class="post">
     <div class="entry">
-      <table>
-	<tr>
-	  <td>Unique ID:</td>
-	  <td>{{ object.uid}}</td>
-    </tr>
-    <tr>
-      <td>Contact person</td>
-      <td>{% for admin in admins %}{% if not forloop.first %}, {% endif %}{{admin}}{% endfor %}</td>
-    </tr>
-	<tr>
-	  <td>Synced From:</td>
-	  <td>{{ object.provider_url}}</td>
-	</tr>
-	<tr>
-	  <td>Status:</td>
-      <td>{{ object.state }}{% if message.progress %} ({{message.progress}}){% endif %}{% if message.error %}<br/> ({{message.human_status}}:{{message.error}}){% endif %}</td>
-    </tr>
-      </table>
+      {% if object.state.to_string in "InProgress Ingested CheckingIntegrity Requested" %} 
+      Transferring experiment (ID {{object.uid}}) from {{object.provider_url}}
+      {% endif %}
+    
+      {% if object.state.to_string in "FailPermanent" %} 
+      An error occurred while transferring this experiment (ID {{object.uid}}) from {{object.provider_url}}
+      <div class="failed-transfer" >
+      {% endif %}
+     
+      {% if object.state.to_string in "Complete" %} 
+      This experiment (ID {{object.uid}}) was transferred from {{object.provider_url}}
+      {# Don't show progress bar for completed transfers. #}
+      {% else %}
+      
+          {% if filestotal %}
+              <div class="transfer-progress-bar"> 
+                  <span style="width:{{percentage}}%">{{filesdone}}/{{filestotal}} </span>
+              </div>
+              <p class="transfer-progress-status">{{message.human_status}}{% if message.error %}: {{message.error}}{% endif %}</p>
+          {% endif %}
+      {% endif %}
+      
+      <div class="transfer-admins-list">
+      {% if admins %}Issues with the transfer? Contact: {% for admin in admins %}{% if not forloop.first %}, {% endif %}{{admin}}{% endfor %}{% endif %}
+      </div>
+      {% if object.state.to_string in "FailPermanent" %} 
+      </div>
+      {% endif %}
+
     </div> <!-- entry -->
   </div> <!-- post -->
 {% else %}

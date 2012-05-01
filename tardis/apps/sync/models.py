@@ -83,6 +83,33 @@ class SyncedExperiment(models.Model):
         """ Record information we have received about the most recent state change. """
         self.msg = json.dumps(status_dict)
         self.save()
+        
+    def get_message_progress(self):
+        progress = ""
+        try:
+            message = json.loads(self.msg)
+            #print message.progress
+            progress = message["progress"]
+        except:
+            pass
+        return progress
+    
+    def get_files_progress(self):
+        import re
+        match = re.search("(\d+)/(\d+)", self.get_message_progress()) # intentionally tolerates strings like "4/25 files now transferred"
+        (filesdone, filestotal) = (0, 0)
+        if match:
+            filesdone = match.group(1)
+            filestotal = match.group(2)
+            percentage = "%.1f" % (float(filesdone) / float(filestotal) * 100)
+        
+        return (filesdone, filestotal)
+
+    def get_files_done (self):
+        return self.get_files_progress()[0]
+    
+    def get_files_total (self):
+        return self.get_files_progress()[1]
 
 
 @receiver(received_remote, sender=Experiment)

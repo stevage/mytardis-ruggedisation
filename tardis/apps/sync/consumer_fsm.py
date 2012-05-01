@@ -25,6 +25,7 @@ class Complete(FinalState):
 
 
 class StatusCheckState(State):
+    """Use the status resulting from a recent action to decide the next state."""
     transitions = {
         TransferService.TRANSFER_COMPLETE: 'CheckingIntegrity',
         TransferService.TRANSFER_IN_PROGRESS: 'InProgress',
@@ -63,7 +64,7 @@ class Requested(StatusCheckState):
 
 
 class Ingested(State):
-    """ Some data has been received, and more may now be requested."""
+    """ Metadata has now been ingested, so data may be requested."""
     def _ingestion_complete(self, experiment):
         return True
 

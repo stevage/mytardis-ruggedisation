@@ -2,7 +2,6 @@ from os import path
 
 from tardis.tardis_portal.models import Experiment, Dataset_File
 
-
 class IntegrityCheck(object):
     """ Tool to check with contents of an experiment exist on disk.""" 
     def __init__(self, experiment_or_id):

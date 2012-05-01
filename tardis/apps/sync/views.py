@@ -164,14 +164,19 @@ def index(request, experiment_id):
         pass
     
     message = {}
-    if synced_exp:
-        if synced_exp.msg:
-            try:
-                message = json.loads(synced_exp.msg)
-            except:
-                pass
+    if synced_exp and synced_exp.msg:
+        try:
+            message = json.loads(synced_exp.msg)
+            # usually now contains status, timestamp, progress (hopefully a '4/25' string), human_status, and optional error)
+        except:
+            pass
     c = Context({'object': synced_exp, 'message':message, 'admins':getattr(settings, 'SYNC_ADMINS', [])})
-    print "Message is: {0}".format(message)
+
+    c['filesdone'] = synced_exp.get_files_done()
+    c['filestotal'] = synced_exp.get_files_total()
+    if c['filesdone']:
+        c['percentage'] = "%.1f" % (float(c['filesdone']) / float(c['filestotal']) * 100)
     url = 'sync/syncedexperiment_detail.html'
+
     return HttpResponse(render_response_index(request, url, c))
 

@@ -9,7 +9,33 @@
 {% block experiment_link_extra_text %}
 {{block.super}}
 {% if experiment.syncedexperiment_set.count %}
-<span class="experiment-transfer-status">[EXTERNAL{% if not experiment.syncedexperiment_set.all.0.is_complete %} - pending{% endif %}]</span>
+{% if not experiment.syncedexperiment_set.all.0.is_complete %}
+<span class="experiment-transfer-status">
+    {% if experiment.syncedexperiment_set.all.0.state.to_string == "Ingested" %}
+    Waiting for data transfer.
+    {% endif %}
+    {% if experiment.syncedexperiment_set.all.0.state.to_string == "Requested" %}
+    Waiting for data transfer.
+    {% endif %}
+    {% ifequal experiment.syncedexperiment_set.all.0.state.to_string "InProgress" %}
+    Receiving data from {{ experiment.syncedexperiment_set.all.0.provider_url }}
+        {% if experiment.syncedexperiment_set.all.0.get_message_progress %}
+        <div class="transfer-progress-bar">
+            <span style="width: {% widthratio experiment.syncedexperiment_set.all.0.get_files_done experiment.syncedexperiment_set.all.0.get_files_total 100 %}px"></span>
+            
+        </div>
+        {% endif %}
+    {% endifequal %}
+    {% if experiment.syncedexperiment_set.all.0.state.to_string == "CheckingIntegrity" %}
+    Processing data.
+    {% endif %}
+</span>
+{% endif %}
+{% if experiment.syncedexperiment_set.all.0.state.to_string == "FailPermanent" %}
+<span class="experiment-transfer-status failed-transfer">
+    Problem with data transfer.
+<span>
+{% endif %}
 {% endif %}
 {% endblock %}
 

@@ -7,11 +7,16 @@ logger = logging.getLogger(__name__)
 
 class State(object):
     """ A simple finite statement machine abstract class, with on_entry and on_exit events."""
+    #to_string='InProgress'
     def __unicode__(self):
         return "%s" % (self.__class__.__name__)
     
     def __str__(self):
         return "%s" % (self.__class__.__name__)
+    
+    #        ''' Allows accessing string value from templates.'''
+    def to_string(self):
+        return self.__str__()
 
     def get_next_state(self, *args, **kwargs):
         """ Returns the next state in the FSM, triggering events if it differs from this one."""
@@ -37,6 +42,7 @@ class State(object):
 
 
 class FinalState(State):
+    """Use this subclass for final states."""
     def is_final_state(self):
         return True
 
@@ -46,7 +52,7 @@ class FSMField(models.Field):
     __metaclass__ = models.SubfieldBase
 
     states = {}
-    """ Contains { 'Statename', StateClass, ... }"""
+    """ Contains { 'Statename': StateClass, ... }"""
 
     def __init__(self, *args, **kwargs):
         kwargs.setdefault('max_length', 50)
@@ -85,6 +91,8 @@ def transition_on_success(state, conditions=[]):
 
 
 def true_false_transition(true_state, false_state):
+    """A decorator applied to a function that returns a boolean: if that function returns true, transition
+    to the true_state, otherwise the false_state."""
     def wrap(f):
         def wrap_f(*args):
             self = args[0]

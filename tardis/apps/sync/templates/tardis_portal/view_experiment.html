@@ -10,7 +10,32 @@
 {% block experiment_title_extra_text %}
 {{ block.super }}
 {% if experiment.syncedexperiment_set.count %}
-<span class="experiment-transfer-status">[External{% if not experiment.syncedexperiment_set.all.0.is_complete %} - pending{% endif %}]</span>
+{% if not experiment.syncedexperiment_set.all.0.is_complete %}
+<span class="experiment-transfer-status">
+    {% if experiment.syncedexperiment_set.all.0.state.to_string == "Ingested" %}
+    Your data has not been received yet.
+    {% endif %}
+    {% if experiment.syncedexperiment_set.all.0.state.to_string == "Requested" %}
+    Your data has not been received yet.
+    {% endif %}
+    {% ifequal experiment.syncedexperiment_set.all.0.state.to_string "InProgress" %}
+    Your data is still being transferred.
+    {% endifequal %}
+    {% if experiment.syncedexperiment_set.all.0.state.to_string == "CheckingIntegrity" %}
+    Your data is still being processed.
+    {% endif %}
+        {% if experiment.syncedexperiment_set.all.0.get_message_progress %}
+        <div class="transfer-progress-bar">
+            <span style="width: {% widthratio experiment.syncedexperiment_set.all.0.get_files_done experiment.syncedexperiment_set.all.0.get_files_total 100 %}px"></span>
+            
+        </div>
+        {% endif %}
+</span>
+{% endif %}
+{% if experiment.syncedexperiment_set.all.0.state.to_string == "FailPermanent" %}
+<span class="experiment-transfer-status failed-transfer">
+    There was a problem transferring your data. System administrators have been alerted. Please don't panic.
+<span>
+{% endif %}
 {% endif %}
 {% endblock %}
-

@@ -2,6 +2,7 @@ from django import forms
 
 
 class FileTransferRequestForm(forms.Form):
+    ''' Structure for requests to transfer an experiment'''
     uid = forms.CharField(max_length=30, required=True)
     dest_path = forms.CharField(max_length=300, required=True)
     site_settings_url = forms.CharField(max_length=255, required=True)
