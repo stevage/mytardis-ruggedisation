@@ -22,14 +22,16 @@ setup(
         'lxml',
         'feedparser',
         'elementtree',
-        'django==1.4',
+        'django>=1.4',
         'django-registration',
         'django-extensions',
         'django-form-utils',
         'django-haystack',
         'django-bootstrap-form',
-        'celery',           # Delayed tasks and queues
-        'django-celery',
+        #'celery',           # Delayed tasks and queues
+        #'django-celery',  Some recent change causes "Can't find module billiard.forking errors"
+        'celery==2.5.5',
+        'django-celery==2.5.3',
         'django-kombu',
         'pysolr',
         'beautifulsoup4',
